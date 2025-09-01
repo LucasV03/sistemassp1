@@ -19,6 +19,7 @@ import type * as repuestos from "../repuestos.js";
 import type * as repuestos_por_deposito from "../repuestos_por_deposito.js";
 import type * as tipos_comprobantes from "../tipos_comprobantes.js";
 import type * as tipos_movimiento from "../tipos_movimiento.js";
+import type * as traspasos from "../traspasos.js";
 
 /**
  * A utility for referencing Convex functions in your app's API.
@@ -35,6 +36,7 @@ declare const fullApi: ApiFromModules<{
   repuestos_por_deposito: typeof repuestos_por_deposito;
   tipos_comprobantes: typeof tipos_comprobantes;
   tipos_movimiento: typeof tipos_movimiento;
+  traspasos: typeof traspasos;
 }>;
 export declare const api: FilterApi<
   typeof fullApi,

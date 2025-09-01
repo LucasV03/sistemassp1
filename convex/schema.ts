@@ -77,5 +77,19 @@ export default defineSchema({
     cantidad: v.number(),
   }).index("byMovimiento", ["movimientoId"]),
 
+traspasos: defineTable({
+    origenId: v.id("depositos"),
+    destinoId: v.id("depositos"),
+    fecha: v.string(),
+    estado: v.string(), // pendiente | confirmado | rechazado
+    usuario: v.optional(v.string()),
+  }).index("byEstado", ["estado"]),
+
+  detalle_traspaso: defineTable({
+    traspasoId: v.id("traspasos"),
+    repuestoId: v.id("repuestos"),
+    cantidad: v.number(),
+  }).index("byTraspaso", ["traspasoId"]),
+
 
 });
