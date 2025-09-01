@@ -87,37 +87,42 @@ export default function DepositosPage() {
 
   return (
     <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-bold">Gestión de Depósitos</h1>
+      <h1 className="text-2xl font-bold text-white">Gestión de Depósitos</h1>
 
       {/* === FORM === */}
-      <Card>
-        <CardContent className="p-4">
-          <form onSubmit={handleSubmit} className="grid gap-3">
+      <Card className="bg-zinc-800">
+        <CardContent className="p-4 text-white">
+          <form onSubmit={handleSubmit} className="grid gap-3 ">
             <Input
+              className="text-white"
               placeholder="Nombre"
               value={form.nombre}
               onChange={(e) => setForm({ ...form, nombre: e.target.value })}
               required
             />
             <Input
+              className="text-white"
               placeholder="Provincia"
               value={form.provincia}
               onChange={(e) => setForm({ ...form, provincia: e.target.value })}
               required
             />
             <Input
+              className="text-white"
               placeholder="Ciudad"
               value={form.ciudad}
               onChange={(e) => setForm({ ...form, ciudad: e.target.value })}
               required
             />
             <Input
+              className="text-white"
               placeholder="Calle"
               value={form.calle}
               onChange={(e) => setForm({ ...form, calle: e.target.value })}
               required
             />
             <Input
+              className="text-white"
               placeholder="Código Postal"
               value={form.codigoPostal}
               onChange={(e) =>
@@ -126,6 +131,7 @@ export default function DepositosPage() {
               required
             />
             <Input
+              className="text-white"
               placeholder="Capacidad total"
               type="number"
               value={form.capacidad_total}
@@ -133,7 +139,7 @@ export default function DepositosPage() {
                 setForm({ ...form, capacidad_total: e.target.value })
               }
             />
-            <Button type="submit">
+            <Button type="submit" className="bg-indigo-700 w-100 ml-125 text-white">
               {form.id ? "Actualizar depósito" : "Crear depósito"}
             </Button>
           </form>
@@ -141,12 +147,12 @@ export default function DepositosPage() {
       </Card>
 
       {/* === LISTA === */}
-      <div className="grid gap-4">
+      <div className="grid gap-4 bg-zinc-800 rounded-xl">
         {depositos?.map((d: any) => (
           <Card key={d._id}>
             <CardContent className="flex items-center justify-between p-4">
               <div>
-                <p className="font-semibold">{d.nombre}</p>
+                <p className="font-semibold text-white">{d.nombre}</p>
                 <p className="text-sm text-gray-600">
                   {d.provincia} - {d.ciudad}
                 </p>
@@ -156,8 +162,8 @@ export default function DepositosPage() {
                   Capacidad: {d.capacidad_total ?? "Sin límite"}
                 </p>
               </div>
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={() => handleEdit(d)}>
+              <div className="flex gap-2 ">
+                <Button className="bg-indigo-700 text-white " variant="outline" onClick={() => handleEdit(d)}>
                   Editar
                 </Button>
                 <Button
