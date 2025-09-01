@@ -20,7 +20,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               {/* Header */}
               <header className="bg-[#141414] flex items-center justify-between px-6 py-4 border-b border-gray-800">
                 <h1 className="text-xl font-semibold tracking-wide text-white">
-                  🚍 Sistema de Transporte
+                   Sistema de Transporte
                 </h1>
 
                 <div className="flex items-center space-x-4">
@@ -37,7 +37,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               </header>
 
               {/* Contenido */}
-              <main className="flex-1 p-6 bg-[#141414] overflow-y-auto">
+              <main className=" flex-1 p-6 bg-[#141414] overflow-y-auto">
                 {children}
               </main>
             </div>

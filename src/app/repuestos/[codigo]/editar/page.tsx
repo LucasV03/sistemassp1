@@ -177,7 +177,7 @@ export default function EditarRepuestoPage({
             <button
               type="submit"
               disabled={loading}
-              className={`px-6 py-2.5 rounded-lg text-white font-semibold shadow transition ${
+              className={`px-6  py-2.5 rounded-lg text-white font-semibold shadow transition ${
                 loading ? "bg-gray-400" : "bg-slate-800 hover:bg-slate-700"
               }`}
             >

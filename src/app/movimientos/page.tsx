@@ -70,15 +70,15 @@ export default function MovimientosPage() {
 
   return (
     <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-bold">Gestión de Movimientos</h1>
+      <h1 className="text-2xl text-white font-bold">Gestión de Movimientos</h1>
 
-      <Card>
+      <Card className="bg-zinc-800">
         <CardContent className="p-4">
-          <label className="block mb-2 font-semibold">
+          <label className="block mb-2 font-semibold text-zinc-400">
             Seleccione un depósito
           </label>
           <select
-            className="border p-2 rounded w-full"
+            className="border p-2 rounded w-full text-zinc-500"
             value={depositoSeleccionado}
             onChange={(e) =>
               setDepositoSeleccionado(e.target.value as Id<"depositos"> | "")
@@ -95,8 +95,8 @@ export default function MovimientosPage() {
       </Card>
 
       {depositoSeleccionado && (
-        <Card>
-          <CardContent className="p-4">
+        <Card className="bg-zinc-800">
+          <CardContent className="p-4 text-zinc-500">
             <form onSubmit={handleSubmit} className="grid gap-3">
               <select
                 className="border p-2 rounded"
@@ -153,7 +153,7 @@ export default function MovimientosPage() {
                 required
               />
 
-              <Button type="submit">Crear Encabezado</Button>
+              <Button className="bg-indigo-700  text-white w-100 ml-125 " type="submit">Crear Encabezado</Button>
             </form>
           </CardContent>
         </Card>
@@ -165,19 +165,20 @@ export default function MovimientosPage() {
             <Card key={m._id}>
               <CardContent className="flex items-center justify-between p-4">
                 <div>
-                  <p className="font-semibold">
+                  <p className="font-semibold text-white">
                     {m.tipoComprobante?.nombre} - {m.tipoMovimiento?.nombre}
                   </p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-zinc-500">
                     Fecha: {m.fecha_registro} {m.hora_registro}
                   </p>
-                  <p className="text-sm">
+                  <p className="text-sm text-zinc-500">
                     Estado: {m.confirmado ? "✅ Confirmado" : "⏳ Pendiente"}
                   </p>
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex gap-2 ">
                   <Button
+                    className="bg-indigo-700 text-white border-hidden"
                     variant="outline"
                     onClick={() => router.push(`/movimientos/${m._id}`)}
                   >

@@ -27,12 +27,12 @@ export default function Sidebar() {
     <aside className="hidden md:flex md:w-64 md:flex-col bg-[#1a1a1a]">
       {/* Logo */}
       <div className="flex items-center gap-3 text-white text-xl font-bold tracking-wide border-b border-gray-800 px-6 py-5.5">
-        <Globe className="h-6 w-6 text-violet-500" />
-        Transportes Emanuel
+        <Globe className="h-6 w-6 text-violet-500 ml-13" />
+        Panel 
       </div>
 
       {/* Navegación */}
-      <nav className="flex flex-col gap-2 mt-8">
+      <nav className="flex flex-col gap-2 mt-2">
         {links.map(({ href, label, Icon }) => {
           const active = href === '/' ? pathname === '/' : pathname.startsWith(href);
           return (

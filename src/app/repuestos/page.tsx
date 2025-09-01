@@ -76,17 +76,17 @@ export default function RepuestosPage() {
 
   return (
     <main className="p-6 max-w-7xl mx-auto space-y-8">
-      <section className="rounded-2xl border p-6 shadow-sm bg-gray-100 dark:bg-neutral-800">
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-          <h2 className="text-2xl font-semibold">📦 Repuestos</h2>
+      <section className="rounded-2xl border p-6 shadow-sm bg-zinc-800 ">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-6 ">
+          <h2 className="text-2xl font-semibold text-white">📦 Repuestos</h2>
 
           {/* Ordenar */}
           <div className="flex items-center gap-2">
-            <label className="text-sm">Ordenar por:</label>
+            <label className="text-sm text-white">Ordenar por:</label>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
-              className="border rounded px-2 py-1 text-sm"
+              className="border rounded px-2 py-1 text-sm text-white"
             >
               <option value="nombre">Nombre</option>
               <option value="codigo">Código</option>
@@ -95,7 +95,7 @@ export default function RepuestosPage() {
             </select>
             <button
               onClick={() => setSortDir((d) => (d === "asc" ? "desc" : "asc"))}
-              className="px-3 py-1 text-sm border rounded"
+              className="px-3 py-1 text-sm border rounded text-white"
             >
               {sortDir === "asc" ? "▲" : "▼"}
             </button>
@@ -121,11 +121,11 @@ export default function RepuestosPage() {
         )}
 
         {/* FORM */}
-        <div className="mt-12">
-          <article className="border rounded-xl p-6 bg-gray-100 dark:bg-neutral-800">
-            <h3 className="text-xl font-semibold mb-4">➕ Agregar repuesto</h3>
+        <div className="mt-12  ">
+          <article className="border rounded-xl p-6 bg-neutral-900" >
+            <h3 className="text-xl text-white font-semibold mb-4">➕ Agregar repuesto</h3>
 
-            <form onSubmit={handleAddRepuesto} className="flex flex-col gap-5">
+            <form onSubmit={handleAddRepuesto} className="flex flex-col gap-5 text-zinc-500">
               <div className="flex flex-wrap gap-5">
                 <Field label="Código">
                   <Input value={codigo} onChange={setCodigo} required />
@@ -164,7 +164,7 @@ export default function RepuestosPage() {
               <div className="flex justify-end">
                 <button
                   type="submit"
-                  className="px-6 py-2.5 bg-slate-800 text-white rounded-lg"
+                  className="px-6 py-2.5 bg-indigo-700 text-white rounded-lg"
                 >
                   Guardar Repuesto
                 </button>

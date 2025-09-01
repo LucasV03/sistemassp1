@@ -78,15 +78,15 @@ export default function MovimientoDetallePage() {
   return (
     <main className="p-6 max-w-5xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Movimiento #{String(movimiento._creationTime).slice(-6)}</h1>
-        <Button variant="outline" onClick={() => router.back()}>
+        <h1 className="text-2xl font-bold text-white">Movimiento #{String(movimiento._creationTime).slice(-6)}</h1>
+        <Button className="bg-indigo-700 border-hidden text-white" variant="outline" onClick={() => router.back()}>
           Volver
         </Button>
       </div>
 
-      <Card>
-        <CardContent className="p-4 grid gap-2">
-          <div className="text-sm">
+      <Card className="bg-zinc-800">
+        <CardContent className="p-4 grid gap-2 ">
+          <div className=" text-sm">
             <span className="font-semibold">Depósito:</span>{" "}
             {movimiento.deposito?.nombre} ({movimiento.deposito?.ciudad})
           </div>
@@ -111,8 +111,8 @@ export default function MovimientoDetallePage() {
       </Card>
 
       {/* Agregar ítems */}
-      <Card>
-        <CardContent className="p-4">
+      <Card className="bg-zinc-800">
+        <CardContent className="p-4 text-zinc-400">
           <form onSubmit={handleAgregar} className="flex flex-wrap items-end gap-3">
             <div className="flex flex-col min-w-[280px]">
               <label className="text-sm mb-1">Repuesto del depósito</label>
@@ -145,7 +145,7 @@ export default function MovimientoDetallePage() {
               />
             </div>
 
-            <Button type="submit" disabled={!puedeAgregar}>
+            <Button className="bg-indigo-700 text-white" type="submit" disabled={!puedeAgregar}>
               Agregar ítem
             </Button>
           </form>
@@ -153,10 +153,10 @@ export default function MovimientoDetallePage() {
       </Card>
 
       {/* Lista de ítems */}
-      <Card>
-        <CardContent className="p-4">
+      <Card className="bg-zinc-800">
+        <CardContent className="p-4 text-zinc-400">
           {detalles.length === 0 ? (
-            <p className="text-sm text-gray-600">Sin ítems cargados.</p>
+            <p className="text-sm text-red-500">Sin ítems cargados.</p>
           ) : (
             <div className="grid gap-2">
               {detalles.map((d: any) => (
@@ -175,6 +175,7 @@ export default function MovimientoDetallePage() {
                   </div>
                   {!deshabilitado && (
                     <Button
+                      className="bg-indigo-700"
                       variant="destructive"
                       onClick={() => handleEliminar(d._id)}
                     >
@@ -188,7 +189,7 @@ export default function MovimientoDetallePage() {
         </CardContent>
       </Card>
 
-      <div className="flex justify-end gap-3">
+      <div className="flex justify-center gap-3 bg-indigo-700 text-white rounded w-100 ml-144">
         {!deshabilitado && (
           <Button onClick={handleConfirmar} disabled={detalles.length === 0}>
             Confirmar movimiento
