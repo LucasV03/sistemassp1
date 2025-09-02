@@ -94,17 +94,42 @@ export const listarTraspasos = query({
   args: {},
   handler: async (ctx) => {
     const traspasos = await ctx.db.query("traspasos").collect();
+
     return Promise.all(
       traspasos.map(async (t) => {
-        const detalles = await ctx.db
+        // Origen y destino
+        const origen = await ctx.db.get(t.origenId);
+        const destino = await ctx.db.get(t.destinoId);
+
+        // Traer detalles y enriquecer con datos de repuesto
+        const detallesRaw = await ctx.db
           .query("detalle_traspaso")
-          .withIndex("byTraspaso", (q) => q.eq("traspasoId", t._id))
+          .filter((q) => q.eq(q.field("traspasoId"), t._id))
           .collect();
-        return { ...t, detalles };
+
+        const detalles = await Promise.all(
+          detallesRaw.map(async (d) => {
+            const repuesto = await ctx.db.get(d.repuestoId);
+            return {
+              ...d,
+              repuestoCodigo: repuesto?.codigo ?? "—",
+              repuestoNombre: repuesto?.nombre ?? "Repuesto sin nombre",
+            };
+          })
+        );
+
+        // Devolver objeto listo para frontend
+        return {
+          ...t,
+          origenNombre: origen?.nombre ?? "??",
+          destinoNombre: destino?.nombre ?? "??",
+          detalles,
+        };
       })
     );
   },
 });
+
 
 // Listar traspasos pendientes
 export const listarTraspasosPendientes = query({
