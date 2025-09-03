@@ -76,7 +76,7 @@ export default function TraspasosPage() {
                   ))}
                 </ul>
 
-                {/* 👇 Mostrar total ya calculado */}
+                {/* 👇 Mostrar total ESTO ES SOLO VISUAL NO MODIFICA LA TABLA TRASPASOS (VERA MAKE IT) */}
                 <p className="mt-3 text-zinc-300 font-semibold">
                   Total: <span className="text-white">{total}</span> unidades
                 </p>
