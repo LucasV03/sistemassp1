@@ -10,11 +10,21 @@ import { Button } from "@/components/ui/button";
 
 export default function EditarDepositoPage({ params }: { params: { id: string } }) {
   const router = useRouter();
-
+const { id } = params;
   // Traer depósito específico
   const deposito = useQuery(api.depositos.obtener, { id: params.id as any });
   const actualizarDeposito = useMutation(api.depositos.actualizar);
 
+  const traspasos = useQuery(api.traspasos.listarPorDeposito, {
+  depositoId: id as any,
+});
+
+    const [filtro, setFiltro] = useState<"todos" | "pendientes" | "confirmados">("todos");
+
+const traspasosFiltrados = traspasos?.filter(t => {
+  if (filtro === "todos") return true;
+  return t.estado === filtro;
+});
   // Estado local
   const [form, setForm] = useState({
     nombre: "",

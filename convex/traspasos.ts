@@ -2,38 +2,6 @@ import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 
 // Crear traspaso con detalles
-export const crearTraspaso = mutation({
-  args: {
-    origenId: v.id("depositos"),
-    destinoId: v.id("depositos"),
-    usuario: v.string(),
-    detalles: v.array(
-      v.object({
-        repuestoId: v.id("repuestos"),
-        cantidad: v.number(),
-      })
-    ),
-  },
-  handler: async (ctx, args) => {
-    const traspasoId = await ctx.db.insert("traspasos", {
-      origenId: args.origenId,
-      destinoId: args.destinoId,
-      usuario: args.usuario,
-      fecha: new Date().toISOString(),
-      estado: "pendiente",
-    });
-
-    for (const d of args.detalles) {
-      await ctx.db.insert("detalle_traspaso", {
-        traspasoId,
-        repuestoId: d.repuestoId,
-        cantidad: d.cantidad,
-      });
-    }
-
-    return traspasoId;
-  },
-});
 
 // Confirmar traspaso
 export const confirmarTraspaso = mutation({
@@ -130,7 +98,51 @@ export const listarTraspasos = query({
   },
 });
 
+// convex/traspasos.ts
 
+
+export const listarTodos = query({
+  args: {},
+  handler: async (ctx) => {
+    const traspasos = await ctx.db
+      .query("traspasos")
+      .order("desc") // ordenar por _creationTime (más eficiente que string fecha)
+      .collect();
+
+    const resultados = await Promise.all(
+      traspasos.map(async (t) => {
+        const origen = await ctx.db.get(t.origenId);
+        const destino = await ctx.db.get(t.destinoId);
+
+        // Traer los detalles de cada traspaso
+        const detalles = await ctx.db
+          .query("detalle_traspaso")
+          .withIndex("byTraspaso", (q) => q.eq("traspasoId", t._id))
+          .collect();
+
+        // Enriquecer cada detalle con el repuesto
+        const detallesConRepuestos = await Promise.all(
+          detalles.map(async (d) => {
+            const repuesto = await ctx.db.get(d.repuestoId);
+            return {
+              ...d,
+              repuesto,
+            };
+          })
+        );
+
+        return {
+          ...t,
+          origen,
+          destino,
+          detalles: detallesConRepuestos,
+        };
+      })
+    );
+
+    return resultados;
+  },
+});
 // Listar traspasos pendientes
 export const listarTraspasosPendientes = query({
   args: {},
@@ -146,6 +158,140 @@ export const listarTraspasosPendientes = query({
           .withIndex("byTraspaso", (q) => q.eq("traspasoId", t._id))
           .collect();
         return { ...t, detalles };
+      })
+    );
+  },
+});
+
+export const listarPendientesPorDeposito = query({
+  args: { depositoId: v.id("depositos") },
+  handler: async (ctx, { depositoId }) => {
+    const traspasos = await ctx.db
+      .query("traspasos")
+      .withIndex("byEstado", (q) => q.eq("estado", "pendiente"))
+      .collect();
+
+    // Filtrar solo los que tengan como destino el depósito
+    const filtrados = traspasos.filter((t) => t.destinoId === depositoId);
+
+    return Promise.all(
+      filtrados.map(async (t) => {
+        const origen = await ctx.db.get(t.origenId);
+        const destino = await ctx.db.get(t.destinoId);
+        const detalles = await ctx.db
+          .query("detalle_traspaso")
+          .withIndex("byTraspaso", (q) => q.eq("traspasoId", t._id))
+          .collect();
+
+        return {
+          ...t,
+          origenNombre: origen?.nombre,
+          destinoNombre: destino?.nombre,
+          detalles,
+        };
+      })
+    );
+  },
+});
+
+
+
+export const crearTraspaso = mutation({
+  args: {
+    origenId: v.id("depositos"),
+    destinoId: v.id("depositos"),
+    usuario: v.string(),
+    detalles: v.array(
+      v.object({
+        repuestoId: v.id("repuestos"),
+        cantidad: v.number(),
+      })
+    ),
+  },
+  handler: async (ctx, { origenId, destinoId, usuario, detalles }) => {
+    if (origenId === destinoId) {
+      throw new Error("El depósito de origen y destino no pueden ser iguales");
+    }
+
+    // ✅ Validar stock antes de crear
+    for (const d of detalles) {
+      const repuestoDeposito = await ctx.db
+        .query("repuestos_por_deposito")
+        .withIndex("byDeposito", (q) => q.eq("depositoId", origenId))
+        .filter((q) => q.eq(q.field("repuestoId"), d.repuestoId))
+        .first();
+
+      if (!repuestoDeposito) {
+        throw new Error(
+          `El depósito origen no tiene stock del repuesto ${d.repuestoId}`
+        );
+      }
+
+      if (repuestoDeposito.stock_actual < d.cantidad) {
+        throw new Error(
+          `Stock insuficiente para el repuesto ${d.repuestoId}. Disponible: ${repuestoDeposito.stock_actual}, solicitado: ${d.cantidad}`
+        );
+      }
+    }
+
+    // ✅ Si todo ok, crear traspaso
+    const traspasoId = await ctx.db.insert("traspasos", {
+      origenId,
+      destinoId,
+      fecha: new Date().toISOString(),
+      estado: "pendiente",
+      usuario,
+    });
+
+    for (const d of detalles) {
+      await ctx.db.insert("detalle_traspaso", {
+        traspasoId,
+        repuestoId: d.repuestoId,
+        cantidad: d.cantidad,
+      });
+    }
+
+    return traspasoId;
+  },
+});
+
+export const listarPorDeposito = query({
+  args: { depositoId: v.id("depositos") },
+  handler: async (ctx, { depositoId }) => {
+    const todos = await ctx.db.query("traspasos").order("desc").collect();
+
+    // Comparar Ids con === (no existe .equals)
+    const relacionados = todos.filter(
+      (t) => t.origenId === depositoId || t.destinoId === depositoId
+    );
+
+    return Promise.all(
+      relacionados.map(async (t) => {
+        const origen = await ctx.db.get(t.origenId);
+        const destino = await ctx.db.get(t.destinoId);
+
+        const detallesRaw = await ctx.db
+          .query("detalle_traspaso")
+          .withIndex("byTraspaso", (q) => q.eq("traspasoId", t._id))
+          .collect();
+
+        const detalles = await Promise.all(
+          detallesRaw.map(async (d) => {
+            const repuesto = await ctx.db.get(d.repuestoId);
+            return {
+              ...d,
+              repuestoCodigo: repuesto?.codigo ?? "—",
+              repuestoNombre: repuesto?.nombre ?? "Repuesto sin nombre",
+            };
+          })
+        );
+
+        return {
+          ...t,
+          origenNombre: origen?.nombre ?? "Desconocido",
+          destinoNombre: destino?.nombre ?? "Desconocido",
+          detalles,
+        };
       })
     );
   },

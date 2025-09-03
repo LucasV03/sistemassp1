@@ -1,6 +1,7 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import { Id } from "./_generated/dataModel"
+
 // =========================
 // 1) Crear encabezado de movimiento
 // =========================
@@ -184,6 +185,35 @@ export const transferirEntreDepositos = mutation({
         "Transferencia registrada. Confirmar ambos movimientos para actualizar stock.",
       movimientos: { egreso: movEgresoId, ingreso: movIngresoId },
     };
+  },
+});
+
+export const listarTodos = query({
+  args: {},
+  handler: async (ctx) => {
+    const movimientos = await ctx.db.query("movimientos_stock").collect();
+
+    // Hacer joins para enriquecer la data
+    const resultados = await Promise.all(
+      movimientos.map(async (m) => {
+        const deposito = await ctx.db.get(m.depositoId);
+        const tipoComprobante = m.tipoComprobanteId
+          ? await ctx.db.get(m.tipoComprobanteId)
+          : null;
+        const tipoMovimiento = m.tipoMovimientoId
+          ? await ctx.db.get(m.tipoMovimientoId)
+          : null;
+
+        return {
+          ...m,
+          deposito,
+          tipoComprobante,
+          tipoMovimiento,
+        };
+      })
+    );
+
+    return resultados;
   },
 });
 
@@ -371,6 +401,51 @@ export const listarRepuestosEnDeposito = query({
           repuesto: repuesto
             ? { _id: repuesto._id, codigo: repuesto.codigo, nombre: repuesto.nombre }
             : null,
+        };
+      })
+    );
+  },
+});
+
+
+export const listarPorDeposito = query({
+  args: { depositoId: v.id("depositos") },
+  handler: async (ctx, { depositoId }) => {
+    const movimientos = await ctx.db
+      .query("movimientos_stock")
+      .filter((q) => q.eq(q.field("depositoId"), depositoId))
+      .order("desc")
+      .collect();
+
+    return Promise.all(
+      movimientos.map(async (m) => {
+        const tipoComprobante = await ctx.db.get(m.tipoComprobanteId);
+        const tipoMovimiento = await ctx.db.get(m.tipoMovimientoId);
+
+        const detallesRaw = await ctx.db
+          .query("detalle_movimiento")
+          .filter((q) => q.eq(q.field("movimientoId"), m._id))
+          .collect();
+
+        const detalles = await Promise.all(
+          detallesRaw.map(async (d) => {
+            const repuestoPorDeposito = await ctx.db.get(d.repuestoDepositoId);
+            const repuesto = repuestoPorDeposito
+              ? await ctx.db.get(repuestoPorDeposito.repuestoId)
+              : null;
+
+            return {
+              ...d,
+              repuestoNombre: repuesto?.nombre ?? "Desconocido",
+            };
+          })
+        );
+
+        return {
+          ...m,
+          tipoComprobante: tipoComprobante?.nombre ?? "Desconocido",
+          tipoMovimiento: tipoMovimiento?.nombre ?? "Desconocido",
+          detalles,
         };
       })
     );

@@ -88,3 +88,32 @@ export const buscarPorCiudad = query({
       .collect();
   },
 });
+
+export const getDeposito = query({
+  args: { depositoId: v.id("depositos") },
+  handler: async (ctx, { depositoId }) => {
+    return await ctx.db.get(depositoId);
+  },
+});
+
+export const listarStockPorDeposito = query({
+  args: { depositoId: v.id("depositos") },
+  handler: async (ctx, { depositoId }) => {
+    const stock = await ctx.db
+      .query("repuestos_por_deposito")
+      .filter((q) => q.eq(q.field("depositoId"), depositoId))
+      .collect();
+
+    const stockConRepuesto = await Promise.all(
+      stock.map(async (s) => {
+        const repuesto = await ctx.db.get(s.repuestoId);
+        return {
+          ...s,
+          repuesto,
+        };
+      })
+    );
+
+    return stockConRepuesto;
+  },
+});

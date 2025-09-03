@@ -19,7 +19,8 @@ export default function NuevoTraspasoPage() {
     setDetalles([...detalles, { repuestoId: "", cantidad: 1 }]);
 
   const handleSave = async () => {
-    if (!origen || !destino || detalles.length === 0) return alert("Completar!");
+  if (!origen || !destino || detalles.length === 0) return alert("Completar!");
+  try {
     await crearTraspaso({
       origenId: origen as any,
       destinoId: destino as any,
@@ -30,7 +31,11 @@ export default function NuevoTraspasoPage() {
       })),
     });
     window.location.href = "/traspasos";
-  };
+  } catch (err: any) {
+    alert(err.message); 
+  }
+};
+
 
   return (
     <div className="p-6 space-y-6">
