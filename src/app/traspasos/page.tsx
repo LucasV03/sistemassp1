@@ -40,7 +40,8 @@ export default function TraspasosPage() {
                 </p>
               </div>
               {t.estado === "pendiente" && (
-                <Button
+                <Button 
+                  className="bg-indigo-700 text-white"
                   onClick={() => confirmarTraspaso({ traspasoId: t._id })}
                 >
                   ✅ Confirmar
