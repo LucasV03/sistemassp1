@@ -23,7 +23,7 @@ export default function TraspasosPage() {
             className="border border-white rounded-xl p-4 shadow-sm flex flex-col gap-2 bg-zinc-800"
           >
             <div className="flex justify-between">
-              <div>
+              <div className="text-zinc-300">
                 <p><b>Origen:</b> <span> {t.origenNombre}</span></p>
                 <p><b>Destino:</b> <span>{t.destinoNombre}</span></p>
                 <p>
@@ -50,17 +50,17 @@ export default function TraspasosPage() {
             </div>
 
             <div>
-  <b>Detalles:</b>
+  <b className="text-zinc-300 ">Detalles:</b>
   <ul className="space-y-1 mt-2">
     {t.detalles.map((d) => (
       <li
         key={d._id}
         className="flex justify-between items-center border-b py-1 text-sm"
       >
-        <span>
-          🔧 <b>{d.repuestoCodigo}</b> — {d.repuestoNombre}
+        <span className="text-white ">
+          🔧 <b>{d.repuestoCodigo}</b> — <span>{d.repuestoNombre}</span>
         </span>
-        <span className="font-semibold text-green-600">x{d.cantidad}</span>
+        <span className="text-green-600">x{d.cantidad}</span>
       </li>
     ))}
   </ul>
