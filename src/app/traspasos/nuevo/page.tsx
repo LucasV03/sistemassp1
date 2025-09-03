@@ -39,14 +39,14 @@ export default function NuevoTraspasoPage() {
 
   return (
     <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-bold">➕ Nuevo Traspaso</h1>
+      <h1 className="text-2xl font-bold text-white">➕ Nuevo Traspaso</h1>
 
-      <div className="space-y-4">
+      <div className="space-y-4 bg-zinc-800 p-8 border rounded-xl border-white">
         {/* Selección depósitos */}
         <div>
-          <label>Origen</label>
+          <label className="text-white ">Origen</label>
           <select
-            className="border p-2 rounded w-full"
+            className="border p-2 rounded w-full text-zinc-500"
             value={origen}
             onChange={(e) => setOrigen(e.target.value)}
           >
@@ -60,9 +60,9 @@ export default function NuevoTraspasoPage() {
         </div>
 
         <div>
-          <label>Destino</label>
+          <label className="text-white" >Destino</label>
           <select
-            className="border p-2 rounded w-full"
+            className="border p-2 rounded w-full text-zinc-500"
             value={destino}
             onChange={(e) => setDestino(e.target.value)}
           >
@@ -77,11 +77,11 @@ export default function NuevoTraspasoPage() {
 
         {/* Detalles */}
         <div className="space-y-2">
-          <h2 className="font-semibold">Detalles</h2>
+          <h2 className="font-semibold text-white">Detalles</h2>
           {detalles.map((d, idx) => (
             <div key={idx} className="flex gap-2">
               <select
-                className="border p-2 rounded flex-1"
+                className="border p-2 rounded flex-1 text-zinc-500"
                 value={d.repuestoId}
                 onChange={(e) => {
                   const copy = [...detalles];
@@ -100,7 +100,7 @@ export default function NuevoTraspasoPage() {
                 type="number"
                 min="1"
                 value={d.cantidad}
-                className="border p-2 rounded w-24"
+                className="border p-2 rounded w-24 text-zinc-500"
                 onChange={(e) => {
                   const copy = [...detalles];
                   copy[idx].cantidad = parseInt(e.target.value);
@@ -109,12 +109,12 @@ export default function NuevoTraspasoPage() {
               />
             </div>
           ))}
-          <Button variant="outline" onClick={addDetalle}>
+          <Button  className="bg-green-700 border-hidden text-white " variant="outline" onClick={addDetalle}>
             ➕ Agregar repuesto
           </Button>
         </div>
 
-        <Button className="w-full" onClick={handleSave}>
+        <Button className="w-full bg-indigo-700 text-white w-80 ml-140" onClick={handleSave}>
           Guardar traspaso
         </Button>
       </div>

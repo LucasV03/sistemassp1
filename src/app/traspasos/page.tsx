@@ -10,22 +10,22 @@ export default function TraspasosPage() {
   if (!traspasos) return <div>Cargando...</div>;
 
   return (
-    <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-bold">📦 Traspasos</h1>
+    <div className="p-6 space-y-6 ">
+      <h1 className="text-2xl font-bold text-white">📦 Traspasos</h1>
       <a href="/traspasos/nuevo">
-        <Button>➕ Nuevo Traspaso</Button>
+        <Button className="text-white bg-indigo-700 mb-3">➕ Nuevo Traspaso</Button>
       </a>
 
       <div className="space-y-4">
         {traspasos.map((t) => (
           <div
             key={t._id}
-            className="border rounded-xl p-4 shadow-sm flex flex-col gap-2"
+            className="border border-white rounded-xl p-4 shadow-sm flex flex-col gap-2 bg-zinc-800"
           >
             <div className="flex justify-between">
               <div>
-                <p><b>Origen:</b> {t.origenNombre}</p>
-<p><b>Destino:</b> {t.destinoNombre}</p>
+                <p><b>Origen:</b> <span> {t.origenNombre}</span></p>
+                <p><b>Destino:</b> <span>{t.destinoNombre}</span></p>
                 <p>
                   <b>Estado:</b>{" "}
                   <span
@@ -59,7 +59,7 @@ export default function TraspasosPage() {
         <span>
           🔧 <b>{d.repuestoCodigo}</b> — {d.repuestoNombre}
         </span>
-        <span className="font-semibold text-blue-600">x{d.cantidad}</span>
+        <span className="font-semibold text-green-600">x{d.cantidad}</span>
       </li>
     ))}
   </ul>
