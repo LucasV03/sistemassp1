@@ -55,12 +55,12 @@ export default function TraspasosPage() {
     {t.detalles.map((d) => (
       <li
         key={d._id}
-        className="flex justify-between items-center border-b py-1 text-sm"
+        className="flex  items-center border-b py-1 text-sm"
       >
         <span className="text-white ">
           🔧 <b>{d.repuestoCodigo}</b> — <span>{d.repuestoNombre}</span>
         </span>
-        <span className="text-green-600">x{d.cantidad}</span>
+        <span className="ml-3 text-green-600">x{d.cantidad}</span>
       </li>
     ))}
   </ul>
