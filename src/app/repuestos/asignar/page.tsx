@@ -24,6 +24,7 @@ export default function AsignarRepuestoPage() {
   };
 
   return (
+
     <div>
       <select
         onChange={(e) =>

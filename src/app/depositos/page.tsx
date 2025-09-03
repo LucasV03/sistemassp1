@@ -2,84 +2,65 @@
 
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from "@/components/ui/select";
+import Link from "next/link";
 
 export default function DepositosPage() {
   // === DATA ===
   const depositos = useQuery(api.depositos.listar);
-  const crearDeposito = useMutation(api.depositos.crear);
-  const actualizarDeposito = useMutation(api.depositos.actualizar);
   const eliminarDeposito = useMutation(api.depositos.eliminar);
 
-  // === FORM STATE ===
-  const [form, setForm] = useState({
-  id: null as string | null,
-  nombre: "",
-  provincia: "",
-  ciudad: "",
-  calle: "",
-  codigoPostal: "",
-  capacidad_total: "" as string | number,
-});
+  // Ocupación de cada depósito
+  const ocupados = useQuery(api.repuestos_por_deposito.ocupadoPorDeposito, {
+    depositoId: undefined,
+  });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // === SELECT DE DEPÓSITO ===
+  const [selectedDeposito, setSelectedDeposito] = useState<string | "all">("all");
 
-    if (form.id) {
-      // Actualizar
-      await actualizarDeposito({
-        id: form.id as any,
-        nombre: form.nombre,
-        provincia: form.provincia,
-        ciudad: form.ciudad,
-        calle: form.calle,
-        codigoPostal: form.codigoPostal,
-        capacidad_total: form.capacidad_total
-  ? Number(form.capacidad_total)
-  : undefined,
+  const repuestosPorDeposito = useQuery(
+    api.repuestos_por_deposito.listarPorDeposito,
+    {
+      depositoId: selectedDeposito === "all" ? undefined : (selectedDeposito as any),
+    }
+  );
 
-      });
-    } else {
-      // Crear
-      await crearDeposito({
-        nombre: form.nombre,
-        provincia: form.provincia,
-        ciudad: form.ciudad,
-        calle: form.calle,
-        codigoPostal: form.codigoPostal,
-        capacidad_total: form.capacidad_total
-  ? Number(form.capacidad_total)
-  : undefined,
+  // === CALCULO DE ESTADÍSTICAS ===
+  const stats = useMemo(() => {
+    if (!depositos || !ocupados) return null;
 
-      });
+    let filtered = depositos;
+    if (selectedDeposito !== "all") {
+      filtered = depositos.filter((d: any) => d._id === selectedDeposito);
     }
 
-    // Resetear formulario
-    setForm({
-      id: null,
-      nombre: "",
-      provincia: "",
-      ciudad: "",
-      calle: "",
-      codigoPostal: "",
-      capacidad_total: "",
-    });
-  };
+    let capacidadTotal = 0;
+    let ocupado = 0;
 
-  const handleEdit = (d: any) => {
-    setForm({
-      id: d._id,
-      nombre: d.nombre,
-      provincia: d.provincia ?? "",
-      ciudad: d.ciudad ?? "",
-      calle: d.calle ?? "",
-      codigoPostal: d.codigoPostal ?? "",
-      capacidad_total: d.capacidad_total ?? "",
-    });
-  };
+    for (const d of filtered) {
+      capacidadTotal += d.capacidad_total || 0;
+      ocupado += ocupados[d._id] || 0;
+    }
+
+    const porcentaje =
+      capacidadTotal > 0 ? ((ocupado / capacidadTotal) * 100).toFixed(1) : 0;
+
+    return {
+      capacidadTotal,
+      ocupado,
+      porcentaje,
+      cantidadDepositos: filtered.length,
+    };
+  }, [depositos, ocupados, selectedDeposito]);
 
   const handleDelete = async (id: string) => {
     await eliminarDeposito({ id: id as any });
@@ -87,96 +68,143 @@ export default function DepositosPage() {
 
   return (
     <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-bold text-white">Gestión de Depósitos</h1>
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold text-white">Gestión de Depósitos</h1>
+        <Link href="/depositos/nuevo">
+          <Button className="bg-indigo-700">Nuevo depósito</Button>
+        </Link>
+      </div>
 
-      {/* === FORM === */}
-      <Card className="bg-zinc-800">
-        <CardContent className="p-4 text-white">
-          <form onSubmit={handleSubmit} className="grid gap-3 ">
-            <Input
-              className="text-zinc-300"
-              placeholder="Nombre"
-              value={form.nombre}
-              onChange={(e) => setForm({ ...form, nombre: e.target.value })}
-              required
-            />
-            <Input
-              className="text-zinc-300"
-              placeholder="Provincia"
-              value={form.provincia}
-              onChange={(e) => setForm({ ...form, provincia: e.target.value })}
-              required
-            />
-            <Input
-              className="text-zinc-300"
-              placeholder="Ciudad"
-              value={form.ciudad}
-              onChange={(e) => setForm({ ...form, ciudad: e.target.value })}
-              required
-            />
-            <Input
-              className="text-zinc-300"
-              placeholder="Calle"
-              value={form.calle}
-              onChange={(e) => setForm({ ...form, calle: e.target.value })}
-              required
-            />
-            <Input
-              className="text-zinc-300"
-              placeholder="Código Postal"
-              value={form.codigoPostal}
-              onChange={(e) =>
-                setForm({ ...form, codigoPostal: e.target.value })
-              }
-              required
-            />
-            <Input
-              className="text-zinc-300"
-              placeholder="Capacidad total"
-              type="number"
-              value={form.capacidad_total}
-              onChange={(e) =>
-                setForm({ ...form, capacidad_total: e.target.value })
-              }
-            />
-            <Button type="submit" className="bg-indigo-700 w-100 ml-125 ">
-              {form.id ? "Actualizar depósito" : "Crear depósito"}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+      {/* === CUADROS DE ESTADÍSTICAS === */}
+      {stats && (
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+            <Card className="bg-zinc-800 text-white">
+              <CardContent className="p-4">
+                <p className="text-sm">Capacidad total</p>
+                <p className="text-xl font-bold">{stats.capacidadTotal}</p>
+              </CardContent>
+            </Card>
+            <Card className="bg-zinc-800 text-white">
+              <CardContent className="p-4">
+                <p className="text-sm">Ocupado</p>
+                <p className="text-xl font-bold">{stats.ocupado}</p>
+              </CardContent>
+            </Card>
+            <Card className="bg-zinc-800 text-white">
+              <CardContent className="p-4">
+                <p className="text-sm">% Ocupado</p>
+                <p className="text-xl font-bold">{stats.porcentaje}%</p>
+              </CardContent>
+            </Card>
+            <Card className="bg-zinc-800 text-white">
+              <CardContent className="p-4">
+                <p className="text-sm"># Depósitos</p>
+                <p className="text-xl font-bold">{stats.cantidadDepositos}</p>
+              </CardContent>
+            </Card>
+          </div>
 
-      {/* === LISTA === */}
-      <div className="grid gap-4  rounded-xl">
-        {depositos?.map((d: any) => (
-          <Card className="text-zinc-400 bg-zinc-800 " key={d._id}>
-            <CardContent className="flex items-center justify-between p-4">
-              <div>
-                <p className="font-semibold text-white">{d.nombre}</p>
-                <p className="text-sm text-gray-600">
-                  {d.provincia} - {d.ciudad}
-                </p>
-                <p className="text-sm">{d.calle}</p>
-                <p className="text-sm">CP: {d.codigoPostal}</p>
-                <p className="text-sm">
-                  Capacidad: {d.capacidad_total ?? "Sin límite"}
-                </p>
-              </div>
-              <div className="flex gap-2 ">
-                <Button className="bg-indigo-700 border-hidden  " variant="outline" onClick={() => handleEdit(d)}>
+          {/* === SELECT DE DEPÓSITO === */}
+          <div className="mt-4">
+            <Select
+              value={selectedDeposito}
+              onValueChange={(val) => setSelectedDeposito(val)}
+            >
+              <SelectTrigger className="w-[250px] bg-slate-800 text-white border border-gray-600 rounded-lg px-3 py-2  ">
+                <SelectValue placeholder="Selecciona depósito" />
+              </SelectTrigger>
+              <SelectContent className="bg-gray-800 text-white">
+                <SelectItem value="all">Todos</SelectItem>
+                {depositos?.map((d: any) => (
+                  <SelectItem key={d._id} value={d._id}>
+                    {d.nombre}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </>
+      )}
+
+      {/* === LISTA DE DEPÓSITOS === */}
+      <div className="grid gap-4 rounded-xl">
+  {depositos?.map((d: any) => {
+    // Mostrar SIEMPRE todos los depósitos
+    return (
+      <Card className="text-zinc-400 bg-zinc-800" key={d._id}>
+        <CardContent className="p-4">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="font-semibold text-white">{d.nombre}</p>
+              <p className="text-sm text-gray-600">
+                {d.provincia} - {d.ciudad}
+              </p>
+              <p className="text-sm">{d.calle}</p>
+              <p className="text-sm">CP: {d.codigoPostal}</p>
+              <p className="text-sm">
+                Capacidad: {d.capacidad_total ?? "Sin límite"}
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Link href={`/depositos/${d._id}`}>
+                <Button 
+                className="bg-sky-600 border-hidden text-white"
+                variant="outline">Ver detalles</Button>
+              </Link>
+              <Link href={`/depositos/${d._id}/editar`}>
+                <Button
+                  className="bg-indigo-700 border-hidden text-white"
+                  variant="outline"
+                >
                   Editar
                 </Button>
-                <Button
-                  variant="destructive"
-                  onClick={() => handleDelete(d._id)}
-                >
-                  Eliminar
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+              </Link>
+              <Button
+                className="bg-red-600 border-hidden"
+                variant="destructive"
+                onClick={() => handleDelete(d._id)}
+              >
+                Eliminar
+              </Button>
+            </div>
+          </div>
+
+          {/* Mostrar repuestos SOLO si el depósito seleccionado coincide */}
+          {selectedDeposito === d._id && repuestosPorDeposito && (
+            <Card className="bg-zinc-900 text-white mt-6">
+              <CardContent className="p-4">
+                <h2 className="text-lg font-bold mb-3">
+                  Repuestos en este depósito:
+                </h2>
+                <div className="space-y-3">
+                  {repuestosPorDeposito.map((r: any) => (
+                    <div
+                      key={r._id}
+                      className="flex items-center justify-between"
+                    >
+                      <span>{r.nombre}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-400">
+                          {r.cantidad} unidades
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                  {repuestosPorDeposito.length === 0 && (
+                    <p className="text-sm text-gray-400">
+                      No hay repuestos en este depósito.
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </CardContent>
+      </Card>
+    );
+  })}
+</div>
     </div>
   );
 }

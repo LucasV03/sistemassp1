@@ -37,11 +37,62 @@ export const asignar = mutation({
 
 // Listar repuestos por depósito (para usar en el remito)
 export const listarPorDeposito = query({
-  args: { depositoId: v.id("depositos") },
+  args: { depositoId: v.optional(v.id("depositos")) },
   handler: async (ctx, args) => {
-    return await ctx.db
-      .query("repuestos_por_deposito")
-      .filter(q => q.eq(q.field("depositoId"), args.depositoId))
-      .collect();
+    let registros = ctx.db.query("repuestos_por_deposito");
+
+    if (args.depositoId) {
+      registros = registros.filter((q) => q.eq(q.field("depositoId"), args.depositoId));
+    }
+
+    const lista = await registros.collect();
+
+    const result = [];
+    for (const r of lista) {
+      const repuesto = await ctx.db.get(r.repuestoId);
+      result.push({
+        _id: r._id,
+        repuestoId: r.repuestoId,
+        nombre: repuesto?.nombre ?? "Desconocido",
+        cantidad: r.stock_actual,
+      });
+    }
+
+    return result;
+  },
+});
+
+export const ocupadoPorDeposito = query({
+  args: { depositoId: v.optional(v.id("depositos")) },
+  handler: async (ctx, args) => {
+    let repuestosQuery = ctx.db.query("repuestos_por_deposito");
+
+    if (args.depositoId) {
+      repuestosQuery = repuestosQuery.filter((q) =>
+        q.eq(q.field("depositoId"), args.depositoId)
+      );
+    }
+
+    const repuestos = await repuestosQuery.collect();
+
+    // Agrupamos por depósito
+    const stats: Record<string, number> = {};
+
+    for (const r of repuestos) {
+      stats[r.depositoId] = (stats[r.depositoId] || 0) + r.stock_actual;
+    }
+
+    return stats;
+  },
+});
+
+
+export const actualizarCantidad = mutation({
+  args: {
+    id: v.id("repuestos_por_deposito"),
+    stock_actual: v.number(),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.id, { stock_actual: args.stock_actual });
   },
 });
