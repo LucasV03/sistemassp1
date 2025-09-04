@@ -43,19 +43,19 @@ export default function DepositoPage() {
 
   return (
     <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-bold">🏭 Depósito {deposito.nombre}</h1>
+      <h1 className="text-2xl font-bold text-white">🏭 Depósito {deposito.nombre}</h1>
 
       {/* ===== STOCK ===== */}
-      <div className="border rounded-xl p-4 shadow-sm">
-        <h2 className="text-xl font-semibold mb-2">📦 Stock de Repuestos</h2>
+      <div className="border border-white rounded-xl p-4 shadow-sm bg-zinc-800">
+        <h2 className="text-xl font-semibold mb-2 text-zinc-300">📦 Stock de Repuestos</h2>
         {stock.length === 0 ? (
-          <p className="text-gray-500">No hay repuestos en este depósito</p>
+          <p className="text-red-600">No hay repuestos en este depósito</p>
         ) : (
           <ul className="space-y-1">
             {stock.map((s) => (
-              <li key={s._id} className="flex justify-between items-center border-b py-1 text-sm">
-                <span>🔧 {s.repuesto?.nombre ?? "Desconocido"}</span>
-                <span className="font-semibold text-blue-600">{s.stock_actual}</span>
+              <li key={s._id} className="flex items-center border-b py-1 text-sm">
+                <span className="text-zinc-400">🔧 {s.repuesto?.nombre ?? "Desconocido"}</span>
+                <span className="font-semibold pl-5 text-green-600">x{s.stock_actual}</span>
               </li>
             ))}
           </ul>
@@ -63,8 +63,8 @@ export default function DepositoPage() {
       </div>
 
       {/* ===== TRASPASOS + MOVIMIENTOS ===== */}
-      <div className="border rounded-xl p-4 shadow-sm">
-        <h2 className="text-xl font-semibold mb-2">📦 Traspasos y Movimientos</h2>
+      <div className="border border-white rounded-xl p-4 shadow-sm bg-zinc-800">
+        <h2 className="text-xl font-semibold mb-2 text-zinc-300">📦 Traspasos y Movimientos</h2>
 
         {/* Filtros */}
         <div className="flex gap-2 mb-4">
@@ -80,19 +80,19 @@ export default function DepositoPage() {
         </div>
 
         {itemsFiltrados.length === 0 ? (
-          <p className="text-gray-500">No hay items con este filtro</p>
+          <p className="text-red-600">No hay items con este filtro</p>
         ) : (
           <div className="space-y-4">
             {itemsFiltrados.map((i) => (
-              <div key={i._id} className="border rounded-xl p-4 shadow-sm flex flex-col gap-2">
+              <div key={i._id} className="border rounded-xl p-4 shadow-sm flex flex-col gap-2 border-white">
                 <div className="flex justify-between">
                   <div>
                     {i.tipo === "traspaso" ? (
                       <>
-                        <p><b>Origen:</b> {i.origenNombre}</p>
-                        <p><b>Destino:</b> {i.destinoNombre}</p>
+                        <p><b className="text-zinc-300">Origen:</b> <span className="text-zinc-300">{i.origenNombre} </span></p>
+                        <p><b className="text-zinc-300">Destino:</b> <span className="text-zinc-300">{i.destinoNombre}</span></p>
                         <p>
-                          <b>Estado:</b>{" "}
+                          <b className="text-zinc-300">Estado:</b>{" "}
                           <span className={i.estado === "confirmado" ? "text-green-600" : "text-yellow-600"}>
                             {i.estado}
                           </span>
@@ -100,9 +100,9 @@ export default function DepositoPage() {
                       </>
                     ) : (
                       <>
-                        <p><b>Movimiento:</b> {i.tipoMovimiento}</p>
-                        <p><b>Comprobante:</b> {i.tipoComprobante}</p>
-                        <p><b>Fecha:</b> {i.fecha_registro}</p>
+                        <p><b className="text-zinc-300">Movimiento:</b> <span className="text-zinc-300">{i.tipoMovimiento}</span></p>
+                        <p><b className="text-zinc-300">Comprobante:</b> <span className="text-zinc-300">{i.tipoComprobante}</span></p>
+                        <p><b className="text-zinc-300">Fecha:</b> <span className="text-zinc-300">{i.fecha_registro}</span></p>
                       </>
                     )}
                   </div>
@@ -113,19 +113,20 @@ export default function DepositoPage() {
                 </div>
 
                 <div>
-                  <b>Detalles:</b>
+                  <b className="text-zinc-300">Detalles:</b>
                   <ul className="space-y-1 mt-2">
   {i.detalles.map((d) => (
     <li
       key={d._id}
-      className="flex justify-between items-center border-b py-1 text-sm"
+      className="flex items-center border-b py-1 text-sm"
     >
-      <span>
+      🔧
+      <span className="text-zinc-200">
         {i.tipo === "traspaso"
           ? d.repuestoNombre
           : d.repuestoNombre /* movimientos usan repuestoNombre directamente */}
       </span>
-      <span className="font-semibold text-blue-600">x{d.cantidad}</span>
+      <span className="font-semibold text-green-600 pl-2">x{d.cantidad}</span>
     </li>
   ))}
 </ul>
