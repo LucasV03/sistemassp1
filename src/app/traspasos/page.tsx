@@ -30,9 +30,11 @@ export default function TraspasosPage() {
             >
               <div className="flex justify-between">
                 <div className="text-zinc-300">
-                  <p>
+                  <p> 
                     <b>Origen:</b> <span>{t.origenNombre}</span>
+                    <span className="ml-280">{new Date(t.fecha).toLocaleString()}</span>
                   </p>
+                  
                   <p>
                     <b>Destino:</b> <span>{t.destinoNombre}</span>
                   </p>
