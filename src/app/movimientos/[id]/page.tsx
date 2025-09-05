@@ -111,46 +111,47 @@ export default function MovimientoDetallePage() {
       </Card>
 
       {/* Agregar ítems */}
-      <Card className="bg-zinc-800">
-        <CardContent className="p-4 text-zinc-400">
-          <form onSubmit={handleAgregar} className="flex flex-wrap items-end gap-3">
-            <div className="flex flex-col min-w-[280px]">
-              <label className="text-sm mb-1">Repuesto del depósito</label>
-              <select
-                disabled={deshabilitado}
-                className="border rounded px-3 py-2"
-                value={repuestoDepositoId}
-                onChange={(e) =>
-                  setRepuestoDepositoId(e.target.value as Id<"repuestos_por_deposito">)
-                }
-              >
-                <option value="">-- Seleccione --</option>
-                {repuestosEnDeposito.map((rd: any) => (
-                  <option key={rd._id} value={rd._id}>
-                    {rd.repuesto?.codigo} - {rd.repuesto?.nombre} | Stock: {rd.stock_actual ?? 0}
-                  </option>
-                ))}
-              </select>
-            </div>
+      {!deshabilitado && (
+  <Card className="bg-zinc-800">
+    <CardContent className="p-4 text-zinc-400">
+      <form onSubmit={handleAgregar} className="flex flex-wrap items-end gap-3">
+        
+        <div className="flex flex-col min-w-[280px]">
+          <label className="text-sm mb-1">Repuesto del depósito</label>
+          <select
+            className="border rounded px-3 py-2"
+            value={repuestoDepositoId}
+            onChange={(e) =>
+              setRepuestoDepositoId(e.target.value as Id<"repuestos_por_deposito">)
+            }
+          >
+            <option value="">-- Seleccione --</option>
+            {repuestosEnDeposito.map((rd: any) => (
+              <option key={rd._id} value={rd._id}>
+                {rd.repuesto?.codigo} - {rd.repuesto?.nombre} | Stock: {rd.stock_actual ?? 0}
+              </option>
+            ))}
+          </select>
+        </div>
 
-            <div className="flex flex-col w-40">
-              <label className="text-sm mb-1">Cantidad</label>
-              <input
-                disabled={deshabilitado}
-                type="number"
-                min={1}
-                value={cantidad}
-                onChange={(e) => setCantidad(Number(e.target.value))}
-                className="border rounded px-3 py-2"
-              />
-            </div>
+        <div className="flex flex-col w-40">
+          <label className="text-sm mb-1">Cantidad</label>
+          <input
+            type="number"
+            min={1}
+            value={cantidad}
+            onChange={(e) => setCantidad(Number(e.target.value))}
+            className="border rounded px-3 py-2"
+          />
+        </div>
 
-            <Button className="bg-indigo-700 text-white" type="submit" disabled={!puedeAgregar}>
-              Agregar ítem
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+        <Button className="bg-indigo-700 text-white" type="submit" disabled={!puedeAgregar}>
+          Agregar ítem
+        </Button>
+      </form>
+    </CardContent>
+  </Card>
+)}
 
       {/* Lista de ítems */}
       <Card className="bg-zinc-800">
@@ -168,10 +169,12 @@ export default function MovimientoDetallePage() {
                     <div className="font-medium">
                       {d.repuesto?.codigo} - {d.repuesto?.nombre}
                     </div>
-                    <div className="opacity-75">
-                      Cantidad: {d.cantidad} | Stock actual en depósito:{" "}
-                      {d.repuestoDeposito?.stock_actual ?? 0}
-                    </div>
+                    <div className="opacity-75 space-x-2">
+  <span>Cantidad: {d.cantidad}</span>
+  <span className="text-red-500">Previo: {d.stock_previo}</span>
+  <span className="text-green-500">Resultante: {d.stock_resultante}</span>
+</div>
+
                   </div>
                   {!deshabilitado && (
                     <Button

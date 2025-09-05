@@ -193,7 +193,6 @@ export const listarTodos = query({
   handler: async (ctx) => {
     const movimientos = await ctx.db.query("movimientos_stock").collect();
 
-    // Hacer joins para enriquecer la data
     const resultados = await Promise.all(
       movimientos.map(async (m) => {
         const deposito = await ctx.db.get(m.depositoId);
@@ -213,9 +212,17 @@ export const listarTodos = query({
       })
     );
 
+    // 🔹 Ordenar más recientes primero
+    resultados.sort((a, b) => {
+      const da = `${a.fecha_registro}T${a.hora_registro}`;
+      const db = `${b.fecha_registro}T${b.hora_registro}`;
+      return db.localeCompare(da);
+    });
+
     return resultados;
   },
 });
+
 
 // =========================
 // 5) Consultar movimientos por depósito
@@ -271,6 +278,8 @@ export const listarDetallesDeMovimiento = query({
           ...d,
           repuestoDeposito: repDep || null,
           repuesto: repuesto || null,
+          stock_previo: d.stock_previo,
+          stock_resultante: d.stock_resultante,
         };
       })
     );
@@ -342,7 +351,19 @@ export const agregarDetalleMovimiento = mutation({
     if (!mov) throw new Error("Movimiento no encontrado.");
     if (mov.confirmado) throw new Error("El movimiento ya está confirmado.");
 
-    // Si ya existe el mismo repuesto en el movimiento, sumamos cantidades
+    const repDep = await ctx.db.get(repuestoDepositoId);
+    if (!repDep) throw new Error("Repuesto en depósito no encontrado.");
+
+    const tipoMov = await ctx.db.get(mov.tipoMovimientoId);
+    if (!tipoMov) throw new Error("Tipo de movimiento no encontrado.");
+
+    const stockPrevio = repDep.stock_actual;
+    const stockResultante =
+      tipoMov.ingreso_egreso === "ingreso"
+        ? stockPrevio + cantidad
+        : stockPrevio - cantidad;
+
+    // Si ya existe el mismo repuesto en el movimiento, actualizamos
     const existente = await ctx.db
       .query("detalle_movimiento")
       .withIndex("byMovimiento", (q) => q.eq("movimientoId", movimientoId))
@@ -353,20 +374,26 @@ export const agregarDetalleMovimiento = mutation({
     );
 
     if (coincide) {
-      await ctx.db.patch(coincide._id, {
-        cantidad: coincide.cantidad + cantidad,
-      });
-      return coincide._id;
-    }
+  await ctx.db.patch(coincide._id, {
+    cantidad: coincide.cantidad + cantidad,
+    stock_previo: coincide.stock_previo ?? 0,
+    stock_resultante: (coincide.stock_resultante ?? coincide.stock_previo ?? 0) + cantidad,
+  });
+  return coincide._id;
+}
+
 
     const id = await ctx.db.insert("detalle_movimiento", {
       movimientoId,
       repuestoDepositoId,
       cantidad,
+      stock_previo: stockPrevio,
+      stock_resultante: stockResultante,
     });
     return id;
   },
 });
+
 
 // Eliminar un ítem del movimiento (si no está confirmado)
 export const eliminarDetalleMovimiento = mutation({
