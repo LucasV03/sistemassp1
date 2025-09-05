@@ -58,45 +58,7 @@ export const confirmarTraspaso = mutation({
 });
 
 // Listar traspasos con detalle
-export const listarTraspasos = query({
-  args: {},
-  handler: async (ctx) => {
-    const traspasos = await ctx.db.query("traspasos").collect();
 
-    return Promise.all(
-      traspasos.map(async (t) => {
-        // Origen y destino
-        const origen = await ctx.db.get(t.origenId);
-        const destino = await ctx.db.get(t.destinoId);
-
-        // Traer detalles y enriquecer con datos de repuesto
-        const detallesRaw = await ctx.db
-          .query("detalle_traspaso")
-          .filter((q) => q.eq(q.field("traspasoId"), t._id))
-          .collect();
-
-        const detalles = await Promise.all(
-          detallesRaw.map(async (d) => {
-            const repuesto = await ctx.db.get(d.repuestoId);
-            return {
-              ...d,
-              repuestoCodigo: repuesto?.codigo ?? "—",
-              repuestoNombre: repuesto?.nombre ?? "Repuesto sin nombre",
-            };
-          })
-        );
-
-        // Devolver objeto listo para frontend
-        return {
-          ...t,
-          origenNombre: origen?.nombre ?? "??",
-          destinoNombre: destino?.nombre ?? "??",
-          detalles,
-        };
-      })
-    );
-  },
-});
 
 // convex/traspasos.ts
 
@@ -144,55 +106,8 @@ export const listarTodos = query({
   },
 });
 // Listar traspasos pendientes
-export const listarTraspasosPendientes = query({
-  args: {},
-  handler: async (ctx) => {
-    const traspasos = await ctx.db
-      .query("traspasos")
-      .filter((q) => q.eq(q.field("estado"), "pendiente"))
-      .collect();
-    return Promise.all(
-      traspasos.map(async (t) => {
-        const detalles = await ctx.db
-          .query("detalle_traspaso")
-          .withIndex("byTraspaso", (q) => q.eq("traspasoId", t._id))
-          .collect();
-        return { ...t, detalles };
-      })
-    );
-  },
-});
 
-export const listarPendientesPorDeposito = query({
-  args: { depositoId: v.id("depositos") },
-  handler: async (ctx, { depositoId }) => {
-    const traspasos = await ctx.db
-      .query("traspasos")
-      .withIndex("byEstado", (q) => q.eq("estado", "pendiente"))
-      .collect();
 
-    // Filtrar solo los que tengan como destino el depósito
-    const filtrados = traspasos.filter((t) => t.destinoId === depositoId);
-
-    return Promise.all(
-      filtrados.map(async (t) => {
-        const origen = await ctx.db.get(t.origenId);
-        const destino = await ctx.db.get(t.destinoId);
-        const detalles = await ctx.db
-          .query("detalle_traspaso")
-          .withIndex("byTraspaso", (q) => q.eq("traspasoId", t._id))
-          .collect();
-
-        return {
-          ...t,
-          origenNombre: origen?.nombre,
-          destinoNombre: destino?.nombre,
-          detalles,
-        };
-      })
-    );
-  },
-});
 
 
 
@@ -255,12 +170,106 @@ export const crearTraspaso = mutation({
   },
 });
 
+
+
+// Listar traspasos con detalle
+export const listarTraspasos = query({
+  args: {},
+  handler: async (ctx) => {
+    const traspasos = await ctx.db.query("traspasos").order("desc").collect();
+
+    return Promise.all(
+      traspasos.map(async (t) => {
+        const origen = await ctx.db.get(t.origenId);
+        const destino = await ctx.db.get(t.destinoId);
+
+        const detallesRaw = await ctx.db
+          .query("detalle_traspaso")
+          .withIndex("byTraspaso", (q) => q.eq("traspasoId", t._id))
+          .collect();
+
+        const detalles = await Promise.all(
+          detallesRaw.map(async (d) => {
+            const repuesto = await ctx.db.get(d.repuestoId);
+            return {
+              ...d,
+              repuestoCodigo: repuesto?.codigo ?? "—",
+              repuestoNombre: repuesto?.nombre ?? "Repuesto sin nombre",
+            };
+          })
+        );
+
+        return {
+          ...t,
+          origenNombre: origen?.nombre ?? "??",
+          destinoNombre: destino?.nombre ?? "??",
+          detalles,
+        };
+      })
+    );
+  },
+});
+
+// Listar traspasos pendientes
+export const listarTraspasosPendientes = query({
+  args: {},
+  handler: async (ctx) => {
+    const traspasos = await ctx.db
+      .query("traspasos")
+      .filter((q) => q.eq(q.field("estado"), "pendiente"))
+      .order("desc")
+      .collect();
+
+    return Promise.all(
+      traspasos.map(async (t) => {
+        const detalles = await ctx.db
+          .query("detalle_traspaso")
+          .withIndex("byTraspaso", (q) => q.eq("traspasoId", t._id))
+          .collect();
+        return { ...t, detalles };
+      })
+    );
+  },
+});
+
+// Listar pendientes por depósito
+export const listarPendientesPorDeposito = query({
+  args: { depositoId: v.id("depositos") },
+  handler: async (ctx, { depositoId }) => {
+    const traspasos = await ctx.db
+      .query("traspasos")
+      .withIndex("byEstado", (q) => q.eq("estado", "pendiente"))
+      .order("desc")
+      .collect();
+
+    const filtrados = traspasos.filter((t) => t.destinoId === depositoId);
+
+    return Promise.all(
+      filtrados.map(async (t) => {
+        const origen = await ctx.db.get(t.origenId);
+        const destino = await ctx.db.get(t.destinoId);
+        const detalles = await ctx.db
+          .query("detalle_traspaso")
+          .withIndex("byTraspaso", (q) => q.eq("traspasoId", t._id))
+          .collect();
+
+        return {
+          ...t,
+          origenNombre: origen?.nombre,
+          destinoNombre: destino?.nombre,
+          detalles,
+        };
+      })
+    );
+  },
+});
+
+// Listar traspasos relacionados a un depósito
 export const listarPorDeposito = query({
   args: { depositoId: v.id("depositos") },
   handler: async (ctx, { depositoId }) => {
     const todos = await ctx.db.query("traspasos").order("desc").collect();
 
-    // Comparar Ids con === (no existe .equals)
     const relacionados = todos.filter(
       (t) => t.origenId === depositoId || t.destinoId === depositoId
     );

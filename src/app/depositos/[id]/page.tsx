@@ -108,7 +108,9 @@ export default function DepositoPage() {
                   </div>
 
                   {i.tipo === "traspaso" && i.estado === "pendiente" && (
-                    <Button onClick={() => confirmarTraspaso({ traspasoId: i._id })}>✅ Confirmar</Button>
+                    <Button 
+                    className="bg-indigo-700 text-white"
+                    onClick={() => confirmarTraspaso({ traspasoId: i._id })}>✅ Confirmar</Button>
                   )}
                 </div>
 
