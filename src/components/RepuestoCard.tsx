@@ -39,14 +39,7 @@ export default function RepuestoCard({
             <b className="text-neutral-900 dark:text-neutral-100">Código:</b>{" "}
             {repuesto.codigo}
           </p>
-          <p>
-            <b className="text-neutral-900 dark:text-neutral-100">Stock:</b>{" "}
-            {repuesto.stock}
-          </p>
-          <p>
-            <b className="text-neutral-900 dark:text-neutral-100">Precio:</b> $
-            {repuesto.precioUnitario}
-          </p>
+          
         </div>
 
         {/* Toggle ver más */}

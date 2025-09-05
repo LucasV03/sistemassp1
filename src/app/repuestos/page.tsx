@@ -86,7 +86,7 @@ export default function RepuestosPage() {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
-              className="border rounded px-2 py-1 text-sm text-white"
+              className="border rounded px-2 py-1 text-sm text-white bg-zinc-700"
             >
               <option value="nombre">Nombre</option>
               <option value="codigo">Código</option>

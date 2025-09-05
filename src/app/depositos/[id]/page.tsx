@@ -6,10 +6,13 @@ import { api } from "../../../../convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 
+
 type Filtro = "todos" | "pendiente" | "confirmado";
 
 export default function DepositoPage() {
   const { id } = useParams<{ id: string }>();
+  
+
 
   // === DATA ===
   const deposito = useQuery(api.depositos.getDeposito, { depositoId: id as any });
@@ -44,7 +47,9 @@ export default function DepositoPage() {
   return (
     <div className="p-6 space-y-6">
       <h1 className="text-2xl font-bold text-white">🏭 Depósito {deposito.nombre}</h1>
-
+      <Button className=" bg-indigo-700 border-hidden text-white" variant="outline" onClick={() => window.history.back()}>
+                Volver
+              </Button>
       {/* ===== STOCK ===== */}
       <div className="border border-white rounded-xl p-4 shadow-sm bg-zinc-800">
         <h2 className="text-xl font-semibold mb-2 text-zinc-300">📦 Stock de Repuestos</h2>
