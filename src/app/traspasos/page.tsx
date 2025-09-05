@@ -11,43 +11,36 @@ export default function TraspasosPage() {
   // ✅ Traer lista de depósitos
   const depositos = useQuery(api.depositos.listar); 
 
-  // Filtros locales
   const [estadoFiltro, setEstadoFiltro] = useState("todos");
   const [origenFiltro, setOrigenFiltro] = useState("todos");
   const [destinoFiltro, setDestinoFiltro] = useState("todos");
   const [diasFiltro, setDiasFiltro] = useState(0);
 
-  if (!traspasos || !depositos) return <div>Cargando...</div>;
-
-  // Aplicamos filtros en memoria
+  // 👇 Manejar datos nulos sin cortar hooks
   const filtrados = useMemo(() => {
+    if (!traspasos) return [];
     let lista = [...traspasos];
 
-    // Filtro por estado
     if (estadoFiltro !== "todos") {
       lista = lista.filter((t) => t.estado === estadoFiltro);
     }
-
-    // Filtro por depósito origen
     if (origenFiltro !== "todos") {
       lista = lista.filter((t) => t.origenId === origenFiltro);
     }
-
-    // Filtro por depósito destino
     if (destinoFiltro !== "todos") {
       lista = lista.filter((t) => t.destinoId === destinoFiltro);
     }
-
-    // Filtro por últimos X días
     if (diasFiltro > 0) {
       const limite = new Date();
       limite.setDate(limite.getDate() - diasFiltro);
       lista = lista.filter((t) => new Date(t.fecha) >= limite);
     }
-
     return lista;
   }, [traspasos, estadoFiltro, origenFiltro, destinoFiltro, diasFiltro]);
 
+  if (!traspasos || !depositos) {
+    return <div className="p-6 text-white">Cargando...</div>;
+  }
   return (
     <div className="p-6 space-y-6">
       <h1 className="text-2xl font-bold text-white">📦 Traspasos</h1>
