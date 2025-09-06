@@ -75,6 +75,8 @@ export default defineSchema({
     movimientoId: v.id("movimientos_stock"),
     repuestoDepositoId: v.id("repuestos_por_deposito"),
     cantidad: v.number(),
+    stock_previo: v.optional(v.number()),      
+    stock_resultante: v.optional(v.number()),
   }).index("byMovimiento", ["movimientoId"]),
 
 traspasos: defineTable({
