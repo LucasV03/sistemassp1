@@ -116,7 +116,8 @@ export const listarConNombres = query({
           proveedorNombre: prov?.nombre ?? "(Proveedor desconocido)",
           depositoNombre: depo?.nombre ?? "(Depósito desconocido)",
         };
-    }));
+      })
+    );
   },
 });
 
