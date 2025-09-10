@@ -75,7 +75,7 @@ export default function ProveedoresNuevoPage() {
     <div className="p-6 space-y-6 text-gray-100">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Nuevo proveedor</h1>
-        <Link href="/proveedores" className="text-gray-300 hover:text-white">
+        <Link href="/proveedores" className="text-gray-300 bg-indigo-700 p-1 rounded">
           ← Volver
         </Link>
       </div>
@@ -168,7 +168,7 @@ export default function ProveedoresNuevoPage() {
         <div className="flex gap-3">
           <button
             disabled={saving}
-            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500 disabled:opacity-50"
+            className="rounded-md bg-indigo-700 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500 disabled:opacity-50"
           >
             {saving ? "Guardando..." : "Guardar"}
           </button>

@@ -71,7 +71,7 @@ export default function DepositosPage() {
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-white">Gestión de Depósitos</h1>
         <Link href="/depositos/nuevo">
-          <Button className="bg-indigo-700">Nuevo depósito</Button>
+          <Button className="bg-indigo-700 text-white">Nuevo depósito</Button>
         </Link>
       </div>
 

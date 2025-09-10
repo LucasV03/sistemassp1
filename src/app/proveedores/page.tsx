@@ -42,15 +42,7 @@ export default function ProveedoresPage() {
 
   return (
     <div className="p-6 space-y-6 text-gray-100">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-2xl font-semibold">Proveedores</h1>
-        <Link
-          href="/proveedores/nuevo"
-          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500"
-        >
-          + Nuevo proveedor
-        </Link>
-      </div>
+      
 
       <div className="flex flex-wrap items-center gap-3">
         <input
@@ -90,6 +82,12 @@ export default function ProveedoresPage() {
             )
           )}
         </div>
+        <Link
+          href="/proveedores/nuevo"
+          className="rounded-md bg-indigo-700 px-4 py-2 ml-1 ml-120 text-sm font-medium text-white hover:bg-blue-500"
+        >
+          + Nuevo proveedor
+        </Link>
       </div>
 
       <div className="overflow-hidden rounded-lg border border-gray-800">

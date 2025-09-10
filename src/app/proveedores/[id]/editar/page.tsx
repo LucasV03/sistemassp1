@@ -156,7 +156,7 @@ export default function ProveedorEditarPage() {
         <div className="flex gap-3">
           <button
             disabled={saving}
-            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500 disabled:opacity-50"
+            className="rounded-md bg-indigo-700 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500 disabled:opacity-50"
           >
             {saving ? "Guardando..." : "Guardar cambios"}
           </button>
