@@ -16,6 +16,8 @@ import type {
 import type * as depositos from "../depositos.js";
 import type * as detalle_traspaso from "../detalle_traspaso.js";
 import type * as movimientos from "../movimientos.js";
+import type * as ordenesCompra from "../ordenesCompra.js";
+import type * as proveedores from "../proveedores.js";
 import type * as repuestos from "../repuestos.js";
 import type * as repuestos_por_deposito from "../repuestos_por_deposito.js";
 import type * as tipos_comprobantes from "../tipos_comprobantes.js";
@@ -34,6 +36,8 @@ declare const fullApi: ApiFromModules<{
   depositos: typeof depositos;
   detalle_traspaso: typeof detalle_traspaso;
   movimientos: typeof movimientos;
+  ordenesCompra: typeof ordenesCompra;
+  proveedores: typeof proveedores;
   repuestos: typeof repuestos;
   repuestos_por_deposito: typeof repuestos_por_deposito;
   tipos_comprobantes: typeof tipos_comprobantes;

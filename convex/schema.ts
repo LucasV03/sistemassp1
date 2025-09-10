@@ -105,4 +105,73 @@ traspasos: defineTable({
     notas: v.optional(v.string()),
   }),
 
+// ==== ÓRDENES DE COMPRA ====
+ordenes_compra: defineTable({
+  numeroOrden: v.string(),                   // "OC-2025-000123"
+  proveedorId: v.id("proveedores"),
+  fechaOrden: v.string(),                    // ISO
+  fechaEsperada: v.optional(v.string()),     // ISO
+  depositoEntregaId: v.id("depositos"),
+  direccionEntrega: v.optional(v.string()),
+
+  moneda: v.union(v.literal("ARS"), v.literal("USD")),
+  tipoCambio: v.optional(v.number()),
+  condicionesPago: v.optional(v.string()),
+  incoterm: v.optional(v.string()),
+
+  estado: v.union(
+    v.literal("BORRADOR"),
+    v.literal("PENDIENTE_APROBACION"),
+    v.literal("APROBADA"),
+    v.literal("ENVIADA"),
+    v.literal("PARCIALMENTE_RECIBIDA"),
+    v.literal("CERRADA"),
+    v.literal("CANCELADA")
+  ),
+
+  subtotal: v.number(),
+  totalDescuento: v.number(),
+  totalImpuestos: v.number(),
+  totalGeneral: v.number(),
+
+  // Como aún no tenés tabla de usuarios, lo dejo como string para evitar el error de validación
+  compradorUsuario: v.string(),
+
+  notas: v.optional(v.string()),
+  adjuntos: v.optional(v.array(v.object({ name: v.string(), url: v.string() }))),
+
+  creadoEn: v.number(),
+  actualizadoEn: v.number(),
+})
+.index("porNumero", ["numeroOrden"])
+.index("porProveedor", ["proveedorId"])
+.index("porFecha", ["fechaOrden"]),
+
+detalle_ordenes_compra: defineTable({
+  ocId: v.id("ordenes_compra"),
+  repuestoId: v.id("repuestos"),
+
+  descripcion: v.string(),
+  unidadMedida: v.string(),                  // (antes uom)
+
+  cantidadPedida: v.number(),
+  cantidadRecibida: v.number(),
+  cantidadCancelada: v.number(),
+
+  precioUnitario: v.number(),
+  descuentoPorc: v.optional(v.number()),
+  tasaImpuesto: v.optional(v.number()),      // 0, 10.5, 21, etc.
+  totalLinea: v.number(),                    // calculado
+
+  fechaNecesidad: v.optional(v.string()),
+  depositoId: v.id("depositos"),
+  centroCosto: v.optional(v.string()),
+  estadoLinea: v.union(
+    v.literal("ABIERTA"),
+    v.literal("CERRADA"),
+    v.literal("CANCELADA")
+  ),
+})
+.index("por_oc", ["ocId"]),
+
 });

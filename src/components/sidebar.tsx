@@ -2,13 +2,13 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Globe, Home, ArrowLeftRight, Car, Route, User, User2Icon, Users2Icon, Wrench, Paperclip, UserCheck2, Clock, Box } from 'lucide-react';
+import { Globe, Home, ArrowLeftRight, Car, Route, User, User2Icon, Users2Icon, Wrench, Paperclip, UserCheck2, Clock, Box, FileText } from 'lucide-react';
 
 const links = [
   { href: '/',          label: 'Home',        Icon: Home },
   
 //  { href: '/vehiculos', label: 'Vehículos',   Icon: Car },
- // { href: '/viajes',    label: 'Viajes',      Icon: Route },
+// { href: '/viajes',    label: 'Viajes',      Icon: Route },
   { href: '/repuestos', label: 'Repuestos',   Icon: Wrench },
   
   
@@ -18,6 +18,9 @@ const links = [
   //{ href: '/reportes',  label: 'Reportes',    Icon: Paperclip },
   { href: '/proveedores', label: 'Proveedores', Icon: Users2Icon },
   //{ href: '/clientes',  label: 'Clientes',    Icon: UserCheck2 },
+
+  // Nuevo módulo
+  { href: '/ordenes-compra', label: 'Órdenes de Compra', Icon: FileText },
 ];
 
 export default function Sidebar() {

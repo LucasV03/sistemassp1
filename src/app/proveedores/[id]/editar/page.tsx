@@ -9,10 +9,10 @@ import Link from "next/link";
 
 export default function ProveedorEditarPage() {
   const params = useParams<{ id: string }>();
-  const id = params.id as string; // Id del proveedor desde la URL
+  const id = params.id as string; // id en la URL (string)
   const router = useRouter();
 
-  // Convex acepta el string del Id directamente (lo castea internamente)
+  // Puede ser undefined mientras carga
   const proveedor = useQuery(api.proveedores.obtener, { id: id as any });
   const editar = useMutation(api.proveedores.editar);
 
@@ -22,6 +22,7 @@ export default function ProveedorEditarPage() {
     telefono: "",
     email: "",
     direccion: "",
+    cuit: "", // NUEVO
     activo: true,
     reputacion: 3,
     notas: "",
@@ -37,6 +38,7 @@ export default function ProveedorEditarPage() {
         telefono: proveedor.telefono,
         email: proveedor.email,
         direccion: proveedor.direccion,
+        cuit: proveedor.cuit ?? "",
         activo: proveedor.activo,
         reputacion: proveedor.reputacion ?? 3,
         notas: proveedor.notas ?? "",
@@ -53,7 +55,7 @@ export default function ProveedorEditarPage() {
     setSaving(true);
     setError(null);
 
-    // 👇 Narrowing explícito: si por algún motivo todavía no llegó, corto.
+    // ⚠️ Narrowing dentro de la misma función:
     if (!proveedor) {
       setError("El proveedor aún no está cargado.");
       setSaving(false);
@@ -62,11 +64,9 @@ export default function ProveedorEditarPage() {
 
     try {
       await editar({
-        id: proveedor._id, // aquí sí uso el Id<"proveedores">
+        id: proveedor._id, // ahora TS sabe que proveedor está definido
         data: form,
       });
-
-      // Para navegar, uso el id de la URL (string) y evito que TS se queje.
       router.push(`/proveedores/${id}`);
     } catch (err: any) {
       setError(err.message ?? "Error al guardar cambios");
@@ -86,11 +86,39 @@ export default function ProveedorEditarPage() {
 
       <form onSubmit={onSubmit} className="grid max-w-3xl grid-cols-1 gap-4">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Input label="Nombre*" value={form.nombre} onChange={(v) => setForm((s) => ({ ...s, nombre: v }))} />
-          <Input label="Contacto*" value={form.contacto_principal} onChange={(v) => setForm((s) => ({ ...s, contacto_principal: v }))} />
-          <Input label="Teléfono*" value={form.telefono} onChange={(v) => setForm((s) => ({ ...s, telefono: v }))} />
-          <Input label="Email*" type="email" value={form.email} onChange={(v) => setForm((s) => ({ ...s, email: v }))} />
-          <Input label="Dirección*" value={form.direccion} onChange={(v) => setForm((s) => ({ ...s, direccion: v }))} className="sm:col-span-2" />
+          <Input
+            label="Nombre*"
+            value={form.nombre}
+            onChange={(v) => setForm((s) => ({ ...s, nombre: v }))}
+          />
+          <Input
+            label="Contacto*"
+            value={form.contacto_principal}
+            onChange={(v) => setForm((s) => ({ ...s, contacto_principal: v }))}
+          />
+          <Input
+            label="Teléfono*"
+            value={form.telefono}
+            onChange={(v) => setForm((s) => ({ ...s, telefono: v }))}
+          />
+          <Input
+            label="Email*"
+            type="email"
+            value={form.email}
+            onChange={(v) => setForm((s) => ({ ...s, email: v }))}
+          />
+          <Input
+            label="Dirección*"
+            value={form.direccion}
+            onChange={(v) => setForm((s) => ({ ...s, direccion: v }))}
+            className="sm:col-span-2"
+          />
+          <Input
+            label="CUIT*"
+            value={form.cuit}
+            onChange={(v) => setForm((s) => ({ ...s, cuit: v }))}
+          />
+
           <div className="flex items-center gap-2">
             <input
               type="checkbox"
@@ -99,6 +127,7 @@ export default function ProveedorEditarPage() {
             />
             <span>Activo</span>
           </div>
+
           <div>
             <label className="mb-1 block text-sm text-gray-300">Reputación</label>
             <input
@@ -110,6 +139,7 @@ export default function ProveedorEditarPage() {
               className="w-full rounded-md border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-gray-100 outline-none focus:ring-2 focus:ring-blue-600"
             />
           </div>
+
           <div className="sm:col-span-2">
             <label className="mb-1 block text-sm text-gray-300">Notas</label>
             <textarea

@@ -84,7 +84,19 @@ export const obtener = query({
   },
 });
 
-
+export const validarId = query({
+  args: { id: v.string() },
+  handler: async (ctx, { id }) => {
+    if (!id) return false;
+    try {
+      const prov = await ctx.db.get(id as any);
+      // si el get falla o no encuentra, prov será null
+      return prov !== null;
+    } catch {
+      return false;
+    }
+  },
+});
 
 export const editar = mutation({
   args: {
