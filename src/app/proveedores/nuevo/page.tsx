@@ -6,6 +6,44 @@ import { useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import Link from "next/link";
 
+/* ===== Helpers de validación ===== */
+const onlyDigits = (s: string) => (s ?? "").toString().replace(/\D/g, "");
+
+const esEmailValido = (s: string) =>
+  /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i.test((s ?? "").trim());
+
+const esTelefonoArg10 = (s: string) => onlyDigits(s).length >= 7;
+
+/** CUIT válido con checksum AFIP (módulo 11) */
+const esCUITValido = (s: string) => {
+  const d = onlyDigits(s);
+  if (d.length !== 11) return false;
+
+  const pref = Number(d.slice(0, 2));
+  const prefValidos = [20, 23, 24, 27, 30, 33, 34];
+  if (!prefValidos.includes(pref)) return false;
+
+  const dni = d.slice(2, 10);
+  if (!/^\d{8}$/.test(dni) || dni === "00000000") return false;
+
+  const nums = d.split("").map((n) => Number(n));
+  const pesos = [5, 4, 3, 2, 7, 6, 5, 4, 3, 2];
+
+  let suma = 0;
+  for (let i = 0; i < 10; i++) suma += nums[i] * pesos[i];
+
+  const mod = 11 - (suma % 11);
+  const verif = mod === 11 ? 0 : mod === 10 ? 9 : mod;
+
+  return verif === nums[10];
+};
+
+const formatearCUIT = (s: string) => {
+  const d = onlyDigits(s);
+  if (d.length !== 11) return s;
+  return `${d.slice(0, 2)}-${d.slice(2, 10)}-${d.slice(10)}`;
+};
+
 export default function ProveedoresNuevoPage() {
   const router = useRouter();
   const crearProveedor = useMutation(api.proveedores.crear);
@@ -16,7 +54,7 @@ export default function ProveedoresNuevoPage() {
     telefono: "",
     email: "",
     direccion: "",
-    cuit: "",        // NUEVO
+    cuit: "",
     activo: true,
     reputacion: 3,
     notas: "",
@@ -25,13 +63,13 @@ export default function ProveedoresNuevoPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Validaciones rápidas
-  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim());
-  const telefonoOk = form.telefono.trim().length >= 6;
+  // Validaciones en vivo (campos no nulos + reglas)
   const nombreOk = form.nombre.trim().length >= 2;
   const contactoOk = form.contacto_principal.trim().length >= 2;
-  const direccionOk = form.direccion.trim().length >= 3;
-  const cuitOk = form.cuit.trim().length >= 8; // regla simple, ajustá si querés validar formato
+  const emailOk = esEmailValido(form.email);
+  const telOk = esTelefonoArg10(form.telefono);
+  const dirOk = form.direccion.trim().length >= 3;
+  const cuitOk = esCUITValido(form.cuit);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -40,19 +78,23 @@ export default function ProveedoresNuevoPage() {
 
     if (!nombreOk) return bail("Ingresá un nombre válido.");
     if (!contactoOk) return bail("Ingresá un contacto válido.");
-    if (!telefonoOk) return bail("Ingresá un teléfono válido.");
+    if (!telOk) return bail("El teléfono debe tener 10 dígitos (solo números).");
     if (!emailOk) return bail("Ingresá un email válido.");
-    if (!direccionOk) return bail("Ingresá una dirección válida.");
-    if (!cuitOk) return bail("Ingresá un CUIT válido.");
+    if (!dirOk) return bail("Ingresá una dirección válida.");
+    if (!cuitOk) return bail("CUIT inválido.");
+
+    // Normalizo antes de enviar
+    const telefono = onlyDigits(form.telefono);
+    const cuit = onlyDigits(form.cuit);
 
     try {
       await crearProveedor({
         nombre: form.nombre.trim(),
         contacto_principal: form.contacto_principal.trim(),
-        telefono: form.telefono.trim(),
-        email: form.email.trim(),
+        telefono,                           // 10 dígitos
+        email: form.email.trim().toLowerCase(),
         direccion: form.direccion.trim(),
-        cuit: form.cuit.trim(),  // NUEVO
+        cuit,                               // 11 dígitos
         activo: form.activo,
         reputacion: Number(form.reputacion) || 3,
         notas: form.notas.trim(),
@@ -75,7 +117,7 @@ export default function ProveedoresNuevoPage() {
     <div className="p-6 space-y-6 text-gray-100">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Nuevo proveedor</h1>
-        <Link href="/proveedores" className="text-gray-300 hover:text-white">
+        <Link href="/proveedores" className="text-gray-300 bg-indigo-700 p-1 rounded">
           ← Volver
         </Link>
       </div>
@@ -97,11 +139,14 @@ export default function ProveedoresNuevoPage() {
             error={!contactoOk && form.contacto_principal.length > 0 ? "Contacto demasiado corto." : undefined}
           />
           <Input
-            label="Teléfono*"
-            placeholder="Ej: 381-555-1234"
+            label="Teléfono"
+            placeholder="Ej: 3815551234"
             value={form.telefono}
             onChange={(v) => setForm((s) => ({ ...s, telefono: v }))}
-            error={!telefonoOk && form.telefono.length > 0 ? "Teléfono inválido." : undefined}
+            type="tel"
+            inputMode="numeric"
+            pattern="\d*"
+            error={!telOk && form.telefono.length > 0 ? "Numero invalido." : undefined}
           />
           <Input
             label="Email*"
@@ -117,7 +162,7 @@ export default function ProveedoresNuevoPage() {
             value={form.direccion}
             onChange={(v) => setForm((s) => ({ ...s, direccion: v }))}
             className="sm:col-span-2"
-            error={!direccionOk && form.direccion.length > 0 ? "Dirección inválida." : undefined}
+            error={!dirOk && form.direccion.length > 0 ? "Dirección inválida." : undefined}
           />
           <Input
             label="CUIT*"
@@ -125,10 +170,12 @@ export default function ProveedoresNuevoPage() {
             value={form.cuit}
             onChange={(v) => setForm((s) => ({ ...s, cuit: v }))}
             error={!cuitOk && form.cuit.length > 0 ? "CUIT inválido." : undefined}
+            onBlur={() => setForm((s) => ({ ...s, cuit: formatearCUIT(s.cuit) }))}
           />
 
           <div className="flex items-center gap-2">
             <input
+              aria-label="Activo"
               type="checkbox"
               checked={form.activo}
               onChange={(e) => setForm((s) => ({ ...s, activo: e.target.checked }))}
@@ -161,14 +208,12 @@ export default function ProveedoresNuevoPage() {
           </div>
         </div>
 
-        {error && (
-          <p className="text-sm text-red-400">{error}</p>
-        )}
+        {error && <p className="text-sm text-red-400">{error}</p>}
 
         <div className="flex gap-3">
           <button
             disabled={saving}
-            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500 disabled:opacity-50"
+            className="rounded-md bg-indigo-700 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500 disabled:opacity-50"
           >
             {saving ? "Guardando..." : "Guardar"}
           </button>
@@ -184,6 +229,7 @@ export default function ProveedoresNuevoPage() {
   );
 }
 
+/* ==== Input base ==== */
 function Input({
   label,
   value,
@@ -192,6 +238,9 @@ function Input({
   className = "",
   placeholder,
   error,
+  onBlur,
+  inputMode,
+  pattern,
 }: {
   label: string;
   value: string;
@@ -200,6 +249,9 @@ function Input({
   className?: string;
   placeholder?: string;
   error?: string;
+  onBlur?: () => void;
+  inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
+  pattern?: string;
 }) {
   const invalid = Boolean(error);
   return (
@@ -208,8 +260,11 @@ function Input({
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        onBlur={onBlur}
         type={type}
         placeholder={placeholder}
+        inputMode={inputMode}
+        pattern={pattern}
         className={`w-full rounded-md border px-3 py-2 text-sm outline-none focus:ring-2 ${
           invalid
             ? "border-red-700 bg-red-950/40 text-red-200 focus:ring-red-700"
