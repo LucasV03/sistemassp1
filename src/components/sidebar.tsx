@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Globe, Home, ArrowLeftRight, Car, Route, User, User2Icon, Users2Icon, Wrench, Paperclip, UserCheck2, Clock, Box, FileText } from 'lucide-react';
+import { Globe, Home, ArrowLeftRight, Car, Route, User, User2Icon, Users2Icon, Wrench, Paperclip, UserCheck2, Clock, Box, FileText, Receipt } from 'lucide-react';
 
 const links = [
   { href: '/',          label: 'Home',        Icon: Home },
@@ -21,6 +21,8 @@ const links = [
 
   // Nuevo módulo
   { href: '/ordenes-compra', label: 'Órdenes de Compra', Icon: FileText },
+    { href: '/facturas', label: 'Facturas', Icon:Receipt},
+
 ];
 
 export default function Sidebar() {
