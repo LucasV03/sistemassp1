@@ -13,6 +13,10 @@ export const listar = query({
         v.literal("contacto_principal"),
         v.literal("email"),
         v.literal("reputacion"),
+        v.literal("telefono"),
+        v.literal("direccion"),
+        v.literal("notas"),
+        v.literal("cuit"),
         v.literal("estado") // sintético: activo/inactivo
       )
     ),
@@ -37,6 +41,7 @@ export const listar = query({
           p.email,
           p.telefono,
           p.direccion,
+          p.cuit ?? "",
           p.notas ?? "",
         ]
           .join(" ")
@@ -79,35 +84,7 @@ export const obtener = query({
   },
 });
 
-export const crear = mutation({
-  args: {
-    nombre: v.string(),
-    contacto_principal: v.string(),
-    telefono: v.string(),
-    email: v.string(),
-    direccion: v.string(),
-    activo: v.boolean(),
-    reputacion: v.optional(v.number()),
-    // Tu colección se llama "repuestos"
-    productos_ofrecidos: v.array(v.id("repuestos")),
-    notas: v.optional(v.string()),
-  },
-  handler: async (ctx, args) => {
-    // unicidad por nombre
-    const repetido = (await ctx.db.query("proveedores").collect()).some(
-      (p) => p.nombre.toLowerCase() === args.nombre.toLowerCase()
-    );
-    if (repetido) throw new Error("Ya existe un proveedor con ese nombre");
 
-    // validación simple de email
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(args.email)) {
-      throw new Error("Email inválido");
-    }
-
-    const id = await ctx.db.insert("proveedores", args);
-    return id;
-  },
-});
 
 export const editar = mutation({
   args: {
@@ -120,7 +97,7 @@ export const editar = mutation({
       direccion: v.optional(v.string()),
       activo: v.optional(v.boolean()),
       reputacion: v.optional(v.number()),
-      productos_ofrecidos: v.optional(v.array(v.id("repuestos"))),
+      cuit: v.optional(v.string()),
       notas: v.optional(v.string()),
     }),
   },
@@ -161,28 +138,37 @@ export const desactivar = mutation({
 /**
  * Agrega un Id<"repuestos"> al array de productos_ofrecidos evitando duplicados
  */
-export const asociarRepuesto = mutation({
-  args: { id: v.id("proveedores"), repuestoId: v.id("repuestos") },
-  handler: async (ctx, { id, repuestoId }) => {
-    const p = await ctx.db.get(id);
-    if (!p) throw new Error("Proveedor no encontrado");
 
-    const set = new Set((p.productos_ofrecidos ?? []) as Id<"repuestos">[]);
-    set.add(repuestoId);
-    await ctx.db.patch(id, { productos_ofrecidos: Array.from(set) });
-  },
-});
 
 /**
  * Elimina un Id<"repuestos"> del array de productos_ofrecidos
  */
-export const desasociarRepuesto = mutation({
-  args: { id: v.id("proveedores"), repuestoId: v.id("repuestos") },
-  handler: async (ctx, { id, repuestoId }) => {
-    const p = await ctx.db.get(id);
-    if (!p) throw new Error("Proveedor no encontrado");
 
-    const filtrado = (p.productos_ofrecidos ?? []).filter((rid) => rid !== repuestoId);
-    await ctx.db.patch(id, { productos_ofrecidos: filtrado });
+export const crear = mutation({
+  args: {
+    nombre: v.string(),
+    contacto_principal: v.string(),
+    telefono: v.string(),
+    email: v.string(),
+    direccion: v.string(),
+    activo: v.boolean(),
+    reputacion: v.optional(v.number()),
+    cuit : v.string(),
+    notas: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    // unicidad por nombre
+    const repetido = (await ctx.db.query("proveedores").collect()).some(
+      (p) => p.nombre.toLowerCase() === args.nombre.toLowerCase()
+    );
+    if (repetido) throw new Error("Ya existe un proveedor con ese nombre");
+
+    // validación simple de email
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(args.email)) {
+      throw new Error("Email inválido");
+    }
+
+    const id = await ctx.db.insert("proveedores", args);
+    return id;
   },
 });

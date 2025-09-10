@@ -98,10 +98,10 @@ traspasos: defineTable({
     contacto_principal: v.string(),
     telefono: v.string(),
     email: v.string(),
+    cuit: v.string(),
     direccion: v.string(),
     activo: v.boolean(), 
     reputacion: v.optional(v.number()), 
-    productos_ofrecidos: v.array(v.id("repuestos")), 
     notas: v.optional(v.string()),
   }),
 
