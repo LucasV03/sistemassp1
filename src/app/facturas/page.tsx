@@ -178,9 +178,9 @@ export default function FacturasProvPage() {
       </div>
 
       {/* Tabla */}
-      <div className="rounded-md border border-neutral-800 overflow-hidden">
+      <div className="rounded-md border border-neutral-800 overflow-hidden text-zinc-400">
         <table className="w-full text-sm">
-          <thead className="bg-neutral-900 text-neutral-300">
+          <thead className="bg-neutral-900 text-zinc-300">
             <tr>
               <th className="text-left px-4 py-2">Nº Prov.</th>
               <th className="text-left px-4 py-2">Proveedor</th>
