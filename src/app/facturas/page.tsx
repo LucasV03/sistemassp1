@@ -4,7 +4,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import type { Doc } from "../../../convex/_generated/dataModel";
-import { api } from "././../../../convex/_generated/api"; // 👈 AJUSTAR SI HACE FALTA
+import { api } from "../../../convex/_generated/api";
 
 type Estado = "PENDIENTE" | "PARCIAL" | "PAGADA" | "ANULADA" | "";
 

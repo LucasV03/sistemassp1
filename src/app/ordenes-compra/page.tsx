@@ -1,10 +1,12 @@
+// src/app/(panel)/ordenes-compra/page.tsx
 'use client';
 import Link from "next/link";
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 
 export default function OCList() {
   const list = useQuery(api.ordenesCompra.listarConNombres, {}) ?? [];
+  const cambiarEstado = useMutation(api.ordenesCompra.cambiarEstado);
 
   return (
     <div className="p-6 space-y-4 text-white">
@@ -39,13 +41,31 @@ export default function OCList() {
                 <td className="p-3 text-right">
                   {po.totalGeneral.toFixed(2)} {po.moneda}
                 </td>
-                <td className="p-3 text-right">
-                  <Link
-                    className="px-3 py-1 rounded bg-neutral-800 hover:bg-neutral-700 text-neutral-100"
-                    href={`/ordenes-compra/${po._id}`}
-                  >
-                    Ver orden
-                  </Link>
+                <td className="p-3">
+                  <div className="flex gap-2 justify-end">
+                    <Link
+                      className="px-3 py-1 rounded bg-neutral-800 hover:bg-neutral-700 text-neutral-100"
+                      href={`/ordenes-compra/${po._id}`}
+                    >
+                      Ver
+                    </Link>
+                    {(po.estado === "BORRADOR" || po.estado === "PENDIENTE_APROBACION") && (
+                      <button
+                        onClick={() => cambiarEstado({ id: po._id, estado: "APROBADA" })}
+                        className="px-3 py-1 rounded bg-indigo-600 hover:bg-indigo-500 text-white"
+                      >
+                        Aprobar
+                      </button>
+                    )}
+                    {po.estado === "APROBADA" && (
+                      <button
+                        onClick={() => cambiarEstado({ id: po._id, estado: "ENVIADA" })}
+                        className="px-3 py-1 rounded bg-sky-600 hover:bg-sky-500 text-white"
+                      >
+                        Enviar
+                      </button>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}

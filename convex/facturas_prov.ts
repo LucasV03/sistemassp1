@@ -64,9 +64,8 @@ export const listar = query({
     if (a.proveedorId) list = list.filter(f => f.proveedorId === a.proveedorId);
     if (a.estado) list = list.filter(f => f.estado === a.estado);
 
-    // Precalcular ISO para evitar overloads de TS
-    const desdeISO = typeof a.desde === "string" ? new Date(a.desde).toISOString() : undefined;
-    const hastaISO = typeof a.hasta === "string" ? new Date(a.hasta).toISOString() : undefined;
+    const desdeISO = a.desde ? new Date(a.desde).toISOString() : undefined;
+    const hastaISO = a.hasta ? new Date(a.hasta).toISOString() : undefined;
 
     if (desdeISO) list = list.filter(f => f.fechaEmision >= desdeISO);
     if (hastaISO) list = list.filter(f => f.fechaEmision <= hastaISO);
@@ -79,7 +78,7 @@ export const listar = query({
     }
 
     // Orden por fecha desc (ISO compara bien)
-    list.sort((a, b) => (a.fechaEmision < b.fechaEmision ? 1 : -1));
+    list.sort((x, y) => (x.fechaEmision < y.fechaEmision ? 1 : -1));
     return list;
   },
 });
@@ -219,8 +218,52 @@ export const crearDesdeOC = mutation({
 });
 
 /* =========================================================
+ * LISTAR FACTURAS DE UNA OC + SUMAS
+ * =======================================================*/
+export const listarDeOC = query({
+  args: { ocId: v.id("ordenes_compra") },
+  handler: async (ctx, { ocId }) => {
+    // Si tienes índice byOc, puedes reemplazar por withIndex("byOc", q => q.eq("ocId", ocId))
+    let facturas = (await ctx.db.query("facturas_prov").collect()).filter(f => f.ocId === ocId);
+    facturas.sort((a, b) => (a.fechaEmision < b.fechaEmision ? 1 : -1));
+
+    const sumTotal = facturas.reduce((a, f) => a + (f.total ?? 0), 0);
+    const sumSaldo = facturas.reduce((a, f) => a + (f.saldo ?? 0), 0);
+
+    return { facturas, sumTotal, sumSaldo };
+  },
+});
+
+/* =========================================================
+ * RESUMEN FINANCIERO DE UNA OC
+ * =======================================================*/
+export const resumenDeOC = query({
+  args: { ocId: v.id("ordenes_compra") },
+  handler: async (ctx, { ocId }) => {
+    const oc = await ctx.db.get(ocId);
+    if (!oc) throw new Error("OC no encontrada");
+
+    const facturas = (await ctx.db.query("facturas_prov").collect()).filter(f => f.ocId === ocId);
+
+    const facturado = facturas.reduce((a, f) => a + (f.total ?? 0), 0);
+    const pagado = facturas.reduce((a, f) => a + ((f.total ?? 0) - (f.saldo ?? 0)), 0);
+    const saldoAPagar = facturas.reduce((a, f) => a + (f.saldo ?? 0), 0);
+
+    return {
+      oc,
+      totalOC: oc.totalGeneral ?? 0,
+      facturado,
+      pagado,
+      saldoAPagar,
+      cantidadFacturas: facturas.length,
+    };
+  },
+});
+
+/* =========================================================
  * REGISTRAR PAGO / RETENCIONES
- * - Inserta pago y actualiza saldo/estado
+ * - Inserta pago, actualiza saldo/estado
+ * - Si todas las facturas de la OC quedan en $0, cierra la OC
  * =======================================================*/
 export const registrarPago = mutation({
   args: {
@@ -264,7 +307,6 @@ export const registrarPago = mutation({
     const retTotal = (a.retIva ?? 0) + (a.retGanancias ?? 0) + (a.retIIBB ?? 0);
     const nuevoSaldo = Math.max(0, red(fac.saldo - a.importe - retTotal));
 
-    // Ya validamos que no está ANULADA aquí
     const nuevoEstado: "PENDIENTE" | "PARCIAL" | "PAGADA" =
       nuevoSaldo === 0
         ? "PAGADA"
@@ -277,6 +319,17 @@ export const registrarPago = mutation({
       estado: nuevoEstado,
       actualizadoEn: ahora,
     });
+
+    // Si la factura está vinculada a una OC, revisar si debemos cerrarla
+    if (fac.ocId) {
+      // Traer todas las facturas de la misma OC y sumar saldos
+      const todas = (await ctx.db.query("facturas_prov").collect()).filter(f => f.ocId === fac.ocId);
+      const saldoAPagar = todas.reduce((acc, f) => acc + (f.saldo ?? 0), 0);
+
+      if (saldoAPagar === 0) {
+        await ctx.db.patch(fac.ocId, { estado: "CERRADA", actualizadoEn: Date.now() });
+      }
+    }
   },
 });
 
@@ -295,5 +348,37 @@ export const anular = mutation({
       notas: motivo ?? fac.notas,
       actualizadoEn: Date.now(),
     });
+  },
+});
+
+/* =========================================================
+ * (Opcional) ¿Qué hay que pagar hasta una fecha?
+ * =======================================================*/
+export const aPagar = query({
+  args: {
+    hasta: v.optional(v.string()), // ISO
+    proveedorId: v.optional(v.id("proveedores")),
+  },
+  handler: async (ctx, { hasta, proveedorId }) => {
+    const pendientes = await ctx.db
+      .query("facturas_prov")
+      .withIndex("byEstado", q => q.eq("estado", "PENDIENTE"))
+      .collect();
+    const parciales = await ctx.db
+      .query("facturas_prov")
+      .withIndex("byEstado", q => q.eq("estado", "PARCIAL"))
+      .collect();
+
+    let list = pendientes.concat(parciales);
+
+    if (proveedorId) list = list.filter(f => f.proveedorId === proveedorId);
+    if (hasta) {
+      const h = new Date(hasta).toISOString();
+      list = list.filter(f => !f.fechaVencimiento || f.fechaVencimiento <= h);
+    }
+
+    list.sort((a, b) => ((a.fechaVencimiento ?? a.fechaEmision) < (b.fechaVencimiento ?? b.fechaEmision) ? -1 : 1));
+    const totalSaldo = list.reduce((a, f) => a + (f.saldo ?? 0), 0);
+    return { list, totalSaldo };
   },
 });
