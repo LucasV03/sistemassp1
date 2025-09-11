@@ -308,7 +308,7 @@ export const cambiarEstado = mutation({
 
     // Consideramos "activa" a APROBADA o ENVIADA
     const esActiva = estado === "APROBADA" || estado === "ENVIADA";
-    if (!esActiva) return;
+    if (estado !== "ENVIADA") return;
 
     // ¿Ya hay factura para esta OC?
     const existentes = (await ctx.db.query("facturas_prov").collect()).filter(f => f.ocId === id);

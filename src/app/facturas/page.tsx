@@ -82,16 +82,21 @@ export default function FacturasProvPage() {
     e.currentTarget.reset();
   };
 
-  const onPagarSubmit = (facturaId: string) => async (e: React.FormEvent<HTMLFormElement>) => {
+  const onPagarSubmit =
+  (facturaId: string) =>
+  async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const form = new FormData(e.currentTarget);
+
+    // 👇 guarda referencia al form ANTES de cualquier await o unmount
+    const formEl = e.currentTarget;
+    const form = new FormData(formEl);
 
     const fechaPagoInput = String(form.get("fechaPago") || "");
     const medio = String(form.get("medio") || "TRANSFERENCIA") as any;
     const importe = Number(form.get("importe") || 0);
-    const retIva = Number(form.get("retIva") || 0) || undefined;
-    const retGanancias = Number(form.get("retGanancias") || 0) || undefined;
-    const retIIBB = Number(form.get("retIIBB") || 0) || undefined;
+    const retIva = form.get("retIva") ? Number(form.get("retIva")) : undefined;
+    const retGanancias = form.get("retGanancias") ? Number(form.get("retGanancias")) : undefined;
+    const retIIBB = form.get("retIIBB") ? Number(form.get("retIIBB")) : undefined;
     const referencia = String(form.get("referencia") || "");
     const notas = String(form.get("notas") || "");
 
@@ -112,10 +117,12 @@ export default function FacturasProvPage() {
       notas: notas || undefined,
     });
 
-    setOpenPagar(null);
-    e.currentTarget.reset();
-  };
+    // 👇 resetea con la referencia guardada
+    formEl.reset();
 
+    // 👇 recién ahora cerrá el modal
+    setOpenPagar(null);
+  };
   const onAnularClick = async (facturaId: string) => {
     const motivo = prompt("Motivo de anulación (opcional):") || undefined;
     await anular({ facturaId: facturaId as any, motivo });
@@ -236,14 +243,13 @@ export default function FacturasProvPage() {
                           Pagar
                         </button>
                       )}
-                      {f.estado !== "ANULADA" && (
+                      {f.estado !== "ANULADA" && f.estado !== "PAGADA" && (
                         <button
-                          onClick={() => setOpenConfirmAnular(f._id)}
-                          className="px-2 py-1 rounded bg-red-600 text-white hover:bg-red-500"
-                        >
-                          Anular
+                                onClick={() => setOpenConfirmAnular(f._id)}
+                                className="px-2 py-1 rounded bg-red-600 text-white hover:bg-red-500">
+                                    Anular
                         </button>
-                      )}
+                        )}
                     </div>
                   </td>
                 </tr>
@@ -283,7 +289,7 @@ export default function FacturasProvPage() {
       {openPagar && (
         <Modal onClose={() => setOpenPagar(null)} title="Registrar pago">
           <form onSubmit={onPagarSubmit(openPagar)} className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3 text-zinc-500">
               <L label="Fecha de pago"><input type="date" name="fechaPago" className="inp" /></L>
               <L label="Medio">
                 <select name="medio" className="inp">
@@ -304,8 +310,8 @@ export default function FacturasProvPage() {
             <L label="Referencia"><input name="referencia" className="inp" /></L>
             <L label="Notas"><textarea name="notas" rows={3} className="inp" /></L>
             <div className="flex justify-end gap-2">
-              <button type="button" onClick={() => setOpenPagar(null)} className="btn-ghost">Cancelar</button>
-              <button type="submit" className="btn-success">Guardar pago</button>
+              <button type="button" onClick={() => setOpenPagar(null)} className="btn-ghost bg-indigo-600 rounded text-white p-2">Cancelar</button>
+              <button type="submit" className="btn-success bg-indigo-600 rounded text-white p-2">Guardar pago</button>
             </div>
           </form>
         </Modal>
