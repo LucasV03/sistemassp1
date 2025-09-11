@@ -2,13 +2,10 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 
-/* =========================================================
+/* =========================
  * Helpers
- * =======================================================*/
-function red(n: number) {
-  return Math.round((n + Number.EPSILON) * 100) / 100;
-}
-
+ * =======================*/
+const red = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
 type AlicIva = 0 | 10.5 | 21;
 
 function calcLinea(
@@ -20,11 +17,7 @@ function calcLinea(
   const subtotal = cantidad * precioUnitario * (1 - (descuentoPorc ?? 0) / 100);
   const ivaMonto = subtotal * ((alicuotaIva ?? 0) / 100);
   const totalLinea = subtotal + ivaMonto;
-  return {
-    subtotal: red(subtotal),
-    ivaMonto: red(ivaMonto),
-    totalLinea: red(totalLinea),
-  };
+  return { subtotal: red(subtotal), ivaMonto: red(ivaMonto), totalLinea: red(totalLinea) };
 }
 
 function sumarTotalesLineas(
@@ -37,9 +30,16 @@ function sumarTotalesLineas(
   return { neto, iva21, iva105, total };
 }
 
-/* =========================================================
- * LISTAR (con filtros)
- * =======================================================*/
+/** vencimiento = fecha + N meses */
+function addMonthsClamp(dateIso: string, months = 1) {
+  const d = new Date(dateIso);
+  d.setMonth(d.getMonth() + months);
+  return d.toISOString();
+}
+
+/* =========================
+ * LISTAR (solo OCs ENVIADAS)
+ * =======================*/
 export const listar = query({
   args: {
     proveedorId: v.optional(v.id("proveedores")),
@@ -51,9 +51,9 @@ export const listar = query({
         v.literal("ANULADA")
       )
     ),
-    desde: v.optional(v.string()), // ISO
-    hasta: v.optional(v.string()), // ISO
-    buscar: v.optional(v.string()), // por numeroProveedor / notas
+    desde: v.optional(v.string()),
+    hasta: v.optional(v.string()),
+    buscar: v.optional(v.string()),
   },
   handler: async (ctx, a) => {
     let list = await ctx.db
@@ -61,20 +61,23 @@ export const listar = query({
       .withIndex("byFechaEmision")
       .collect();
 
-    // 🔴 Mostrar solo facturas cuya OC esté ENVIADA (si tiene ocId)
-    if (list.length) {
-      const filtradas: typeof list = [];
-      for (const f of list) {
-        if (!f.ocId) { filtradas.push(f); continue; }
-        const oc = await ctx.db.get(f.ocId);
-        if (oc?.estado === "ENVIADA") filtradas.push(f);
-      }
-      list = filtradas;
-    }
+    
+// Filtrar por estado de la OC si existe ocId
+if (list.length) {
+  const filtradas: typeof list = [];
+  for (const f of list) {
+    if (!f.ocId) { filtradas.push(f); continue; }
+    const oc = await ctx.db.get(f.ocId);
+    if (oc?.estado === "ENVIADA") filtradas.push(f);
+  }
+  list = filtradas;
+}
 
-    // Resto de filtros
+
+
+
     if (a.proveedorId) list = list.filter(f => f.proveedorId === a.proveedorId);
-    if (a.estado)      list = list.filter(f => f.estado === a.estado);
+    if (a.estado) list = list.filter(f => f.estado === a.estado);
 
     const desdeISO = a.desde ? new Date(a.desde).toISOString() : undefined;
     const hastaISO = a.hasta ? new Date(a.hasta).toISOString() : undefined;
@@ -93,60 +96,51 @@ export const listar = query({
   },
 });
 
-/* =========================================================
+/* =========================
  * OBTENER (cabecera + items)
- * =======================================================*/
+ * =======================*/
 export const obtener = query({
   args: { id: v.id("facturas_prov") },
   handler: async (ctx, { id }) => {
     const fac = await ctx.db.get(id);
     if (!fac) throw new Error("Factura no encontrada");
-
     const items = await ctx.db
       .query("facturas_prov_items")
       .withIndex("byFactura", q => q.eq("facturaId", id))
       .collect();
-
     return { fac, items };
   },
 });
 
-/* =========================================================
- * CREAR DESDE OC
- * - Crea cabecera e items copiando desde la OC
- * - Usa cantidadPedida para el valor de la línea
- * =======================================================*/
+/* =========================
+ * CREAR DESDE OC (vto por defecto +1 mes)
+ * =======================*/
 export const crearDesdeOC = mutation({
   args: {
     ocId: v.id("ordenes_compra"),
     numeroProveedor: v.string(),
-    fechaEmision: v.string(),                 // ISO
-    fechaVencimiento: v.optional(v.string()), // ISO
+    fechaEmision: v.string(),
+    fechaVencimiento: v.optional(v.string()),
     notas: v.optional(v.string()),
   },
   handler: async (ctx, a) => {
     const oc = await ctx.db.get(a.ocId);
     if (!oc) throw new Error("OC no encontrada");
-
-    const proveedor = await ctx.db.get(oc.proveedorId);
-    if (!proveedor) throw new Error("Proveedor no encontrado");
+    if (oc.estado !== "ENVIADA") {
+      throw new Error("Solo se puede facturar una OC que esté ENVIADA.");
+    }
 
     const ocItems = await ctx.db
       .query("detalle_ordenes_compra")
       .withIndex("por_oc", q => q.eq("ocId", a.ocId))
       .collect();
-
     if (ocItems.length === 0) throw new Error("La OC no tiene ítems");
 
-    // Mapear ítems OC -> líneas de factura (cantidadPedida)
     const lineas = ocItems.map(it => {
       const descuento = it.descuentoPorc ?? 0;
       const alic = (it.tasaImpuesto ?? 0) as AlicIva;
       const { subtotal, ivaMonto, totalLinea } = calcLinea(
-        it.cantidadPedida,
-        it.precioUnitario,
-        descuento,
-        alic
+        it.cantidadPedida, it.precioUnitario, descuento, alic
       );
       return {
         ocItemId: it._id,
@@ -156,57 +150,43 @@ export const crearDesdeOC = mutation({
         precioUnitario: it.precioUnitario,
         descuentoPorc: descuento,
         alicuotaIva: alic,
-        subtotal,
-        ivaMonto,
-        totalLinea,
+        subtotal, ivaMonto, totalLinea,
       };
     });
 
     const { neto, iva21, iva105, total } = sumarTotalesLineas(
-      lineas.map(l => ({
-        subtotal: l.subtotal,
-        ivaMonto: l.ivaMonto,
-        totalLinea: l.totalLinea,
-        alicuotaIva: l.alicuotaIva,
-      }))
+      lineas.map(l => ({ subtotal: l.subtotal, ivaMonto: l.ivaMonto, totalLinea: l.totalLinea, alicuotaIva: l.alicuotaIva }))
     );
 
     const ahora = Date.now();
+    const emisionISO = new Date(a.fechaEmision).toISOString();
+    const vtoISO = a.fechaVencimiento
+      ? new Date(a.fechaVencimiento).toISOString()
+      : addMonthsClamp(emisionISO, 1);
 
-    // Cabecera
+    const proveedor = await ctx.db.get(oc.proveedorId);
+    if (!proveedor) {
+  throw new Error("Proveedor no encontrado");
+}
     const facturaId = await ctx.db.insert("facturas_prov", {
       ocId: a.ocId,
       proveedorId: oc.proveedorId,
       proveedorNombre: proveedor.nombre,
-
       numeroProveedor: a.numeroProveedor,
       puntoVenta: undefined,
       tipo: undefined,
-
-      fechaEmision: new Date(a.fechaEmision).toISOString(),
-      fechaVencimiento: a.fechaVencimiento
-        ? new Date(a.fechaVencimiento).toISOString()
-        : undefined,
-
+      fechaEmision: emisionISO,
+      fechaVencimiento: vtoISO,
       moneda: oc.moneda,
       tipoCambio: oc.tipoCambio,
-      neto,
-      iva21,
-      iva105,
-      otrosImpuestos: 0,
-      total,
-      saldo: total,
-
+      neto, iva21, iva105, otrosImpuestos: 0,
+      total, saldo: total,
       estado: "PENDIENTE",
-      cae: undefined,
-      caeVto: undefined,
-
+      cae: undefined, caeVto: undefined,
       notas: a.notas,
-      creadoEn: ahora,
-      actualizadoEn: ahora,
+      creadoEn: ahora, actualizadoEn: ahora,
     });
 
-    // Ítems
     for (const l of lineas) {
       await ctx.db.insert("facturas_prov_items", {
         facturaId,
@@ -227,38 +207,29 @@ export const crearDesdeOC = mutation({
   },
 });
 
-/* =========================================================
- * LISTAR FACTURAS DE UNA OC + SUMAS
- * =======================================================*/
+/* =========================
+ * FACTURAS de una OC / Resumen de OC
+ * =======================*/
 export const listarDeOC = query({
   args: { ocId: v.id("ordenes_compra") },
   handler: async (ctx, { ocId }) => {
-    // Si tienes índice byOc, puedes reemplazar por withIndex("byOc", q => q.eq("ocId", ocId))
     let facturas = (await ctx.db.query("facturas_prov").collect()).filter(f => f.ocId === ocId);
     facturas.sort((a, b) => (a.fechaEmision < b.fechaEmision ? 1 : -1));
-
     const sumTotal = facturas.reduce((a, f) => a + (f.total ?? 0), 0);
     const sumSaldo = facturas.reduce((a, f) => a + (f.saldo ?? 0), 0);
-
     return { facturas, sumTotal, sumSaldo };
   },
 });
 
-/* =========================================================
- * RESUMEN FINANCIERO DE UNA OC
- * =======================================================*/
 export const resumenDeOC = query({
   args: { ocId: v.id("ordenes_compra") },
   handler: async (ctx, { ocId }) => {
     const oc = await ctx.db.get(ocId);
     if (!oc) throw new Error("OC no encontrada");
-
     const facturas = (await ctx.db.query("facturas_prov").collect()).filter(f => f.ocId === ocId);
-
     const facturado = facturas.reduce((a, f) => a + (f.total ?? 0), 0);
     const pagado = facturas.reduce((a, f) => a + ((f.total ?? 0) - (f.saldo ?? 0)), 0);
     const saldoAPagar = facturas.reduce((a, f) => a + (f.saldo ?? 0), 0);
-
     return {
       oc,
       totalOC: oc.totalGeneral ?? 0,
@@ -270,15 +241,13 @@ export const resumenDeOC = query({
   },
 });
 
-/* =========================================================
- * REGISTRAR PAGO / RETENCIONES
- * - Inserta pago, actualiza saldo/estado
- * - Si todas las facturas de la OC quedan en $0, cierra la OC
- * =======================================================*/
+/* =========================
+ * PAGOS
+ * =======================*/
 export const registrarPago = mutation({
   args: {
     facturaId: v.id("facturas_prov"),
-    fechaPago: v.string(), // ISO
+    fechaPago: v.string(),
     medio: v.union(
       v.literal("TRANSFERENCIA"),
       v.literal("EFECTIVO"),
@@ -296,8 +265,13 @@ export const registrarPago = mutation({
   handler: async (ctx, a) => {
     const fac = await ctx.db.get(a.facturaId);
     if (!fac) throw new Error("Factura no encontrada");
-    if (fac.estado === "ANULADA")
-      throw new Error("No se puede pagar una factura anulada");
+    if (fac.estado === "ANULADA") throw new Error("No se puede pagar una factura anulada");
+
+    const retTotal = (a.retIva ?? 0) + (a.retGanancias ?? 0) + (a.retIIBB ?? 0);
+    const pagoTotal = red(a.importe + retTotal);
+    if (a.importe <= 0) throw new Error("El importe del pago debe ser mayor a 0");
+    if (pagoTotal - fac.saldo > 0.01)
+      throw new Error("El pago (importe + retenciones) supera el saldo pendiente de la factura");
 
     const ahora = Date.now();
 
@@ -314,15 +288,9 @@ export const registrarPago = mutation({
       creadoEn: ahora,
     });
 
-    const retTotal = (a.retIva ?? 0) + (a.retGanancias ?? 0) + (a.retIIBB ?? 0);
-    const nuevoSaldo = Math.max(0, red(fac.saldo - a.importe - retTotal));
-
+    const nuevoSaldo = Math.max(0, red(fac.saldo - pagoTotal));
     const nuevoEstado: "PENDIENTE" | "PARCIAL" | "PAGADA" =
-      nuevoSaldo === 0
-        ? "PAGADA"
-        : nuevoSaldo < fac.total
-        ? "PARCIAL"
-        : "PENDIENTE";
+      nuevoSaldo === 0 ? "PAGADA" : nuevoSaldo < fac.total ? "PARCIAL" : "PENDIENTE";
 
     await ctx.db.patch(a.facturaId, {
       saldo: nuevoSaldo,
@@ -330,27 +298,28 @@ export const registrarPago = mutation({
       actualizadoEn: ahora,
     });
 
-    // Si la factura está vinculada a una OC, revisar si debemos cerrarla
+    // cerrar OC si todas sus facturas quedaron en 0
     if (fac.ocId) {
-      // Traer todas las facturas de la misma OC y sumar saldos
       const todas = (await ctx.db.query("facturas_prov").collect()).filter(f => f.ocId === fac.ocId);
       const saldoAPagar = todas.reduce((acc, f) => acc + (f.saldo ?? 0), 0);
-
       if (saldoAPagar === 0) {
         await ctx.db.patch(fac.ocId, { estado: "CERRADA", actualizadoEn: Date.now() });
       }
     }
   },
+
+  
 });
 
-/* =========================================================
+/* =========================
  * ANULAR
- * =======================================================*/
+ * =======================*/
 export const anular = mutation({
   args: { facturaId: v.id("facturas_prov"), motivo: v.optional(v.string()) },
   handler: async (ctx, { facturaId, motivo }) => {
     const fac = await ctx.db.get(facturaId);
     if (!fac) throw new Error("Factura no encontrada");
+    if (fac.estado === "PAGADA") throw new Error("No se puede anular una factura ya pagada.");
 
     await ctx.db.patch(facturaId, {
       estado: "ANULADA",
@@ -361,12 +330,12 @@ export const anular = mutation({
   },
 });
 
-/* =========================================================
- * (Opcional) ¿Qué hay que pagar hasta una fecha?
- * =======================================================*/
+/* =========================
+ * A PAGAR (opcional)
+ * =======================*/
 export const aPagar = query({
   args: {
-    hasta: v.optional(v.string()), // ISO
+    hasta: v.optional(v.string()),
     proveedorId: v.optional(v.id("proveedores")),
   },
   handler: async (ctx, { hasta, proveedorId }) => {
@@ -387,7 +356,9 @@ export const aPagar = query({
       list = list.filter(f => !f.fechaVencimiento || f.fechaVencimiento <= h);
     }
 
-    list.sort((a, b) => ((a.fechaVencimiento ?? a.fechaEmision) < (b.fechaVencimiento ?? b.fechaEmision) ? -1 : 1));
+    list.sort((a, b) =>
+      ((a.fechaVencimiento ?? a.fechaEmision) < (b.fechaVencimiento ?? b.fechaEmision) ? -1 : 1)
+    );
     const totalSaldo = list.reduce((a, f) => a + (f.saldo ?? 0), 0);
     return { list, totalSaldo };
   },
