@@ -184,7 +184,7 @@ export default function FacturasProvPage() {
         <table className="w-full text-sm">
           <thead className="bg-neutral-900 text-zinc-300">
             <tr>
-              <th className="text-left px-4 py-2">Nº Prov.</th>
+              <th className="text-left px-4 py-2">Nº Factura.</th>
               <th className="text-left px-4 py-2">Proveedor</th>
               <th className="text-left px-4 py-2">Emisión</th>
               <th className="text-left px-4 py-2">Vence</th>
