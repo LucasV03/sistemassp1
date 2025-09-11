@@ -61,12 +61,23 @@ export const listar = query({
       .withIndex("byFechaEmision")
       .collect();
 
+    // 🔴 Mostrar solo facturas cuya OC esté ENVIADA (si tiene ocId)
+    if (list.length) {
+      const filtradas: typeof list = [];
+      for (const f of list) {
+        if (!f.ocId) { filtradas.push(f); continue; }
+        const oc = await ctx.db.get(f.ocId);
+        if (oc?.estado === "ENVIADA") filtradas.push(f);
+      }
+      list = filtradas;
+    }
+
+    // Resto de filtros
     if (a.proveedorId) list = list.filter(f => f.proveedorId === a.proveedorId);
-    if (a.estado) list = list.filter(f => f.estado === a.estado);
+    if (a.estado)      list = list.filter(f => f.estado === a.estado);
 
     const desdeISO = a.desde ? new Date(a.desde).toISOString() : undefined;
     const hastaISO = a.hasta ? new Date(a.hasta).toISOString() : undefined;
-
     if (desdeISO) list = list.filter(f => f.fechaEmision >= desdeISO);
     if (hastaISO) list = list.filter(f => f.fechaEmision <= hastaISO);
 
@@ -77,7 +88,6 @@ export const listar = query({
       );
     }
 
-    // Orden por fecha desc (ISO compara bien)
     list.sort((x, y) => (x.fechaEmision < y.fechaEmision ? 1 : -1));
     return list;
   },

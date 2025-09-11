@@ -321,12 +321,12 @@ export default function FacturasProvPage() {
       {openConfirmAnular && (
         <Modal onClose={() => setOpenConfirmAnular(null)} title="Anular factura">
           <div className="space-y-4">
-            <p className="text-neutral-300">
+            <p className="text-white">
               ¿Seguro que querés <b>anular</b> esta factura? Esta acción pondrá el saldo en 0.
             </p>
             <div className="flex justify-end gap-2">
-              <button onClick={() => setOpenConfirmAnular(null)} className="btn-ghost">Cancelar</button>
-              <button onClick={() => onAnularClick(openConfirmAnular)} className="btn-danger">Anular</button>
+              <button onClick={() => setOpenConfirmAnular(null)} className="btn-ghost bg-zinc-300 rounded w-20">Cancelar</button>
+              <button onClick={() => onAnularClick(openConfirmAnular)} className="btn-danger bg-red-600 rounded w-20">Anular</button>
             </div>
           </div>
         </Modal>

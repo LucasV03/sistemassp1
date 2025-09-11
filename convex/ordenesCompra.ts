@@ -306,31 +306,29 @@ export const cambiarEstado = mutation({
     const ahora = Date.now();
     await ctx.db.patch(id, { estado, actualizadoEn: ahora });
 
-    // Consideramos "activa" a APROBADA o ENVIADA
-    const esActiva = estado === "APROBADA" || estado === "ENVIADA";
+    // ✅ SOLO cuando pasa a ENVIADA creamos la factura
     if (estado !== "ENVIADA") return;
 
-    // ¿Ya hay factura para esta OC?
-    const existentes = (await ctx.db.query("facturas_prov").collect()).filter(f => f.ocId === id);
-    if (existentes.length > 0) return; // ya hay, no duplicar
+    // Evitar duplicados
+    const ya = (await ctx.db.query("facturas_prov").collect()).some(f => f.ocId === id);
+    if (ya) return;
 
     const oc = await ctx.db.get(id);
     if (!oc) return;
-
     const prov = await ctx.db.get(oc.proveedorId);
-    if (!prov) return;
-
     const ocItems = await ctx.db
       .query("detalle_ordenes_compra")
-      .withIndex("por_oc", (q) => q.eq("ocId", id))
+      .withIndex("por_oc", q => q.eq("ocId", id))
       .collect();
     if (ocItems.length === 0) return;
 
-    // Calcular líneas con cantidadPedida
-    const lineas = ocItems.map((it) => {
+    const red = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
+    const normAlic = (x?: number) => (x === 21 ? 21 : x === 10.5 ? 10.5 : 0) as 0|10.5|21;
+
+    const lineas = ocItems.map(it => {
       const desc = it.descuentoPorc ?? 0;
       const alic = normAlic(it.tasaImpuesto);
-      const subtotal = it.cantidadPedida * it.precioUnitario * (1 - (desc / 100));
+      const subtotal = it.cantidadPedida * it.precioUnitario * (1 - desc / 100);
       const iva = subtotal * (alic / 100);
       const total = subtotal + iva;
       return {
@@ -347,40 +345,25 @@ export const cambiarEstado = mutation({
       };
     });
 
-    const neto = red(lineas.reduce((a, l) => a + l.subtotal, 0));
-    const iva21 = red(lineas.filter(l => l.alicuotaIva === 21).reduce((a, l) => a + l.ivaMonto, 0));
+    const neto   = red(lineas.reduce((a, l) => a + l.subtotal, 0));
+    const iva21  = red(lineas.filter(l => l.alicuotaIva === 21).reduce((a, l) => a + l.ivaMonto, 0));
     const iva105 = red(lineas.filter(l => l.alicuotaIva === 10.5).reduce((a, l) => a + l.ivaMonto, 0));
-    const total = red(lineas.reduce((a, l) => a + l.totalLinea, 0));
+    const total  = red(lineas.reduce((a, l) => a + l.totalLinea, 0));
 
-    // Crear factura automática (placeholder en numeroProveedor)
     const numeroProveedor = `AUTO-${new Date().getFullYear()}-${String(ahora).slice(-6)}`;
 
     const facturaId = await ctx.db.insert("facturas_prov", {
       ocId: id,
       proveedorId: oc.proveedorId,
       proveedorNombre: (prov as any)?.nombre ?? "",
-
       numeroProveedor,
-      puntoVenta: undefined,
-      tipo: undefined,
-
       fechaEmision: new Date().toISOString(),
-      fechaVencimiento: undefined,
-
       moneda: oc.moneda,
       tipoCambio: oc.tipoCambio,
-      neto,
-      iva21,
-      iva105,
-      otrosImpuestos: 0,
-      total,
-      saldo: total,
-
+      neto, iva21, iva105, otrosImpuestos: 0,
+      total, saldo: total,
       estado: "PENDIENTE",
-      cae: undefined,
-      caeVto: undefined,
-
-      notas: `Generada automáticamente al activar OC ${oc.numeroOrden}`,
+      notas: `Generada automáticamente al marcar OC ${oc.numeroOrden} como ENVIADA`,
       creadoEn: ahora,
       actualizadoEn: ahora,
     });
@@ -402,7 +385,6 @@ export const cambiarEstado = mutation({
     }
   },
 });
-
 /* =========================
  * RECEPCIÓN PARCIAL / SIMPLE
  * ========================= */
