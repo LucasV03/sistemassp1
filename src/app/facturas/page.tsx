@@ -262,37 +262,138 @@ export default function FacturasProvPage() {
       </div>
 
 
-      {/* MODAL: Registrar pago */}
-      {openPagar && (
-        <Modal onClose={() => setOpenPagar(null)} title="Registrar pago">
-          <form onSubmit={onPagarSubmit(openPagar)} className="space-y-3">
-            <div className="grid grid-cols-2 gap-3 text-zinc-500">
-              <L label="Fecha de pago"><input type="date" name="fechaPago" className="inp" /></L>
-              <L label="Medio">
-                <select name="medio" className="inp">
-                  <option>TRANSFERENCIA</option>
-                  <option>EFECTIVO</option>
-                  <option>CHEQUE</option>
-                  <option>TARJETA</option>
-                  <option>OTRO</option>
-                </select>
-              </L>
-              <L label="Importe"><input type="number" step="0.01" name="importe" className="inp" /></L>
-              <div className="grid grid-cols-3 gap-3 col-span-2">
-                <L label="Ret. IVA"><input type="number" step="0.01" name="retIva" className="inp" /></L>
-                <L label="Ret. Ganancias"><input type="number" step="0.01" name="retGanancias" className="inp" /></L>
-                <L label="Ret. IIBB"><input type="number" step="0.01" name="retIIBB" className="inp" /></L>
-              </div>
-            </div>
-            <L label="Referencia"><input name="referencia" className="inp" /></L>
-            <L label="Notas"><textarea name="notas" rows={3} className="inp" /></L>
-            <div className="flex justify-end gap-2">
-              <button type="button" onClick={() => setOpenPagar(null)} className="btn-ghost bg-indigo-600 rounded text-white p-2">Cancelar</button>
-              <button type="submit" className="btn-success bg-indigo-600 rounded text-white p-2">Guardar pago</button>
-            </div>
-          </form>
-        </Modal>
-      )}
+{/* MODAL: Registrar pago */}
+{openPagar && (
+  <Modal onClose={() => setOpenPagar(null)} title="Registrar pago">
+    <form onSubmit={onPagarSubmit(openPagar)} className="space-y-3">
+      <div className="grid grid-cols-2 gap-3 text-zinc-500">
+        {/* Fecha actual por defecto */}
+        <L label="Fecha de pago">
+          <input
+            type="date"
+            name="fechaPago"
+            defaultValue={new Date().toISOString().split("T")[0]}
+            className="inp"
+          />
+        </L>
+
+        {/* Medio de pago */}
+        <L label="Medio de pago">
+          <div className="relative">
+            <select
+              name="medio"
+              id="medioPago"
+              className="inp cursor-pointer appearance-none text-white bg-neutral-900 border border-neutral-600 pr-8"
+              onChange={(e) => {
+                const cuotasEl = document.getElementById("cuotasWrapper");
+                const detalleEl = document.getElementById("detalleCuotas");
+                if (cuotasEl) {
+                  cuotasEl.style.display =
+                    e.target.value === "TARJETA DE CREDITO" ? "block" : "none";
+                }
+                if (detalleEl) detalleEl.innerHTML = ""; // limpiar detalle
+                // Reset importe
+                const factura = facturas?.find((f) => f._id === openPagar);
+                const input = document.getElementById("importeInput") as HTMLInputElement;
+                if (factura && input) input.value = (factura.saldo ?? 0).toFixed(2);
+              }}
+              defaultValue=""
+            >
+              <option value="" disabled className="text-gray-400">
+                Seleccione medio...
+              </option>
+              <option value="TRANSFERENCIA">TRANSFERENCIA</option>
+              <option value="EFECTIVO">EFECTIVO</option>
+              <option value="CHEQUE">CHEQUE</option>
+              <option value="TARJETA DE CREDITO">TARJETA DE CREDITO</option>
+              <option value="TARJETA DE DEBITO">TARJETA DE DEBITO</option>
+              <option value="OTRO">OTRO</option>
+            </select>
+          </div>
+        </L>
+
+        {/* Importe fijo */}
+        <L label="Importe a pagar">
+          <input
+            type="number"
+            step="0.01"
+            name="importe"
+            id="importeInput"
+            value={(facturas?.find((f) => f._id === openPagar)?.saldo ?? 0).toFixed(2)}
+            readOnly
+            className="inp"
+          />
+        </L>
+      </div>
+
+      {/* Selector de cuotas (solo tarjeta de crédito) */}
+      <div id="cuotasWrapper" style={{ display: "none" }}>
+        <L label="Cuotas">
+          <div className="relative">
+            <select
+              name="cuotas"
+              id="cuotas"
+              className="inp cursor-pointer appearance-none text-white bg-neutral-900 border border-neutral-600 pr-8"
+              onChange={(e) => {
+                const factura = facturas?.find((f) => f._id === openPagar);
+                if (!factura) return;
+                const input = document.getElementById("importeInput") as HTMLInputElement;
+                const detalleEl = document.getElementById("detalleCuotas");
+                if (!input || !detalleEl) return;
+
+                const base = factura.saldo ?? 0;
+                if (e.target.value) {
+                  const interes = base * 0.1; // 10%
+                  const totalConInteres = base + interes;
+                  input.value = totalConInteres.toFixed(2);
+                  const cuotas = parseInt(e.target.value);
+                  const valorCuota = totalConInteres / cuotas;
+
+                  detalleEl.innerHTML = `
+                    <p>Total con interés: <b>$${totalConInteres.toFixed(2)}</b></p>
+                    <p>${cuotas} cuotas de <b>$${valorCuota.toFixed(2)}</b></p>
+                  `;
+                } else {
+                  input.value = base.toFixed(2);
+                  detalleEl.innerHTML = "";
+                }
+              }}
+              defaultValue=""
+            >
+              <option value="" disabled className="text-gray-400">
+                Seleccione cuotas...
+              </option>
+              <option value="3">3 cuotas (10% interés)</option>
+              <option value="5">5 cuotas (10% interés)</option>
+              <option value="8">8 cuotas (10% interés)</option>
+            </select>
+
+          </div>
+        </L>
+        <div
+          id="detalleCuotas"
+          className="text-sm text-indigo-400 mt-2 space-y-1"
+        ></div>
+      </div>
+
+      <div className="flex justify-end gap-2">
+        <button
+          type="button"
+          onClick={() => setOpenPagar(null)}
+          className="btn-ghost bg-indigo-600 rounded text-white p-2"
+        >
+          Cancelar
+        </button>
+        <button
+          type="submit"
+          className="btn-success bg-indigo-600 rounded text-white p-2"
+        >
+          Guardar pago
+        </button>
+      </div>
+    </form>
+  </Modal>
+)}
 
       {/* MODAL: Confirmar anulación */}
       {openConfirmAnular && (
