@@ -142,12 +142,7 @@ export default function FacturasProvPage() {
           <div className="px-3 py-2 rounded bg-neutral-900 border border-neutral-700 text-neutral-200">
             Vencidas: <b>{kpis.cantVencidas}</b>
           </div>
-          <button
-            onClick={() => setOpenNueva(true)}
-            className="px-3 py-2 rounded bg-indigo-600 text-white hover:bg-indigo-500"
-          >
-            Registrar desde OC
-          </button>
+          
         </div>
       </div>
 
@@ -266,24 +261,6 @@ export default function FacturasProvPage() {
         </table>
       </div>
 
-      {/* MODAL: Nueva factura desde OC */}
-      {openNueva && (
-        <Modal onClose={() => setOpenNueva(false)} title="Registrar factura desde OC">
-          <form onSubmit={onNuevaDesdeOCSubmit} className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
-              <L label="OC ID"><input name="ocId" className="inp" /></L>
-              <L label="Nº factura proveedor"><input name="numeroProveedor" className="inp" /></L>
-              <L label="Fecha emisión"><input type="date" name="fechaEmision" className="inp" /></L>
-              <L label="Fecha vencimiento"><input type="date" name="fechaVencimiento" className="inp" /></L>
-            </div>
-            <L label="Notas"><textarea name="notas" rows={3} className="inp" /></L>
-            <div className="flex justify-end gap-2">
-              <button type="button" onClick={() => setOpenNueva(false)} className="btn-ghost">Cancelar</button>
-              <button type="submit" className="btn-primary">Crear</button>
-            </div>
-          </form>
-        </Modal>
-      )}
 
       {/* MODAL: Registrar pago */}
       {openPagar && (
