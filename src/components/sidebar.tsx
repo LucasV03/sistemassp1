@@ -14,7 +14,7 @@ const links = [
   
   { href: '/movimientos',  label: 'Movimientos',    Icon: Clock },
   { href: '/depositos',   label: 'Depositos',     Icon: Box },
-  { href: '/traspasos',   label: 'Traspasos',     Icon: ArrowLeftRight },
+  //{ href: '/traspasos',   label: 'Traspasos',     Icon: ArrowLeftRight },
   //{ href: '/reportes',  label: 'Reportes',    Icon: Paperclip },
   { href: '/proveedores', label: 'Proveedores', Icon: Users2Icon },
   //{ href: '/clientes',  label: 'Clientes',    Icon: UserCheck2 },

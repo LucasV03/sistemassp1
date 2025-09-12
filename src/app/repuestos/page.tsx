@@ -80,6 +80,18 @@ export default function RepuestosPage() {
         <div className="flex flex-wrap items-center justify-between gap-3 mb-6 ">
           <h2 className="text-2xl font-semibold text-white">📦 Repuestos</h2>
 
+
+          
+            <button 
+            className="px-3 py-1 text-sm border rounded text-white"
+
+             
+            onClick={() => router.push("/repuestos/asignar")}
+            >Asignar repuesto 
+              
+
+          </button>
+
           {/* Ordenar */}
           <div className="flex items-center gap-2">
             <label className="text-sm text-white">Ordenar por:</label>
