@@ -172,7 +172,7 @@ export function DownloadFacturaPdfButton({ factura }: Props) {
   return (
     <button
       onClick={handleDownload}
-      className="px-2 py-1 rounded bg-indigo-600 text-white hover:bg-indigo-500 disabled:opacity-60"
+      className="px-2 py-1 rounded bg-sky-600 text-white hover:bg-sky-700 disabled:opacity-60"
       disabled={downloading}
       title="Descargar factura en PDF"
     >
