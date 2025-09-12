@@ -2,8 +2,11 @@
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { useState } from "react";
-
 import { Id } from "../../../../convex/_generated/dataModel";
+import { Card, CardContent } from "@/components/ui/card";
+import { Label } from "../../../components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 export default function AsignarRepuestoPage() {
   const depositos = useQuery(api.depositos.listar);
@@ -21,44 +24,80 @@ export default function AsignarRepuestoPage() {
       repuestoId,
       stockInicial: stock,
     });
+    setDepositoId(null);
+    setRepuestoId(null);
+    setStock(0);
   };
 
   return (
+    <div className="flex justify-center items-center min-h-screen  p-6">
+      <Card className="w-full max-w-md shadow-lg rounded-2xl bg-slate-500">
+        <CardContent className="p-6 space-y-6">
+          <h1 className="text-xl font-bold text-gray-800">
+            ➕ Asignar Repuesto a Depósito
+          </h1>
 
-    <div>
-      <select
-        onChange={(e) =>
-          setDepositoId(e.target.value as Id<"depositos">) // ✅ casteo
-        }
-      >
-        <option value="">Seleccionar depósito</option>
-        {depositos?.map((d) => (
-          <option key={d._id} value={d._id}>
-            {d.nombre}
-          </option>
-        ))}
-      </select>
+          {/* Select Depósito */}
+          <div className="space-y-2">
+            <Label htmlFor="deposito">Depósito</Label>
+            <select
+              id="deposito"
+              className="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring focus:ring-indigo-200 p-2"
+              value={depositoId ?? ""}
+              onChange={(e) =>
+                setDepositoId(e.target.value as Id<"depositos">)
+              }
+            >
+              <option value="">Seleccionar depósito</option>
+              {depositos?.map((d) => (
+                <option key={d._id} value={d._id}>
+                  {d.nombre}
+                </option>
+              ))}
+            </select>
+          </div>
 
-      <select
-        onChange={(e) =>
-          setRepuestoId(e.target.value as Id<"repuestos">) // ✅ casteo
-        }
-      >
-        <option value="">Seleccionar repuesto</option>
-        {repuestos?.map((r) => (
-          <option key={r._id} value={r._id}>
-            {r.nombre}
-          </option>
-        ))}
-      </select>
+          {/* Select Repuesto */}
+          <div className="space-y-2">
+            <Label htmlFor="repuesto">Repuesto</Label>
+            <select
+              id="repuesto"
+              className="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring focus:ring-indigo-200 p-2"
+              value={repuestoId ?? ""}
+              onChange={(e) =>
+                setRepuestoId(e.target.value as Id<"repuestos">)
+              }
+            >
+              <option value="">Seleccionar repuesto</option>
+              {repuestos?.map((r) => (
+                <option key={r._id} value={r._id}>
+                  {r.nombre}
+                </option>
+              ))}
+            </select>
+          </div>
 
-      <input
-        type="number"
-        value={stock}
-        onChange={(e) => setStock(Number(e.target.value))}
-      />
+          {/* Input Stock */}
+          <div className="space-y-2">
+            <Label htmlFor="stock">Stock Inicial</Label>
+            <Input
+              id="stock"
+              type="number"
+              value={stock}
+              onChange={(e) => setStock(Number(e.target.value))}
+              placeholder="Ingrese cantidad"
+            />
+          </div>
 
-      <button onClick={handleSubmit}>Asignar</button>
+          {/* Botón */}
+          <Button
+            onClick={handleSubmit}
+            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg py-2"
+          >
+            Asignar
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   );
 }
