@@ -13,7 +13,7 @@ export default function OCList() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Órdenes de compra</h1>
         <Link href="/ordenes-compra/nueva" className="px-4 py-2 rounded bg-violet-600 text-white">
-          Nueva OC
+          Nueva Orden de Compra
         </Link>
       </div>
 

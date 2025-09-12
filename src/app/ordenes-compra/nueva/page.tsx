@@ -29,13 +29,21 @@ export default function NuevaOC() {
     fechaOrden: new Date().toISOString(),
     fechaEsperada: "",
     depositoEntregaId: "" as any,
-    direccionEntrega: "",
     moneda: "ARS" as "ARS" | "USD",
     tipoCambio: 1,
     condicionesPago: "",
     compradorUsuario: "",
     notas: "",
   });
+
+  // >>> Ajuste automático del tipo de cambio según moneda
+  useEffect(() => {
+    if (h.moneda === "ARS") {
+      setH(s => ({ ...s, tipoCambio: 1 }));
+    } else if (h.moneda === "USD") {
+      setH(s => ({ ...s, tipoCambio: 1400 }));
+    }
+  }, [h.moneda]);
 
   // Items
   const [items, setItems] = useState<ItemRow[]>([]);
@@ -80,7 +88,6 @@ export default function NuevaOC() {
         fechaOrden: h.fechaOrden,
         fechaEsperada: h.fechaEsperada || undefined,
         depositoEntregaId: h.depositoEntregaId as any,
-        direccionEntrega: h.direccionEntrega || undefined,
         moneda: h.moneda,
         tipoCambio: Number(h.tipoCambio) || 1,
         condicionesPago: h.condicionesPago || undefined,
@@ -123,7 +130,7 @@ export default function NuevaOC() {
             value={h.proveedorId ?? ""}
             onChange={(e) => setH(s => ({ ...s, proveedorId: e.target.value as any }))}
           >
-            <option value="">Seleccioná un proveedor…</option>
+            <option value="">Seleccionar un proveedor</option>
             {proveedores.map((p: any) => (
               <option key={p._id} value={p._id}>{p.nombre} {p.cuit ? `— CUIT ${p.cuit}` : ""}</option>
             ))}
@@ -138,7 +145,7 @@ export default function NuevaOC() {
             value={h.depositoEntregaId ?? ""}
             onChange={(e) => setH(s => ({ ...s, depositoEntregaId: e.target.value as any }))}
           >
-            <option value="">Seleccioná depósito…</option>
+            <option value="">Seleccionar depósito</option>
             {depositos.map((d: any) => (
               <option key={d._id} value={d._id}>{d.nombre}</option>
             ))}
@@ -146,15 +153,7 @@ export default function NuevaOC() {
         </div>
 
         {/* Dirección de entrega */}
-        <div>
-          <label className="block text-sm text-neutral-300 mb-1">Dirección de entrega</label>
-          <input
-            className="w-full bg-neutral-900 border border-neutral-800 rounded p-2"
-            placeholder="Ej: Depósito Central"
-            value={h.direccionEntrega}
-            onChange={(e) => setH(s => ({ ...s, direccionEntrega: e.target.value }))}
-          />
-        </div>
+
 
         {/* Fecha orden (solo lectura) */}
         <div>
@@ -195,14 +194,26 @@ export default function NuevaOC() {
           </div>
           <div>
             <label className="block text-sm text-neutral-300 mb-1">Tipo de cambio</label>
-            <input
-              type="number"
-              step="0.0001"
-              className="w-full bg-neutral-900 border border-neutral-800 rounded p-2"
-              placeholder="Ej: 980.50"
-              value={h.tipoCambio}
-              onChange={(e) => setH(s => ({ ...s, tipoCambio: Number(e.target.value) || 1 }))}
-            />
+            {h.moneda === "ARS" ? (
+              // ARS: deshabilitado y muestra guion
+              <input
+                type="text"
+                className="w-full bg-neutral-900 border border-neutral-800 rounded p-2 text-center text-neutral-400"
+                value="-"
+                disabled
+                title="No aplica tipo de cambio para ARS"
+              />
+            ) : (
+              // USD: editable con 1400 por defecto
+              <input
+                type="number"
+                step="0.0001"
+                className="w-full bg-neutral-900 border border-neutral-800 rounded p-2"
+                placeholder="Ej: 1400.00"
+                value={h.tipoCambio}
+                onChange={(e) => setH(s => ({ ...s, tipoCambio: Number(e.target.value) || 1 }))}
+              />
+            )}
           </div>
         </div>
 
@@ -371,7 +382,7 @@ export default function NuevaOC() {
           disabled={saving}
           className="px-4 py-2 rounded bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white"
         >
-          {saving ? 'Guardando…' : 'Guardar OC'}
+          {saving ? 'Guardando…' : 'Guardar Orden de Compra'}
         </button>
         <button
           onClick={() => window.history.back()}
