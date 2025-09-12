@@ -38,7 +38,7 @@ function addMonthsClamp(dateIso: string, months = 1) {
 }
 
 /* =========================
- * LISTAR (solo OCs ENVIADAS)
+ * LISTAR (sin filtrar por estado de la OC)
  * =======================*/
 export const listar = query({
   args: {
@@ -61,21 +61,7 @@ export const listar = query({
       .withIndex("byFechaEmision")
       .collect();
 
-    
-// Filtrar por estado de la OC si existe ocId
-if (list.length) {
-  const filtradas: typeof list = [];
-  for (const f of list) {
-    if (!f.ocId) { filtradas.push(f); continue; }
-    const oc = await ctx.db.get(f.ocId);
-    if (oc?.estado === "ENVIADA") filtradas.push(f);
-  }
-  list = filtradas;
-}
-
-
-
-
+    // Ya no filtramos por estado de la OC
     if (a.proveedorId) list = list.filter(f => f.proveedorId === a.proveedorId);
     if (a.estado) list = list.filter(f => f.estado === a.estado);
 
@@ -166,8 +152,8 @@ export const crearDesdeOC = mutation({
 
     const proveedor = await ctx.db.get(oc.proveedorId);
     if (!proveedor) {
-  throw new Error("Proveedor no encontrado");
-}
+      throw new Error("Proveedor no encontrado");
+    }
     const facturaId = await ctx.db.insert("facturas_prov", {
       ocId: a.ocId,
       proveedorId: oc.proveedorId,
@@ -248,11 +234,14 @@ export const registrarPago = mutation({
   args: {
     facturaId: v.id("facturas_prov"),
     fechaPago: v.string(),
+    // Aceptamos lo que viene del front…
     medio: v.union(
       v.literal("TRANSFERENCIA"),
       v.literal("EFECTIVO"),
       v.literal("CHEQUE"),
-      v.literal("TARJETA"),
+      v.literal("TARJETA"),               // por compatibilidad
+      v.literal("TARJETA DE CREDITO"),
+      v.literal("TARJETA DE DEBITO"),
       v.literal("OTRO")
     ),
     importe: v.number(),
@@ -267,6 +256,17 @@ export const registrarPago = mutation({
     if (!fac) throw new Error("Factura no encontrada");
     if (fac.estado === "ANULADA") throw new Error("No se puede pagar una factura anulada");
 
+    // Normalizamos a los valores que admite el schema de pagos_prov (incluye "TARJETA")
+    const medioDB:
+      | "TRANSFERENCIA"
+      | "EFECTIVO"
+      | "CHEQUE"
+      | "TARJETA"
+      | "OTRO" =
+      a.medio === "TARJETA DE CREDITO" || a.medio === "TARJETA DE DEBITO"
+        ? "TARJETA"
+        : (a.medio as "TRANSFERENCIA" | "EFECTIVO" | "CHEQUE" | "TARJETA" | "OTRO");
+
     const retTotal = (a.retIva ?? 0) + (a.retGanancias ?? 0) + (a.retIIBB ?? 0);
     const pagoTotal = red(a.importe + retTotal);
     if (a.importe <= 0) throw new Error("El importe del pago debe ser mayor a 0");
@@ -278,7 +278,7 @@ export const registrarPago = mutation({
     await ctx.db.insert("pagos_prov", {
       facturaId: a.facturaId,
       fechaPago: new Date(a.fechaPago).toISOString(),
-      medio: a.medio,
+      medio: medioDB,
       importe: a.importe,
       retIva: a.retIva,
       retGanancias: a.retGanancias,
@@ -307,8 +307,6 @@ export const registrarPago = mutation({
       }
     }
   },
-
-  
 });
 
 /* =========================
