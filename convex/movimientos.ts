@@ -1,6 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
-import { Id } from "./_generated/dataModel"
+import { Id } from "./_generated/dataModel";
 
 // =========================
 // 1) Crear encabezado de movimiento
@@ -12,7 +12,6 @@ export const crearMovimiento = mutation({
     tipoMovimientoId: v.id("tipos_movimiento"),
     fecha_registro: v.string(),
     hora_registro: v.string(),
-    
   },
   handler: async (ctx, args) => {
     const movimientoId = await ctx.db.insert("movimientos_stock", {
@@ -21,7 +20,7 @@ export const crearMovimiento = mutation({
       tipoMovimientoId: args.tipoMovimientoId,
       fecha_registro: args.fecha_registro,
       hora_registro: args.hora_registro,
-      confirmado: false, 
+      confirmado: false,
     });
 
     return movimientoId;
@@ -38,7 +37,6 @@ export const agregarDetalle = mutation({
     cantidad: v.number(),
   },
   handler: async (ctx, args) => {
-    // Validar que el repuesto/deposito exista
     const repDep = await ctx.db.get(args.repuestoDepositoId);
     if (!repDep) throw new Error("Repuesto en depósito no encontrado");
 
@@ -74,33 +72,24 @@ export const confirmarMovimiento = mutation({
       throw new Error("El movimiento no tiene detalles");
     }
 
-    // Actualizar stock en cada repuesto/deposito
-    for (const det of detalles) {
-      const repDep = await ctx.db.get(det.repuestoDepositoId);
-      if (!repDep) throw new Error("Repuesto en depósito no encontrado");
+    // 🔹 Solo aplicamos stock si es INGRESO pendiente
+    if (tipoMov.ingreso_egreso === "ingreso") {
+      for (const det of detalles) {
+        const repDep = await ctx.db.get(det.repuestoDepositoId);
+        if (!repDep) throw new Error("Repuesto en depósito no encontrado");
 
-      let nuevoStock = repDep.stock_actual;
+        const nuevoStock = repDep.stock_actual + det.cantidad;
 
-      if (tipoMov.ingreso_egreso === "ingreso") {
-        nuevoStock += det.cantidad;
         if (repDep.capacidad_maxima && nuevoStock > repDep.capacidad_maxima) {
           throw new Error(
             `No se puede exceder la capacidad máxima (${repDep.capacidad_maxima}) del depósito`
           );
         }
-      } else if (tipoMov.ingreso_egreso === "egreso") {
-        if (repDep.stock_actual < det.cantidad) {
-          throw new Error(
-            `Stock insuficiente para el repuesto en depósito (${repDep.stock_actual} disponibles)`
-          );
-        }
-        nuevoStock -= det.cantidad;
-      }
 
-      await ctx.db.patch(det.repuestoDepositoId, { stock_actual: nuevoStock });
+        await ctx.db.patch(det.repuestoDepositoId, { stock_actual: nuevoStock });
+      }
     }
 
-    // marcar como confirmado
     await ctx.db.patch(args.movimientoId, { confirmado: true });
 
     return { ok: true, mensaje: "Movimiento confirmado y stock actualizado" };
@@ -108,7 +97,7 @@ export const confirmarMovimiento = mutation({
 });
 
 // =========================
-// 4) Transferir entre depósitos
+// 4) Transferir entre depósitos (nuevo flujo)
 // =========================
 export const transferirEntreDepositos = mutation({
   args: {
@@ -118,7 +107,6 @@ export const transferirEntreDepositos = mutation({
     repuestos: v.array(
       v.object({
         repuestoOrigenId: v.id("repuestos_por_deposito"),
-        repuestoDestinoId: v.id("repuestos_por_deposito"),
         cantidad: v.number(),
       })
     ),
@@ -126,6 +114,10 @@ export const transferirEntreDepositos = mutation({
     hora: v.string(),
   },
   handler: async (ctx, args) => {
+    if (args.depositoOrigenId === args.depositoDestinoId) {
+      throw new Error("El depósito de origen y destino no pueden ser iguales");
+    }
+
     const egresoTipo = await ctx.db
       .query("tipos_movimiento")
       .filter((q) => q.eq(q.field("ingreso_egreso"), "egreso"))
@@ -139,15 +131,39 @@ export const transferirEntreDepositos = mutation({
       throw new Error("Debe existir un tipo de movimiento ingreso y egreso");
     }
 
+    // ====== EGRESO confirmado ======
     const movEgresoId = await ctx.db.insert("movimientos_stock", {
       depositoId: args.depositoOrigenId,
       tipoComprobanteId: args.tipoComprobanteId,
       tipoMovimientoId: egresoTipo._id,
       fecha_registro: args.fecha,
       hora_registro: args.hora,
-      confirmado: false,
+      confirmado: true,
     });
 
+    for (const rep of args.repuestos) {
+      const repOrigen = await ctx.db.get(rep.repuestoOrigenId);
+      if (!repOrigen) throw new Error("Repuesto origen no encontrado");
+      if (repOrigen.stock_actual < rep.cantidad) {
+        throw new Error(
+          `Stock insuficiente en depósito origen (${repOrigen.stock_actual} disponibles)`
+        );
+      }
+
+      await ctx.db.patch(rep.repuestoOrigenId, {
+        stock_actual: repOrigen.stock_actual - rep.cantidad,
+      });
+
+      await ctx.db.insert("detalle_movimiento", {
+        movimientoId: movEgresoId,
+        repuestoDepositoId: rep.repuestoOrigenId,
+        cantidad: rep.cantidad,
+        stock_previo: repOrigen.stock_actual,
+        stock_resultante: repOrigen.stock_actual - rep.cantidad,
+      });
+    }
+
+    // ====== INGRESO pendiente ======
     const movIngresoId = await ctx.db.insert("movimientos_stock", {
       depositoId: args.depositoDestinoId,
       tipoComprobanteId: args.tipoComprobanteId,
@@ -160,34 +176,49 @@ export const transferirEntreDepositos = mutation({
     for (const rep of args.repuestos) {
       const repOrigen = await ctx.db.get(rep.repuestoOrigenId);
       if (!repOrigen) throw new Error("Repuesto origen no encontrado");
-      if (repOrigen.stock_actual < rep.cantidad) {
-        throw new Error(
-          `Stock insuficiente en depósito origen (${repOrigen.stock_actual} disponibles)`
-        );
+
+      let repDestino = await ctx.db
+        .query("repuestos_por_deposito")
+        .withIndex("byDeposito", (q) => q.eq("depositoId", args.depositoDestinoId))
+        .filter((q) => q.eq(q.field("repuestoId"), repOrigen.repuestoId))
+        .first();
+
+      if (!repDestino) {
+        const newId = await ctx.db.insert("repuestos_por_deposito", {
+          repuestoId: repOrigen.repuestoId,
+          depositoId: args.depositoDestinoId,
+          stock_actual: 0,
+          stock_minimo: repOrigen.stock_minimo ?? undefined,
+          stock_maximo: repOrigen.stock_maximo ?? undefined,
+          capacidad_maxima: repOrigen.capacidad_maxima ?? undefined,
+        });
+        repDestino = await ctx.db.get(newId);
+      }
+
+      if (!repDestino) {
+        throw new Error("No se pudo preparar repuesto en destino");
       }
 
       await ctx.db.insert("detalle_movimiento", {
-        movimientoId: movEgresoId,
-        repuestoDepositoId: rep.repuestoOrigenId,
-        cantidad: rep.cantidad,
-      });
-
-      await ctx.db.insert("detalle_movimiento", {
         movimientoId: movIngresoId,
-        repuestoDepositoId: rep.repuestoDestinoId,
+        repuestoDepositoId: repDestino._id,
         cantidad: rep.cantidad,
+        stock_previo: repDestino.stock_actual,
+        stock_resultante: repDestino.stock_actual + rep.cantidad,
       });
     }
 
     return {
       ok: true,
-      mensaje:
-        "Transferencia registrada. Confirmar ambos movimientos para actualizar stock.",
+      mensaje: "Traspaso registrado",
       movimientos: { egreso: movEgresoId, ingreso: movIngresoId },
     };
   },
 });
 
+// =========================
+// 5) Consultar movimientos
+// =========================
 export const listarTodos = query({
   args: {},
   handler: async (ctx) => {
@@ -212,7 +243,6 @@ export const listarTodos = query({
       })
     );
 
-    // 🔹 Ordenar más recientes primero
     resultados.sort((a, b) => {
       const da = `${a.fecha_registro}T${a.hora_registro}`;
       const db = `${b.fecha_registro}T${b.hora_registro}`;
@@ -223,9 +253,8 @@ export const listarTodos = query({
   },
 });
 
-
 // =========================
-// 5) Consultar movimientos por depósito
+// 6) Consultar movimientos por depósito
 // =========================
 export const listarMovimientosPorDeposito = query({
   args: { depositoId: v.id("depositos") },
@@ -235,7 +264,6 @@ export const listarMovimientosPorDeposito = query({
       .withIndex("byDeposito", (q) => q.eq("depositoId", depositoId))
       .collect();
 
-    // populate nombres
     const result = await Promise.all(
       movimientos.map(async (m) => {
         const tipoComprobante = await ctx.db.get(m.tipoComprobanteId);
@@ -248,7 +276,6 @@ export const listarMovimientosPorDeposito = query({
       })
     );
 
-    // (Opcional) ordenar por fecha/hora
     result.sort((a, b) => {
       const da = `${a.fecha_registro}T${a.hora_registro}`;
       const db = `${b.fecha_registro}T${b.hora_registro}`;
@@ -260,7 +287,7 @@ export const listarMovimientosPorDeposito = query({
 });
 
 // =========================
-// 6) Consultar detalle de un movimiento
+// 7) Consultar detalle de un movimiento
 // =========================
 export const listarDetallesDeMovimiento = query({
   args: { movimientoId: v.id("movimientos_stock") },
@@ -286,9 +313,8 @@ export const listarDetallesDeMovimiento = query({
   },
 });
 
-
 // =========================
-// 7) Eliminar movimiento (si no está confirmado)
+// 8) Eliminar movimiento (si no está confirmado)
 // =========================
 export const eliminarMovimiento = mutation({
   args: { movimientoId: v.id("movimientos_stock") },
@@ -299,7 +325,6 @@ export const eliminarMovimiento = mutation({
       throw new Error("No se puede eliminar un movimiento confirmado");
     }
 
-    // borrar detalles primero
     const detalles = await ctx.db
       .query("detalle_movimiento")
       .withIndex("byMovimiento", (q) => q.eq("movimientoId", args.movimientoId))
@@ -315,7 +340,9 @@ export const eliminarMovimiento = mutation({
   },
 });
 
-
+// =========================
+// 9) Obtener un movimiento
+// =========================
 export const obtenerMovimiento = query({
   args: { movimientoId: v.id("movimientos_stock") },
   handler: async (ctx, { movimientoId }) => {
@@ -335,7 +362,9 @@ export const obtenerMovimiento = query({
   },
 });
 
-
+// =========================
+// 10) Agregar detalle a un movimiento
+// =========================
 export const agregarDetalleMovimiento = mutation({
   args: {
     movimientoId: v.id("movimientos_stock"),
@@ -363,7 +392,6 @@ export const agregarDetalleMovimiento = mutation({
         ? stockPrevio + cantidad
         : stockPrevio - cantidad;
 
-    // Si ya existe el mismo repuesto en el movimiento, actualizamos
     const existente = await ctx.db
       .query("detalle_movimiento")
       .withIndex("byMovimiento", (q) => q.eq("movimientoId", movimientoId))
@@ -374,14 +402,14 @@ export const agregarDetalleMovimiento = mutation({
     );
 
     if (coincide) {
-  await ctx.db.patch(coincide._id, {
-    cantidad: coincide.cantidad + cantidad,
-    stock_previo: coincide.stock_previo ?? 0,
-    stock_resultante: (coincide.stock_resultante ?? coincide.stock_previo ?? 0) + cantidad,
-  });
-  return coincide._id;
-}
-
+      await ctx.db.patch(coincide._id, {
+        cantidad: coincide.cantidad + cantidad,
+        stock_previo: coincide.stock_previo ?? 0,
+        stock_resultante:
+          (coincide.stock_resultante ?? coincide.stock_previo ?? 0) + cantidad,
+      });
+      return coincide._id;
+    }
 
     const id = await ctx.db.insert("detalle_movimiento", {
       movimientoId,
@@ -394,8 +422,9 @@ export const agregarDetalleMovimiento = mutation({
   },
 });
 
-
-// Eliminar un ítem del movimiento (si no está confirmado)
+// =========================
+// 11) Eliminar detalle de un movimiento
+// =========================
 export const eliminarDetalleMovimiento = mutation({
   args: { detalleId: v.id("detalle_movimiento") },
   handler: async (ctx, { detalleId }) => {
@@ -409,21 +438,23 @@ export const eliminarDetalleMovimiento = mutation({
     await ctx.db.delete(detalleId);
   },
 });
+
+// =========================
+// 12) Listar repuestos en depósito
+// =========================
 export const listarRepuestosEnDeposito = query({
   args: { depositoId: v.id("depositos") },
   handler: async (ctx, { depositoId }) => {
-    // Todos los repuestos vinculados al depósito
     const repuestosDeposito = await ctx.db
       .query("repuestos_por_deposito")
       .withIndex("byDeposito", (q) => q.eq("depositoId", depositoId))
       .collect();
 
-    // Enriquecer cada registro con la info del repuesto
     return await Promise.all(
       repuestosDeposito.map(async (rd) => {
         const repuesto = await ctx.db.get(rd.repuestoId);
         return {
-          _id: rd._id, // necesario para <option key>
+          _id: rd._id,
           stock_actual: rd.stock_actual,
           repuesto: repuesto
             ? { _id: repuesto._id, codigo: repuesto.codigo, nombre: repuesto.nombre }
@@ -434,7 +465,9 @@ export const listarRepuestosEnDeposito = query({
   },
 });
 
-
+// =========================
+// 13) Listar movimientos por depósito con detalles
+// =========================
 export const listarPorDeposito = query({
   args: { depositoId: v.id("depositos") },
   handler: async (ctx, { depositoId }) => {
