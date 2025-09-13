@@ -1,11 +1,15 @@
-// src/app/repuestos/[codigo]/editar/page.tsx
 "use client";
 
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../../convex/_generated/api";
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
-import { use } from "react";
+import { useState, useEffect, use } from "react";
+
+// Selectores asíncronos
+import SelectCategoria from "@/components/selectores/SelectCategoria";
+import SelectMarca from "@/components/selectores/SelectMarca";
+import SelectVehiculo from "@/components/selectores/SelectVehiculo";
+import SelectModelo from "@/components/selectores/SelectModelo";
 
 export default function EditarRepuestoPage({
   params,
@@ -13,38 +17,47 @@ export default function EditarRepuestoPage({
   params: Promise<{ codigo: string }>;
 }) {
   const router = useRouter();
-  const { codigo } = use(params); // ✅ unwrap Promise
+  const { codigo } = use(params); // unwrap Promise (app router)
   const repuesto = useQuery(api.repuestos.obtenerPorCodigo, { codigo });
 
-  const actualizarRepuesto = useMutation(api.repuestos.actualizarRepuesto);
   const actualizarRepuestoPorCodigo = useMutation(api.repuestos.actualizarPorCodigo);
 
-  // Estado del form
+  // Estado del form (strings compatibles con tu API)
   const [form, setForm] = useState({
     nombre: "",
     descripcion: "",
-    
     precioUnitario: 0,
     marca: "",
     modeloCompatible: "",
     categoria: "",
-    
+    vehiculo: "",
   });
+
+  // ids para filtros dependientes
+  const [marcaId, setMarcaId] = useState<string | undefined>(undefined);
+  const [vehiculoId, setVehiculoId] = useState<string | undefined>(undefined);
+  const [categoriaId, setCategoriaId] = useState<string | undefined>(undefined);
+  const [modeloId, setModeloId] = useState<string | undefined>(undefined);
+
   const [loading, setLoading] = useState(false);
 
   // Cargar datos al montar / actualizar query
   useEffect(() => {
     if (repuesto) {
       setForm({
-        nombre: repuesto.nombre,
+        nombre: repuesto.nombre ?? "",
         descripcion: repuesto.descripcion ?? "",
-        
         precioUnitario: repuesto.precioUnitario ?? 0,
         marca: repuesto.marca ?? "",
         modeloCompatible: repuesto.modeloCompatible ?? "",
         categoria: repuesto.categoria ?? "",
-        
+        vehiculo: repuesto.vehiculo ?? "",
       });
+      // si ya guardás ids en el doc, podés precargar:
+      setMarcaId(repuesto.marcaId);
+      setVehiculoId(repuesto.vehiculoId);
+      setCategoriaId(repuesto.categoriaId);
+      setModeloId(repuesto.modeloId);
     }
   }, [repuesto]);
 
@@ -55,15 +68,14 @@ export default function EditarRepuestoPage({
     const { name, value } = e.target;
     setForm((prev) => ({
       ...prev,
-      [name]:
-        name === "stock" || name === "precioUnitario" ? Number(value) : value,
+      [name]: name === "precioUnitario" ? Number(value) : value,
     }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.nombre.trim()) {
-      alert("El nombre es obligatorio ❌");
+      alert("El nombre es obligatorio");
       return;
     }
     setLoading(true);
@@ -104,13 +116,9 @@ export default function EditarRepuestoPage({
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           <div className="flex flex-wrap gap-5">
-
-
-
             <Field label="Código">
-  <Input value={codigo} disabled />
-</Field>
-
+              <Input value={codigo} disabled />
+            </Field>
 
             <Field label="Nombre">
               <Input
@@ -130,7 +138,43 @@ export default function EditarRepuestoPage({
               />
             </Field>
 
-            
+            {/* Selectores asíncronos */}
+            <SelectCategoria
+              valueName={form.categoria}
+              onPick={(nombre, id) => {
+                setForm((p) => ({ ...p, categoria: nombre }));
+                setCategoriaId(id);
+              }}
+            />
+            <SelectMarca
+              valueName={form.marca}
+              onPick={(nombre, id) => {
+                setForm((p) => ({ ...p, marca: nombre }));
+                setMarcaId(id);
+                setForm((p) => ({ ...p, vehiculo: "", modeloCompatible: "" }));
+                setVehiculoId(undefined);
+                setModeloId(undefined);
+              }}
+            />
+            <SelectVehiculo
+              valueName={form.vehiculo}
+              marcaId={marcaId ?? null}
+              onPick={(nombre, id) => {
+                setForm((p) => ({ ...p, vehiculo: nombre }));
+                setVehiculoId(id);
+                setForm((p) => ({ ...p, modeloCompatible: "" }));
+                setModeloId(undefined);
+              }}
+            />
+            <SelectModelo
+              valueName={form.modeloCompatible}
+              marcaId={marcaId ?? null}
+              vehiculoId={vehiculoId ?? null}
+              onPick={(nombre, id) => {
+                setForm((p) => ({ ...p, modeloCompatible: nombre }));
+                setModeloId(id);
+              }}
+            />
 
             <Field label="Precio Unitario">
               <Input
@@ -141,28 +185,6 @@ export default function EditarRepuestoPage({
                 required
               />
             </Field>
-
-            <Field label="Marca">
-              <Input name="marca" value={form.marca} onChange={handleChange} />
-            </Field>
-
-            <Field label="Modelo Compatible">
-              <Input
-                name="modeloCompatible"
-                value={form.modeloCompatible}
-                onChange={handleChange}
-              />
-            </Field>
-
-            <Field label="Categoría">
-              <Input
-                name="categoria"
-                value={form.categoria}
-                onChange={handleChange}
-              />
-            </Field>
-
-            
           </div>
 
           {/* Botonera */}
@@ -177,7 +199,7 @@ export default function EditarRepuestoPage({
             <button
               type="submit"
               disabled={loading}
-              className={`px-6  py-2.5 rounded-lg text-white font-semibold shadow transition ${
+              className={`px-6 py-2.5 rounded-lg text-white font-semibold shadow transition ${
                 loading ? "bg-gray-400" : "bg-slate-800 hover:bg-slate-700"
               }`}
             >

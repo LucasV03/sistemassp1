@@ -13,9 +13,13 @@ import type {
   FilterApi,
   FunctionReference,
 } from "convex/server";
+import type * as _lib from "../_lib.js";
+import type * as categorias from "../categorias.js";
 import type * as depositos from "../depositos.js";
 import type * as detalle_traspaso from "../detalle_traspaso.js";
 import type * as facturas_prov from "../facturas_prov.js";
+import type * as marcas from "../marcas.js";
+import type * as modelos from "../modelos.js";
 import type * as movimientos from "../movimientos.js";
 import type * as ordenesCompra from "../ordenesCompra.js";
 import type * as proveedores from "../proveedores.js";
@@ -24,6 +28,7 @@ import type * as repuestos_por_deposito from "../repuestos_por_deposito.js";
 import type * as tipos_comprobantes from "../tipos_comprobantes.js";
 import type * as tipos_movimiento from "../tipos_movimiento.js";
 import type * as traspasos from "../traspasos.js";
+import type * as vehiculos from "../vehiculos.js";
 
 /**
  * A utility for referencing Convex functions in your app's API.
@@ -34,9 +39,13 @@ import type * as traspasos from "../traspasos.js";
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  _lib: typeof _lib;
+  categorias: typeof categorias;
   depositos: typeof depositos;
   detalle_traspaso: typeof detalle_traspaso;
   facturas_prov: typeof facturas_prov;
+  marcas: typeof marcas;
+  modelos: typeof modelos;
   movimientos: typeof movimientos;
   ordenesCompra: typeof ordenesCompra;
   proveedores: typeof proveedores;
@@ -45,6 +54,7 @@ declare const fullApi: ApiFromModules<{
   tipos_comprobantes: typeof tipos_comprobantes;
   tipos_movimiento: typeof tipos_movimiento;
   traspasos: typeof traspasos;
+  vehiculos: typeof vehiculos;
 }>;
 export declare const api: FilterApi<
   typeof fullApi,

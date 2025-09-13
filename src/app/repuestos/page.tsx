@@ -1,10 +1,16 @@
-// src/app/repuestos/page.tsx
 "use client";
 
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+
+// Selectores asíncronos
+import SelectCategoria from "@/components/selectores/SelectCategoria";
+import SelectMarca from "@/components/selectores/SelectMarca";
+import SelectVehiculo from "@/components/selectores/SelectVehiculo";
+import SelectModelo from "@/components/selectores/SelectModelo";
 
 export default function RepuestosPage() {
   const repuestos = useQuery(api.repuestos.listar);
@@ -19,11 +25,19 @@ export default function RepuestosPage() {
   const [codigo, setCodigo] = useState("");
   const [nombre, setNombre] = useState("");
   const [descripcion, setDescripcion] = useState("");
+
+  // nombres (compatibles con tu API actual)
   const [categoria, setCategoria] = useState("");
   const [vehiculo, setVehiculo] = useState("");
   const [marca, setMarca] = useState("");
   const [modeloCompatible, setModeloCompatible] = useState("");
   const [precioUnitario, setPrecioUnitario] = useState<number>(0);
+
+  // ids para filtrar selects dependientes (opcional)
+  const [categoriaId, setCategoriaId] = useState<string | undefined>(undefined);
+  const [marcaId, setMarcaId] = useState<string | undefined>(undefined);
+  const [vehiculoId, setVehiculoId] = useState<string | undefined>(undefined);
+  const [modeloId, setModeloId] = useState<string | undefined>(undefined);
 
   // BUSCAR
   const [buscar, setBuscar] = useState("");
@@ -45,18 +59,11 @@ export default function RepuestosPage() {
   const repuestosFiltrados = useMemo(() => {
     const q = norm(buscar).trim();
     if (!q) return data;
-
-    return data.filter((r: any) => {
-      return (
-        norm(r.codigo).includes(q) ||
-        norm(r.nombre).includes(q) ||
-        norm(r.descripcion).includes(q) ||
-        norm(r.categoria).includes(q) ||
-        norm(r.vehiculo).includes(q) ||
-        norm(r.marca).includes(q) ||
-        norm(r.modeloCompatible).includes(q)
-      );
-    });
+    return data.filter((r: any) =>
+      [r.codigo, r.nombre, r.descripcion, r.categoria, r.vehiculo, r.marca, r.modeloCompatible]
+        .map(norm)
+        .some((x) => x.includes(q))
+    );
   }, [data, buscar]);
 
   // Ordenamiento
@@ -94,12 +101,16 @@ export default function RepuestosPage() {
     setMarca("");
     setModeloCompatible("");
     setPrecioUnitario(0);
+    setCategoriaId(undefined);
+    setMarcaId(undefined);
+    setVehiculoId(undefined);
+    setModeloId(undefined);
   };
 
   return (
     <main className="p-6 max-w-7xl mx-auto space-y-8 text-white">
       <section className="rounded-2xl border border-neutral-800 bg-zinc-800 shadow-sm">
-        {/* Header: título, búsqueda, ordenar, asignar */}
+        {/* Header: título, búsqueda, ordenar, asignar, catálogos */}
         <div className="flex flex-wrap items-center justify-between gap-3 p-6">
           <h2 className="text-2xl font-semibold">📦 Repuestos</h2>
 
@@ -152,6 +163,35 @@ export default function RepuestosPage() {
             >
               Asignar repuesto
             </button>
+
+            {/* Accesos a Catálogos */}
+            <div className="hidden md:flex items-center gap-2 pl-3 ml-1 border-l border-neutral-700">
+              <span className="text-xs uppercase text-neutral-400">Catálogos:</span>
+              <Link
+                href="/catalogos/categorias"
+                className="px-2.5 py-1 text-sm border rounded bg-neutral-900 hover:bg-neutral-800"
+              >
+                Categorías
+              </Link>
+              <Link
+                href="/catalogos/marcas"
+                className="px-2.5 py-1 text-sm border rounded bg-neutral-900 hover:bg-neutral-800"
+              >
+                Marcas
+              </Link>
+              <Link
+                href="/catalogos/vehiculos"
+                className="px-2.5 py-1 text-sm border rounded bg-neutral-900 hover:bg-neutral-800"
+              >
+                Vehículos
+              </Link>
+              <Link
+                href="/catalogos/modelos"
+                className="px-2.5 py-1 text-sm border rounded bg-neutral-900 hover:bg-neutral-800"
+              >
+                Modelos
+              </Link>
+            </div>
           </div>
         </div>
 
@@ -237,18 +277,47 @@ export default function RepuestosPage() {
                 <Field label="Descripción" className="flex-1 min-w-[250px]">
                   <Textarea value={descripcion} onChange={setDescripcion} />
                 </Field>
-                <Field label="Categoría">
-                  <Input value={categoria} onChange={setCategoria} required />
-                </Field>
-                <Field label="Vehículo">
-                  <Input value={vehiculo} onChange={setVehiculo} required />
-                </Field>
-                <Field label="Marca">
-                  <Input value={marca} onChange={setMarca} />
-                </Field>
-                <Field label="Modelo Compatible">
-                  <Input value={modeloCompatible} onChange={setModeloCompatible} />
-                </Field>
+
+                {/* Selectores asíncronos */}
+                <SelectCategoria
+                  valueName={categoria}
+                  onPick={(nombre, id) => {
+                    setCategoria(nombre);
+                    setCategoriaId(id);
+                  }}
+                />
+                <SelectMarca
+                  valueName={marca}
+                  onPick={(nombre, id) => {
+                    setMarca(nombre);
+                    setMarcaId(id);
+                    // al cambiar marca, limpiar dependientes
+                    setVehiculo("");
+                    setVehiculoId(undefined);
+                    setModeloCompatible("");
+                    setModeloId(undefined);
+                  }}
+                />
+                <SelectVehiculo
+                  valueName={vehiculo}
+                  marcaId={marcaId ?? null}
+                  onPick={(nombre, id) => {
+                    setVehiculo(nombre);
+                    setVehiculoId(id);
+                    setModeloCompatible("");
+                    setModeloId(undefined);
+                  }}
+                />
+                <SelectModelo
+                  valueName={modeloCompatible}
+                  marcaId={marcaId ?? null}
+                  vehiculoId={vehiculoId ?? null}
+                  onPick={(nombre, id) => {
+                    setModeloCompatible(nombre);
+                    setModeloId(id);
+                  }}
+                />
+
                 <Field label="Precio Unitario">
                   <Input
                     type="number"

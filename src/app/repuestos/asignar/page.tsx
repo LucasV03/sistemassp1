@@ -30,7 +30,7 @@ export default function AsignarRepuestoPage() {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen  p-6">
+    <div className="flex justify-center items-center min-h-screen p-6">
       <Card className="w-full max-w-md shadow-lg rounded-2xl bg-slate-500">
         <CardContent className="p-6 space-y-6">
           <h1 className="text-xl font-bold text-gray-800">
@@ -44,13 +44,11 @@ export default function AsignarRepuestoPage() {
               id="deposito"
               className="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring focus:ring-indigo-200 p-2"
               value={depositoId ?? ""}
-              onChange={(e) =>
-                setDepositoId(e.target.value as Id<"depositos">)
-              }
+              onChange={(e) => setDepositoId(e.target.value as Id<"depositos">)}
             >
               <option value="">Seleccionar depósito</option>
               {depositos?.map((d) => (
-                <option key={d._id} value={d._id}>
+                <option key={String(d._id)} value={String(d._id)}>
                   {d.nombre}
                 </option>
               ))}
@@ -64,13 +62,11 @@ export default function AsignarRepuestoPage() {
               id="repuesto"
               className="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring focus:ring-indigo-200 p-2"
               value={repuestoId ?? ""}
-              onChange={(e) =>
-                setRepuestoId(e.target.value as Id<"repuestos">)
-              }
+              onChange={(e) => setRepuestoId(e.target.value as Id<"repuestos">)}
             >
               <option value="">Seleccionar repuesto</option>
               {repuestos?.map((r) => (
-                <option key={r._id} value={r._id}>
+                <option key={String(r._id)} value={String(r._id)}>
                   {r.nombre}
                 </option>
               ))}

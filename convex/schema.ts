@@ -1,14 +1,51 @@
+// convex/schema.ts
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
 export default defineSchema({
+  // ======= MAESTRAS =======
+  categorias: defineTable({
+    nombre: v.string(),
+    slug: v.string(),
+    creadoEn: v.number(),
+    actualizadoEn: v.number(),
+  })
+    .index("by_slug", ["slug"])
+    .index("by_nombre", ["nombre"]),
 
+  marcas: defineTable({
+    nombre: v.string(),
+    slug: v.string(),
+    creadoEn: v.number(),
+    actualizadoEn: v.number(),
+  })
+    .index("by_slug", ["slug"])
+    .index("by_nombre", ["nombre"]),
 
+  vehiculos: defineTable({
+    nombre: v.string(),         // p.ej. "Hilux"
+    marcaId: v.id("marcas"),
+    slug: v.string(),
+    creadoEn: v.number(),
+    actualizadoEn: v.number(),
+  })
+    .index("by_marca", ["marcaId"])
+    .index("by_marca_slug", ["marcaId", "slug"]),
 
+  modelos: defineTable({
+    nombre: v.string(),         // p.ej. "2016 2.8 TDI 4x4"
+    marcaId: v.id("marcas"),
+    vehiculoId: v.id("vehiculos"),
+    slug: v.string(),
+    claveUnica: v.string(),     // `${marcaId}:${vehiculoId}:${slug}`
+    creadoEn: v.number(),
+    actualizadoEn: v.number(),
+  })
+    .index("by_vehiculo", ["vehiculoId"])
+    .index("by_clave", ["claveUnica"]),
 
-
-
-  // ==== REPUESTOS (ajustamos para stock distribuido) ====
+  // ======= REPUESTOS =======
+  // Mantengo tus campos de texto (compatibilidad) + nuevos por ID
   repuestos: defineTable({
     codigo: v.string(),
     nombre: v.string(),
@@ -18,7 +55,19 @@ export default defineSchema({
     marca: v.optional(v.string()),
     modeloCompatible: v.optional(v.string()),
     precioUnitario: v.number(),
-    
+
+    categoriaId: v.optional(v.id("categorias")),
+    marcaId: v.optional(v.id("marcas")),
+    vehiculoId: v.optional(v.id("vehiculos")),
+    modeloId: v.optional(v.id("modelos")),
+
+    categoriaNombre: v.optional(v.string()),
+    marcaNombre: v.optional(v.string()),
+    vehiculoNombre: v.optional(v.string()),
+    modeloNombre: v.optional(v.string()),
+
+    creadoEn: v.optional(v.number()),
+    actualizadoEn: v.optional(v.number()),
   })
     .index("byCodigo", ["codigo"])
     .index("byNombre", ["nombre"])
@@ -26,7 +75,7 @@ export default defineSchema({
     .index("byCategoria", ["categoria"])
     .index("byVehiculo", ["vehiculo"]),
 
-  // ==== NUEVAS TABLAS ====
+  // ======= LO QUE YA TENÍAS (SIN CAMBIOS) =======
   depositos: defineTable({
     nombre: v.string(),
     provincia: v.string(),
@@ -34,7 +83,6 @@ export default defineSchema({
     calle: v.string(),
     codigoPostal: v.string(),
     capacidad_total: v.optional(v.number()),
-    
   })
     .index("byNombre", ["nombre"])
     .index("byProvincia", ["provincia"])
@@ -54,12 +102,12 @@ export default defineSchema({
     .index("byRepuesto", ["repuestoId"]),
 
   tipos_movimiento: defineTable({
-    nombre: v.string(), // Ej: "Transferencia", "Compra", "Consumo"
+    nombre: v.string(),
     ingreso_egreso: v.union(v.literal("ingreso"), v.literal("egreso")),
   }),
 
   tipos_comprobante: defineTable({
-    nombre: v.string(), // Ej: "Remito", "Orden de compra"
+    nombre: v.string(),
   }),
 
   movimientos_stock: defineTable({
@@ -75,15 +123,15 @@ export default defineSchema({
     movimientoId: v.id("movimientos_stock"),
     repuestoDepositoId: v.id("repuestos_por_deposito"),
     cantidad: v.number(),
-    stock_previo: v.optional(v.number()),      
+    stock_previo: v.optional(v.number()),
     stock_resultante: v.optional(v.number()),
   }).index("byMovimiento", ["movimientoId"]),
 
-traspasos: defineTable({
+  traspasos: defineTable({
     origenId: v.id("depositos"),
     destinoId: v.id("depositos"),
     fecha: v.string(),
-    estado: v.string(), // pendiente | confirmado | rechazado
+    estado: v.string(),
     usuario: v.optional(v.string()),
   }).index("byEstado", ["estado"]),
 
@@ -100,95 +148,76 @@ traspasos: defineTable({
     email: v.string(),
     cuit: v.string(),
     direccion: v.string(),
-    activo: v.boolean(), 
-    reputacion: v.optional(v.number()), 
+    activo: v.boolean(),
+    reputacion: v.optional(v.number()),
     notas: v.optional(v.string()),
   }),
 
-// ==== ÓRDENES DE COMPRA ====
-ordenes_compra: defineTable({
-  numeroOrden: v.string(),                   // "OC-2025-000123"
-  proveedorId: v.id("proveedores"),
-  fechaOrden: v.string(),                    // ISO
-  fechaEsperada: v.optional(v.string()),     // ISO
-  depositoEntregaId: v.id("depositos"),
-  direccionEntrega: v.optional(v.string()),
-
-  moneda: v.union(v.literal("ARS"), v.literal("USD")),
-  tipoCambio: v.optional(v.number()),
-  condicionesPago: v.optional(v.string()),
-  incoterm: v.optional(v.string()),
-
-  estado: v.union(
-    v.literal("BORRADOR"),
-    v.literal("PENDIENTE_APROBACION"),
-    v.literal("APROBADA"),
-    v.literal("ENVIADA"),
-    v.literal("PARCIALMENTE_RECIBIDA"),
-    v.literal("CERRADA"),
-    v.literal("CANCELADA")
-  ),
-
-  subtotal: v.number(),
-  totalDescuento: v.number(),
-  totalImpuestos: v.number(),
-  totalGeneral: v.number(),
-
-  // Como aún no tenés tabla de usuarios, lo dejo como string para evitar el error de validación
-  compradorUsuario: v.string(),
-
-  notas: v.optional(v.string()),
-  adjuntos: v.optional(v.array(v.object({ name: v.string(), url: v.string() }))),
-
-  creadoEn: v.number(),
-  actualizadoEn: v.number(),
-})
-.index("porNumero", ["numeroOrden"])
-.index("porProveedor", ["proveedorId"])
-.index("porFecha", ["fechaOrden"]),
-
-detalle_ordenes_compra: defineTable({
-  ocId: v.id("ordenes_compra"),
-  repuestoId: v.id("repuestos"),
-
-  descripcion: v.string(),
-  unidadMedida: v.string(),                  // (antes uom)
-
-  cantidadPedida: v.number(),
-  cantidadRecibida: v.number(),
-  cantidadCancelada: v.number(),
-
-  precioUnitario: v.number(),
-  descuentoPorc: v.optional(v.number()),
-  tasaImpuesto: v.optional(v.number()),      // 0, 10.5, 21, etc.
-  totalLinea: v.number(),                    // calculado
-
-  fechaNecesidad: v.optional(v.string()),
-  depositoId: v.id("depositos"),
-  centroCosto: v.optional(v.string()),
-  estadoLinea: v.union(
-    v.literal("ABIERTA"),
-    v.literal("CERRADA"),
-    v.literal("CANCELADA")
-  ),
-})
-.index("por_oc", ["ocId"]),
-
-// === FACTURAS DE PROVEEDOR (cuentas por pagar) ===
-  facturas_prov: defineTable({
-    ocId: v.optional(v.id("ordenes_compra")),   // vínculo con OC (opcional)
+  ordenes_compra: defineTable({
+    numeroOrden: v.string(),
     proveedorId: v.id("proveedores"),
-    proveedorNombre: v.string(),                // denormalizado p/ listar
+    fechaOrden: v.string(),
+    fechaEsperada: v.optional(v.string()),
+    depositoEntregaId: v.id("depositos"),
+    direccionEntrega: v.optional(v.string()),
+    moneda: v.union(v.literal("ARS"), v.literal("USD")),
+    tipoCambio: v.optional(v.number()),
+    condicionesPago: v.optional(v.string()),
+    incoterm: v.optional(v.string()),
+    estado: v.union(
+      v.literal("BORRADOR"),
+      v.literal("PENDIENTE_APROBACION"),
+      v.literal("APROBADA"),
+      v.literal("ENVIADA"),
+      v.literal("PARCIALMENTE_RECIBIDA"),
+      v.literal("CERRADA"),
+      v.literal("CANCELADA")
+    ),
+    subtotal: v.number(),
+    totalDescuento: v.number(),
+    totalImpuestos: v.number(),
+    totalGeneral: v.number(),
+    compradorUsuario: v.string(),
+    notas: v.optional(v.string()),
+    adjuntos: v.optional(v.array(v.object({ name: v.string(), url: v.string() }))),
+    creadoEn: v.number(),
+    actualizadoEn: v.number(),
+  })
+    .index("porNumero", ["numeroOrden"])
+    .index("porProveedor", ["proveedorId"])
+    .index("porFecha", ["fechaOrden"]),
 
-    numeroProveedor: v.string(),                // Nº factura prov.
+  detalle_ordenes_compra: defineTable({
+    ocId: v.id("ordenes_compra"),
+    repuestoId: v.id("repuestos"),
+    descripcion: v.string(),
+    unidadMedida: v.string(),
+    cantidadPedida: v.number(),
+    cantidadRecibida: v.number(),
+    cantidadCancelada: v.number(),
+    precioUnitario: v.number(),
+    descuentoPorc: v.optional(v.number()),
+    tasaImpuesto: v.optional(v.number()),
+    totalLinea: v.number(),
+    fechaNecesidad: v.optional(v.string()),
+    depositoId: v.id("depositos"),
+    centroCosto: v.optional(v.string()),
+    estadoLinea: v.union(
+      v.literal("ABIERTA"),
+      v.literal("CERRADA"),
+      v.literal("CANCELADA")
+    ),
+  }).index("por_oc", ["ocId"]),
+
+  facturas_prov: defineTable({
+    ocId: v.optional(v.id("ordenes_compra")),
+    proveedorId: v.id("proveedores"),
+    proveedorNombre: v.string(),
+    numeroProveedor: v.string(),
     puntoVenta: v.optional(v.number()),
-    tipo: v.optional(v.string()),               // "A" | "B" | "C" (si aplica)
-
-    // Fechas ISO (siguiendo tu esquema actual)
+    tipo: v.optional(v.string()),
     fechaEmision: v.string(),
     fechaVencimiento: v.optional(v.string()),
-
-    // Moneda e importes
     moneda: v.union(v.literal("ARS"), v.literal("USD")),
     tipoCambio: v.optional(v.number()),
     neto: v.number(),
@@ -197,17 +226,14 @@ detalle_ordenes_compra: defineTable({
     otrosImpuestos: v.optional(v.number()),
     total: v.number(),
     saldo: v.number(),
-
     estado: v.union(
       v.literal("PENDIENTE"),
       v.literal("PARCIAL"),
       v.literal("PAGADA"),
       v.literal("ANULADA")
     ),
-
     cae: v.optional(v.string()),
     caeVto: v.optional(v.string()),
-
     notas: v.optional(v.string()),
     creadoEn: v.number(),
     actualizadoEn: v.number(),
@@ -217,27 +243,23 @@ detalle_ordenes_compra: defineTable({
     .index("byEstado", ["estado"])
     .index("byNumeroProveedor", ["numeroProveedor"]),
 
-  // === Ítems de factura de proveedor ===
   facturas_prov_items: defineTable({
     facturaId: v.id("facturas_prov"),
     ocItemId: v.optional(v.id("detalle_ordenes_compra")),
     repuestoId: v.optional(v.id("repuestos")),
-
     descripcion: v.string(),
     cantidad: v.number(),
     precioUnitario: v.number(),
     descuentoPorc: v.optional(v.number()),
     alicuotaIva: v.union(v.literal(0), v.literal(10.5), v.literal(21)),
-
-    subtotal: v.number(),     // cant * precio * (1 - desc%)
+    subtotal: v.number(),
     ivaMonto: v.number(),
     totalLinea: v.number(),
   }).index("byFactura", ["facturaId"]),
 
-  // === Pagos / retenciones a facturas de proveedor ===
   pagos_prov: defineTable({
     facturaId: v.id("facturas_prov"),
-    fechaPago: v.string(), // ISO
+    fechaPago: v.string(),
     medio: v.union(
       v.literal("TRANSFERENCIA"),
       v.literal("EFECTIVO"),
@@ -253,5 +275,4 @@ detalle_ordenes_compra: defineTable({
     notas: v.optional(v.string()),
     creadoEn: v.number(),
   }).index("byFactura", ["facturaId"]),
-
 });

@@ -1,6 +1,7 @@
+// convex/repuestos.ts
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
-
+import { now } from "./_lib";
 
 // ========================
 // CREAR REPUESTO
@@ -15,20 +16,27 @@ export const crear = mutation({
     vehiculo: v.string(),
     marca: v.optional(v.string()),
     modeloCompatible: v.optional(v.string()),
-  
   },
   handler: async (ctx, args) => {
+    // --- evitar duplicados por código ---
+    const existe = await ctx.db
+      .query("repuestos")
+      .filter((qb) => qb.eq(qb.field("codigo"), args.codigo))
+      .unique();
+    if (existe) throw new Error("Ya existe un repuesto con ese código");
+
     // 1. Crear repuesto
     const repuestoId = await ctx.db.insert("repuestos", {
-      codigo: args.codigo,
-      nombre: args.nombre,
+      codigo: args.codigo.trim(),
+      nombre: args.nombre.trim(),
       descripcion: args.descripcion,
       precioUnitario: args.precioUnitario,
-      categoria: args.categoria,
-      vehiculo: args.vehiculo,
+      categoria: args.categoria.trim(),
+      vehiculo: args.vehiculo.trim(),
       marca: args.marca,
       modeloCompatible: args.modeloCompatible,
-
+      creadoEn: now(),
+      actualizadoEn: now(),
     });
 
     // 2. Listar todos los depósitos
@@ -48,7 +56,6 @@ export const crear = mutation({
     return repuestoId;
   },
 });
-
 
 // ========================
 // LISTAR REPUESTOS (solo catálogo, sin stock)
@@ -84,11 +91,10 @@ export const actualizarRepuesto = mutation({
     marca: v.optional(v.string()),
     modeloCompatible: v.optional(v.string()),
     precioUnitario: v.optional(v.number()),
-    
   },
   handler: async (ctx, args) => {
     const { id, ...updates } = args;
-    await ctx.db.patch(id, updates);
+    await ctx.db.patch(id, { ...updates, actualizadoEn: now() });
     return { ok: true };
   },
 });
@@ -120,8 +126,8 @@ export const asignarADeposito = mutation({
     // Verificar si ya existe la relación
     const existente = await ctx.db
       .query("repuestos_por_deposito")
-      .withIndex("byRepuesto", (q) => q.eq("repuestoId", args.repuestoId))
-      .filter((q) => q.eq(q.field("depositoId"), args.depositoId))
+      .filter((qb) => qb.eq(qb.field("repuestoId"), args.repuestoId))
+      .filter((qb) => qb.eq(qb.field("depositoId"), args.depositoId))
       .unique();
 
     if (existente) {
@@ -140,7 +146,7 @@ export const listarPorDeposito = query({
   handler: async (ctx, args) => {
     const stock = await ctx.db
       .query("repuestos_por_deposito")
-      .withIndex("byDeposito", (q) => q.eq("depositoId", args.depositoId))
+      .filter((qb) => qb.eq(qb.field("depositoId"), args.depositoId))
       .collect();
 
     // Enriquecer con datos del repuesto
@@ -161,14 +167,14 @@ export const buscarConStock = query({
   handler: async (ctx, args) => {
     const repuesto = await ctx.db
       .query("repuestos")
-      .withIndex("byCodigo", (q) => q.eq("codigo", args.codigo))
+      .filter((qb) => qb.eq(qb.field("codigo"), args.codigo))
       .unique();
 
     if (!repuesto) return null;
 
     const stocks = await ctx.db
       .query("repuestos_por_deposito")
-      .withIndex("byRepuesto", (q) => q.eq("repuestoId", repuesto._id))
+      .filter((qb) => qb.eq(qb.field("repuestoId"), repuesto._id))
       .collect();
 
     const stockTotal = stocks.reduce((acc, s) => acc + s.stock_actual, 0);
@@ -182,7 +188,7 @@ export const obtenerPorCodigo = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("repuestos")
-      .withIndex("byCodigo", (q) => q.eq("codigo", args.codigo))
+      .filter((qb) => qb.eq(qb.field("codigo"), args.codigo))
       .unique();
   },
 });
@@ -203,12 +209,12 @@ export const actualizarPorCodigo = mutation({
     const { codigo, ...updates } = args;
     const repuesto = await ctx.db
       .query("repuestos")
-      .withIndex("byCodigo", (q) => q.eq("codigo", codigo))
+      .filter((qb) => qb.eq(qb.field("codigo"), codigo))
       .unique();
 
     if (!repuesto) throw new Error("Repuesto no encontrado");
 
-    await ctx.db.patch(repuesto._id, updates);
+    await ctx.db.patch(repuesto._id, { ...updates, actualizadoEn: now() });
     return { ok: true };
   },
 });
