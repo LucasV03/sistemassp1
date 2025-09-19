@@ -151,6 +151,7 @@ export default defineSchema({
     activo: v.boolean(),
     reputacion: v.optional(v.number()),
     notas: v.optional(v.string()),
+    codigo: v.optional(v.string()),
   }),
 
   ordenes_compra: defineTable({

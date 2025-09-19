@@ -17,7 +17,8 @@ export const listar = query({
         v.literal("direccion"),
         v.literal("notas"),
         v.literal("cuit"),
-        v.literal("estado") // sintético: activo/inactivo
+        v.literal("estado"), // sintético: activo/inactivo
+        v.literal("codigo")
       )
     ),
     orden: v.optional(v.union(v.literal("asc"), v.literal("desc"))),
@@ -111,6 +112,7 @@ export const editar = mutation({
       reputacion: v.optional(v.number()),
       cuit: v.optional(v.string()),
       notas: v.optional(v.string()),
+      codigo: v.optional(v.string()),
     }),
   },
   handler: async (ctx, { id, data }) => {
@@ -167,6 +169,7 @@ export const crear = mutation({
     reputacion: v.optional(v.number()),
     cuit : v.string(),
     notas: v.optional(v.string()),
+    codigo: v.optional(v.string()), 
   },
   handler: async (ctx, args) => {
     // unicidad por nombre
