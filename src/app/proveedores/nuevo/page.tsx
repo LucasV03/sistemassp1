@@ -55,6 +55,7 @@ export default function ProveedoresNuevoPage() {
     email: "",
     direccion: "",
     cuit: "",
+    codigo: "",
     activo: true,
     reputacion: 3,
     notas: "",
@@ -70,6 +71,8 @@ export default function ProveedoresNuevoPage() {
   const telOk = esTelefonoArg10(form.telefono);
   const dirOk = form.direccion.trim().length >= 3;
   const cuitOk = esCUITValido(form.cuit);
+  const codigoOk = form.codigo.trim().length === 4;
+
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -82,6 +85,7 @@ export default function ProveedoresNuevoPage() {
     if (!emailOk) return bail("Ingresá un email válido.");
     if (!dirOk) return bail("Ingresá una dirección válida.");
     if (!cuitOk) return bail("CUIT inválido.");
+    if (!codigoOk) return bail("Codigo inválido.");
 
     // Normalizo antes de enviar
     const telefono = onlyDigits(form.telefono);
@@ -95,6 +99,7 @@ export default function ProveedoresNuevoPage() {
         email: form.email.trim().toLowerCase(),
         direccion: form.direccion.trim(),
         cuit,                               // 11 dígitos
+        codigo: form.codigo.trim(),
         activo: form.activo,
         reputacion: Number(form.reputacion) || 3,
         notas: form.notas.trim(),
@@ -172,7 +177,14 @@ export default function ProveedoresNuevoPage() {
             error={!cuitOk && form.cuit.length > 0 ? "CUIT inválido." : undefined}
             onBlur={() => setForm((s) => ({ ...s, cuit: formatearCUIT(s.cuit) }))}
           />
-
+          <Input
+            label="Codigo*"
+            placeholder="Ej: ABCD"
+            value={form.codigo}
+            onChange={(v) => setForm((s) => ({ ...s, codigo: v }))}
+            className="sm:col-span-2"
+            error={!codigoOk && form.codigo.length > 0 ? "Codigo inválido." : undefined}
+          />
           <div className="flex items-center gap-2">
             <input
               aria-label="Activo"

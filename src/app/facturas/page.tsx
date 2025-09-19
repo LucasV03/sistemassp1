@@ -22,7 +22,8 @@ const moneyFmt = (moneda: string) =>
   new Intl.NumberFormat("es-AR", { style: "currency", currency: moneda || "ARS" });
 
 const LS_KEY = "facturas_prov_overrides_v1";
-
+const crearComprobante = useMutation(api.comprobantes_prov.crear);
+const comprobantes = useQuery(api.comprobantes_prov.listar) ?? [];
 export default function FacturasProvPage() {
   // Filtros
   const [buscar, setBuscar] = useState("");

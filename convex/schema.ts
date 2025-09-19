@@ -276,4 +276,28 @@ export default defineSchema({
     notas: v.optional(v.string()),
     creadoEn: v.number(),
   }).index("byFactura", ["facturaId"]),
+
+
+comprobantes_prov: defineTable({
+  proveedorId: v.id("proveedores"),
+  tipoComprobanteId: v.id("tipos_comprobante"), // Factura, ND, NC
+  letra: v.string(),       // A, B, C
+  sucursal: v.string(),    // hasta 4 dígitos
+  numero: v.string(),      // hasta 8 dígitos
+  fecha: v.string(),       // ISO date
+  total: v.number(),
+  saldo: v.number(),
+  creadoEn: v.number(),
+  actualizadoEn: v.number(),
+}).index("byProveedor", ["proveedorId"])
+  .index("byNumero", ["sucursal", "numero"]),
+  
+
+detalle_comprobantes_prov: defineTable({
+  comprobanteId: v.id("comprobantes_prov"),
+  repuestoId: v.id("repuestos"),
+  cantidad: v.number(),
+  precioUnitario: v.number(),
+  subtotal: v.number(),
+}).index("byComprobante", ["comprobanteId"]),
 });

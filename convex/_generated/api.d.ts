@@ -15,6 +15,7 @@ import type {
 } from "convex/server";
 import type * as _lib from "../_lib.js";
 import type * as categorias from "../categorias.js";
+import type * as comprobantes_prov from "../comprobantes_prov.js";
 import type * as depositos from "../depositos.js";
 import type * as detalle_traspaso from "../detalle_traspaso.js";
 import type * as facturas_prov from "../facturas_prov.js";
@@ -41,6 +42,7 @@ import type * as vehiculos from "../vehiculos.js";
 declare const fullApi: ApiFromModules<{
   _lib: typeof _lib;
   categorias: typeof categorias;
+  comprobantes_prov: typeof comprobantes_prov;
   depositos: typeof depositos;
   detalle_traspaso: typeof detalle_traspaso;
   facturas_prov: typeof facturas_prov;
