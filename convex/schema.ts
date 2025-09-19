@@ -277,19 +277,28 @@ export default defineSchema({
     creadoEn: v.number(),
   }).index("byFactura", ["facturaId"]),
 
-
 comprobantes_prov: defineTable({
   proveedorId: v.id("proveedores"),
-  tipoComprobanteId: v.id("tipos_comprobante"), // Factura, ND, NC
-  letra: v.string(),       // A, B, C
-  sucursal: v.string(),    // hasta 4 dígitos
-  numero: v.string(),      // hasta 8 dígitos
-  fecha: v.string(),       // ISO date
+  proveedorCuit: v.string(),     // ⬅️ nuevo campo
+  tipoComprobanteId: v.id("tipos_comprobante"),
+  letra: v.string(),
+  sucursal: v.string(),
+  numero: v.string(),
+  fecha: v.string(),
+  hora: v.string(),
   total: v.number(),
   saldo: v.number(),
+  estado: v.union(
+    v.literal("PENDIENTE"),
+    v.literal("PARCIAL"),
+    v.literal("PAGADO"),
+    v.literal("ANULADO")
+  ),
   creadoEn: v.number(),
   actualizadoEn: v.number(),
-}).index("byProveedor", ["proveedorId"])
+})
+
+  .index("byProveedor", ["proveedorId"])
   .index("byNumero", ["sucursal", "numero"]),
   
 
@@ -299,5 +308,21 @@ detalle_comprobantes_prov: defineTable({
   cantidad: v.number(),
   precioUnitario: v.number(),
   subtotal: v.number(),
+}).index("byComprobante", ["comprobanteId"]),
+
+
+pagos_comprobantes: defineTable({
+  comprobanteId: v.id("comprobantes_prov"),
+  fechaPago: v.string(), // ISO string
+  medio: v.union(
+    v.literal("TRANSFERENCIA"),
+    v.literal("EFECTIVO"),
+    v.literal("CHEQUE"),
+    v.literal("TARJETA"),
+    v.literal("OTRO")
+  ),
+  importe: v.number(),
+  notas: v.optional(v.string()),
+  creadoEn: v.number(),
 }).index("byComprobante", ["comprobanteId"]),
 });
