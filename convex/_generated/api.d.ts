@@ -13,10 +13,15 @@ import type {
   FilterApi,
   FunctionReference,
 } from "convex/server";
+import type * as clientes from "../clientes.js";
+import type * as contratos from "../contratos.js";
 import type * as depositos from "../depositos.js";
 import type * as detalle_traspaso from "../detalle_traspaso.js";
 import type * as facturas_prov from "../facturas_prov.js";
+import type * as interacciones from "../interacciones.js";
 import type * as movimientos from "../movimientos.js";
+import type * as notas from "../notas.js";
+import type * as notasFinancieras from "../notasFinancieras.js";
 import type * as ordenesCompra from "../ordenesCompra.js";
 import type * as proveedores from "../proveedores.js";
 import type * as repuestos from "../repuestos.js";
@@ -34,10 +39,15 @@ import type * as traspasos from "../traspasos.js";
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  clientes: typeof clientes;
+  contratos: typeof contratos;
   depositos: typeof depositos;
   detalle_traspaso: typeof detalle_traspaso;
   facturas_prov: typeof facturas_prov;
+  interacciones: typeof interacciones;
   movimientos: typeof movimientos;
+  notas: typeof notas;
+  notasFinancieras: typeof notasFinancieras;
   ordenesCompra: typeof ordenesCompra;
   proveedores: typeof proveedores;
   repuestos: typeof repuestos;

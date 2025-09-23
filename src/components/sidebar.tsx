@@ -21,7 +21,10 @@ const links = [
 
   // Nuevo módulo
   { href: '/ordenes-compra', label: 'Órdenes de Compra', Icon: FileText },
-    { href: '/facturas', label: 'Facturas', Icon:Receipt},
+  { href: '/facturas', label: 'Facturas', Icon:Receipt},
+
+  { href: '/clientes', label: 'Clientes', Icon: User2Icon },  
+  
 
 ];
 
