@@ -143,6 +143,11 @@ export const proximoNumero = query({
   },
 });
 
+
+
+// =====================
+// Registrar pago (una factura)
+// =====================
 export const registrarPago = mutation({
   args: {
     comprobanteId: v.id("comprobantes_prov"),
@@ -196,5 +201,69 @@ export const registrarPago = mutation({
     });
 
     return { nuevoSaldo, nuevoEstado };
+  },
+});
+
+// =====================
+// Registrar pago (múltiples facturas)
+// =====================
+export const registrarPagoMultiple = mutation({
+  args: {
+    facturasIds: v.array(v.id("comprobantes_prov")),
+    pagos: v.array(
+      v.object({
+        medio: v.union(
+          v.literal("TRANSFERENCIA"),
+          v.literal("EFECTIVO"),
+          v.literal("CHEQUE"),
+          v.literal("TARJETA"),
+          v.literal("OTRO")
+        ),
+        importe: v.number(),
+        notas: v.optional(v.string()),
+      })
+    ),
+  },
+  handler: async (ctx, { facturasIds, pagos }) => {
+    const resultados: { id: string; nuevoSaldo: number; nuevoEstado: string }[] = [];
+
+    for (const facturaId of facturasIds) {
+      const comp = await ctx.db.get(facturaId);
+      if (!comp) continue;
+
+      const ahora = Date.now();
+      let totalPagado = 0;
+
+      for (const p of pagos) {
+        await ctx.db.insert("pagos_comprobantes", {
+          comprobanteId: facturaId,
+          fechaPago: new Date().toISOString(),
+          medio: p.medio,
+          importe: p.importe,
+          notas: p.notas,
+          creadoEn: ahora,
+        });
+        totalPagado += p.importe;
+      }
+
+      const nuevoSaldo = Math.max(0, comp.saldo - totalPagado);
+
+      let nuevoEstado: "PENDIENTE" | "PARCIAL" | "PAGADO" = "PENDIENTE";
+      if (nuevoSaldo <= 0) {
+        nuevoEstado = "PAGADO";
+      } else if (nuevoSaldo < comp.total) {
+        nuevoEstado = "PARCIAL";
+      }
+
+      await ctx.db.patch(facturaId, {
+        saldo: nuevoSaldo,
+        estado: nuevoEstado,
+        actualizadoEn: ahora,
+      });
+
+      resultados.push({ id: facturaId, nuevoSaldo, nuevoEstado });
+    }
+
+    return resultados;
   },
 });

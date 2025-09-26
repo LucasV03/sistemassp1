@@ -93,6 +93,12 @@ export default function ComprobantesProvPage() {
           >
             + Nuevo Comprobante
           </Link>
+           <Link
+    href="/facturas/pagos/nuevo"
+    className="px-3 py-2 rounded bg-emerald-600 text-white hover:bg-emerald-500"
+  >
+    + Nuevo Pago
+  </Link>
           <div className="px-3 py-2 rounded bg-neutral-900 border border-neutral-700 text-neutral-200">
             Pendiente: <b>{moneyFmt("ARS").format(kpis.totalPendiente)}</b>
           </div>
@@ -173,28 +179,20 @@ export default function ComprobantesProvPage() {
                   <td className="px-4 py-2 text-right">{m.format(c.total ?? 0)}</td>
                   <td className="px-4 py-2 text-right">{m.format(c.saldo ?? 0)}</td>
                   <td className="px-4 py-2 text-right">
-                    <div className="flex gap-2 justify-end">
-                      <Link
-                        href={`/facturas/${c._id}`}
-                        className="px-2 py-1 rounded bg-blue-600 text-white hover:bg-blue-500"
-                      >
-                        Ver Detalles
-                      </Link>
-                      {c.estado !== "ANULADO" && c.estado !== "PAGADO" && (
-                        <>
-                          <button
-                            onClick={() => handleOpenPago(c)}
-                            className="px-2 py-1 rounded bg-emerald-600 text-white hover:bg-emerald-500"
-                          >
-                            Pagar
-                          </button>
-                          <button className="px-2 py-1 rounded bg-red-600 text-white hover:bg-red-500">
-                            Anular
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </td>
+  <div className="flex gap-2 justify-end">
+    <Link
+      href={`/facturas/${c._id}`}
+      className="px-2 py-1 rounded bg-blue-600 text-white hover:bg-blue-500"
+    >
+      Ver Detalles
+    </Link>
+    {c.estado !== "ANULADO" && c.estado !== "PAGADO" && (
+      <button className="px-2 py-1 rounded bg-red-600 text-white hover:bg-red-500">
+        Anular
+      </button>
+    )}
+  </div>
+</td>
                 </tr>
               );
             })}

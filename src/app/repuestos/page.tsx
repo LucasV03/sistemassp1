@@ -168,7 +168,7 @@ export default function RepuestosPage() {
                 <th className="p-3 text-left">Vehículo</th>
                 <th className="p-3 text-left">Marca</th>
                 <th className="p-3 text-left">Modelo</th>
-                <th className="p-3 text-right">Precio Unitario</th>
+                
                 <th className="p-3 text-right">Acciones</th>
               </tr>
             </thead>
@@ -187,9 +187,7 @@ export default function RepuestosPage() {
                   <td className="p-3">{r.vehiculo}</td>
                   <td className="p-3">{r.marca}</td>
                   <td className="p-3">{r.modeloCompatible}</td>
-                  <td className="p-3 text-right">
-                    {Number(r.precioUnitario ?? 0).toFixed(2)}
-                  </td>
+                  
                   <td className="p-3">
                     <div className="flex gap-2 justify-end">
                       <Link
