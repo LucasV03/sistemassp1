@@ -206,7 +206,6 @@ export const registrarPago = mutation({
 
 // =====================
 // Registrar pago (múltiples facturas)
-// =====================
 export const registrarPagoMultiple = mutation({
   args: {
     facturasIds: v.array(v.id("comprobantes_prov")),
@@ -227,33 +226,39 @@ export const registrarPagoMultiple = mutation({
   handler: async (ctx, { facturasIds, pagos }) => {
     const resultados: { id: string; nuevoSaldo: number; nuevoEstado: string }[] = [];
 
+    // total global disponible
+    let totalDisponible = pagos.reduce((a, p) => a + p.importe, 0);
+
     for (const facturaId of facturasIds) {
       const comp = await ctx.db.get(facturaId);
-      if (!comp) continue;
+      if (!comp || totalDisponible <= 0) continue;
 
+      let montoAplicado = 0;
       const ahora = Date.now();
-      let totalPagado = 0;
 
-      for (const p of pagos) {
+      // cuánto aplicar a esta factura
+      const aplicar = Math.min(totalDisponible, comp.saldo);
+
+      if (aplicar > 0) {
+        // registrar pago (lo tratamos como un único pago global, no duplicado)
         await ctx.db.insert("pagos_comprobantes", {
           comprobanteId: facturaId,
           fechaPago: new Date().toISOString(),
-          medio: p.medio,
-          importe: p.importe,
-          notas: p.notas,
+          medio: "EFECTIVO", // ⚠️ por ahora usamos un medio único
+          importe: aplicar,
+          notas: "",
           creadoEn: ahora,
         });
-        totalPagado += p.importe;
+
+        montoAplicado = aplicar;
+        totalDisponible -= aplicar;
       }
 
-      const nuevoSaldo = Math.max(0, comp.saldo - totalPagado);
-
+      // actualizar saldo y estado de la factura
+      const nuevoSaldo = Math.max(0, comp.saldo - montoAplicado);
       let nuevoEstado: "PENDIENTE" | "PARCIAL" | "PAGADO" = "PENDIENTE";
-      if (nuevoSaldo <= 0) {
-        nuevoEstado = "PAGADO";
-      } else if (nuevoSaldo < comp.total) {
-        nuevoEstado = "PARCIAL";
-      }
+      if (nuevoSaldo <= 0) nuevoEstado = "PAGADO";
+      else if (nuevoSaldo < comp.total) nuevoEstado = "PARCIAL";
 
       await ctx.db.patch(facturaId, {
         saldo: nuevoSaldo,
@@ -267,3 +272,4 @@ export const registrarPagoMultiple = mutation({
     return resultados;
   },
 });
+

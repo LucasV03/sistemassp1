@@ -35,7 +35,9 @@ export default function NuevaFacturaPage() {
   const [numero, setNumero] = useState("00000001");
   const [fecha, setFecha] = useState(new Date().toISOString().slice(0, 10)); // yyyy-mm-dd
   const [hora, setHora] = useState(new Date().toISOString().slice(11, 16)); // hh:mm
-
+  const proximoNumero = useQuery(api.comprobantes_prov.proximoNumero, {
+    sucursal,
+  }) ?? "00000001";
 
   // items
   const [items, setItems] = useState<ItemRow[]>([]);
@@ -52,17 +54,23 @@ export default function NuevaFacturaPage() {
   }, [items]);
 
   // auto-set sucursal cuando cambia proveedor
-  useEffect(() => {
+    useEffect(() => {
     if (proveedorId) {
       const p = proveedores.find((x) => String(x._id) === proveedorId);
       if (p?.codigo) setSucursal(p.codigo.padStart(4, "0"));
       if (p?.cuit) setCuit(p.cuit);
-    }else{
-        setSucursal("");
+    } else {
+      setSucursal("");
       setCuit("");
     }
   }, [proveedorId, proveedores]);
-  
+
+
+  useEffect(() => {
+    if (sucursal) {
+      setNumero(proximoNumero); // se trae desde Convex
+    }
+  }, [sucursal, proximoNumero]);
 
   // estado de guardado
   const [saving, setSaving] = useState(false);

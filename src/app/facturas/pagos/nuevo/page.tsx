@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../../convex/_generated/api";
-import type { Id, Doc } from "../../../../../convex/_generated/dataModel";
+import type { Doc } from "../../../../../convex/_generated/dataModel";
 import { useState, useMemo } from "react";
 
 type Medio = "TRANSFERENCIA" | "EFECTIVO" | "CHEQUE" | "TARJETA" | "OTRO";
@@ -15,10 +15,19 @@ export default function NuevoPagoPage() {
   const registrarPagoMultiple = useMutation(api.comprobantes_prov.registrarPagoMultiple);
 
   const [proveedorId, setProveedorId] = useState<string>("");
+  const [searchProveedor, setSearchProveedor] = useState<string>("");
+  const [focusProveedor, setFocusProveedor] = useState(false);
   const [facturasSel, setFacturasSel] = useState<string[]>([]);
   const [pagos, setPagos] = useState<{ medio: Medio; importe: number; notas?: string }[]>([
     { medio: "EFECTIVO", importe: 0 },
   ]);
+
+  // 🔎 lista de proveedores filtrados
+  const proveedoresFiltrados = useMemo(() => {
+    if (!searchProveedor.trim()) return proveedores;
+    const q = searchProveedor.toLowerCase();
+    return proveedores.filter((p) => p.nombre.toLowerCase().includes(q));
+  }, [searchProveedor, proveedores]);
 
   // facturas pendientes del proveedor
   const pendientes = useMemo(() => {
@@ -40,12 +49,45 @@ export default function NuevoPagoPage() {
     [pagos]
   );
 
+  // 🔎 Simulación de distribución de pagos parciales
+  function calcularDistribucion(facturas: any[], totalDisponible: number) {
+    const resultado: { factura: any; aplicado: number; saldoFinal: number }[] = [];
+    for (const f of facturas) {
+      if (totalDisponible <= 0) {
+        resultado.push({ factura: f, aplicado: 0, saldoFinal: f.saldo });
+        continue;
+      }
+      const aplicar = Math.min(totalDisponible, f.saldo);
+      resultado.push({
+        factura: f,
+        aplicado: aplicar,
+        saldoFinal: f.saldo - aplicar,
+      });
+      totalDisponible -= aplicar;
+    }
+    return resultado;
+  }
+
+  const distribucion = useMemo(() => {
+    const seleccionadas = pendientes.filter((f: any) =>
+      facturasSel.includes(String(f._id))
+    );
+    return calcularDistribucion(seleccionadas, totalPagos);
+  }, [pendientes, facturasSel, totalPagos]);
+
   async function confirmarPago() {
     if (!proveedorId || facturasSel.length === 0) {
       return alert("Seleccioná proveedor y facturas.");
     }
-    if (totalPagos !== totalSeleccionado) {
-      return alert("El total de los métodos de pago no coincide con el total de facturas.");
+
+    if (totalPagos <= 0) {
+      return alert("Ingresá un importe válido en los métodos de pago.");
+    }
+
+    if (totalPagos > totalSeleccionado) {
+      return alert(
+        "El total de los métodos de pago no puede superar el total de facturas seleccionadas."
+      );
     }
 
     await registrarPagoMultiple({
@@ -53,31 +95,50 @@ export default function NuevoPagoPage() {
       pagos,
     });
 
-    router.push("/facturas");
+    router.push("/facturas/pagos");
   }
 
   return (
     <div className="p-6 space-y-8 text-white">
       <h1 className="text-2xl font-bold">Nuevo Pago</h1>
 
-      {/* Proveedor */}
-      <div className="space-y-2">
+      {/* Proveedor con búsqueda/autocomplete */}
+      <div className="space-y-2 relative">
         <label className="text-sm text-neutral-400">Proveedor</label>
-        <select
+        <input
+          type="text"
           className="inp"
-          value={proveedorId}
+          placeholder="Buscar o seleccionar proveedor…"
+          value={searchProveedor}
           onChange={(e) => {
-            setProveedorId(e.target.value);
-            setFacturasSel([]);
+            setSearchProveedor(e.target.value);
+            setProveedorId("");
           }}
-        >
-          <option value="">Seleccione proveedor…</option>
-          {proveedores.map((p: Doc<"proveedores">) => (
-            <option key={p._id} value={String(p._id)}>
-              {p.nombre}
-            </option>
-          ))}
-        </select>
+          onFocus={() => setFocusProveedor(true)}
+          onBlur={() => setTimeout(() => setFocusProveedor(false), 200)} // delay para permitir click
+        />
+
+        {(focusProveedor || searchProveedor.length > 0) && (
+          <div className="absolute z-10 bg-neutral-900 border border-neutral-700 rounded mt-1 w-full max-h-40 overflow-y-auto shadow-lg">
+            {proveedoresFiltrados.map((p) => (
+              <div
+                key={p._id}
+                onClick={() => {
+                  setProveedorId(String(p._id));
+                  setSearchProveedor(p.nombre);
+                  setFacturasSel([]);
+                  setFocusProveedor(false);
+                }}
+                className="px-3 py-2 hover:bg-neutral-800 cursor-pointer"
+              >
+                {p.nombre}
+              </div>
+            ))}
+            {proveedoresFiltrados.length === 0 && (
+              <div className="px-3 py-2 text-neutral-500">No hay coincidencias</div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Facturas pendientes */}
@@ -108,7 +169,9 @@ export default function NuevoPagoPage() {
                       }
                     />
                   </td>
-                  <td className="p-2">{f.sucursal}-{f.numero}</td>
+                  <td className="p-2">
+                    {f.sucursal}-{f.numero}
+                  </td>
                   <td className="p-2">
                     {new Date(f.fecha).toLocaleDateString("es-AR")}
                   </td>
@@ -198,6 +261,52 @@ export default function NuevoPagoPage() {
                 })}
               </span>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Distribución del pago */}
+      {distribucion.length > 0 && (
+        <div className="space-y-2">
+          <h2 className="font-medium text-lg">Distribución del pago</h2>
+          <div className="rounded border border-neutral-700 overflow-hidden">
+            <table className="w-full text-sm">
+              <thead className="bg-neutral-900 text-neutral-300">
+                <tr>
+                  <th className="p-2 text-left">Factura</th>
+                  <th className="p-2 text-right">Saldo inicial</th>
+                  <th className="p-2 text-right">Aplicado</th>
+                  <th className="p-2 text-right">Saldo final</th>
+                </tr>
+              </thead>
+              <tbody>
+                {distribucion.map((d, i) => (
+                  <tr key={i} className="border-t border-neutral-800">
+                    <td className="p-2">
+                      {d.factura.sucursal}-{d.factura.numero}
+                    </td>
+                    <td className="p-2 text-right">
+                      {d.factura.saldo.toLocaleString("es-AR", {
+                        style: "currency",
+                        currency: "ARS",
+                      })}
+                    </td>
+                    <td className="p-2 text-right text-emerald-400">
+                      {d.aplicado.toLocaleString("es-AR", {
+                        style: "currency",
+                        currency: "ARS",
+                      })}
+                    </td>
+                    <td className="p-2 text-right text-yellow-400">
+                      {d.saldoFinal.toLocaleString("es-AR", {
+                        style: "currency",
+                        currency: "ARS",
+                      })}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       )}
