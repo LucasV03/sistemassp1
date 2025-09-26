@@ -1,46 +1,73 @@
+// src/app/depositos/page.tsx
 "use client";
 
+import React from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { useState, useMemo } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import {
-  Select,
-  SelectTrigger,
-  SelectContent,
-  SelectItem,
-  SelectValue,
-} from "@/components/ui/select";
 import Link from "next/link";
 
 export default function DepositosPage() {
   // === DATA ===
-  const depositos = useQuery(api.depositos.listar);
+  const depositos = useQuery(api.depositos.listar) || [];
   const eliminarDeposito = useMutation(api.depositos.eliminar);
 
   // Ocupación de cada depósito
-  const ocupados = useQuery(api.repuestos_por_deposito.ocupadoPorDeposito, {
-    depositoId: undefined,
-  });
+  const ocupados =
+    useQuery(api.repuestos_por_deposito.ocupadoPorDeposito, {
+      depositoId: undefined,
+    }) || {};
 
-  // === SELECT DE DEPÓSITO ===
-  const [selectedDeposito, setSelectedDeposito] = useState<string | "all">("all");
-
-  const repuestosPorDeposito = useQuery(
-    api.repuestos_por_deposito.listarPorDeposito,
-    {
-      depositoId: selectedDeposito === "all" ? undefined : (selectedDeposito as any),
-    }
+  // === UI STATE ===
+  const [selectedDeposito, setSelectedDeposito] = useState<string | "all">(
+    "all"
   );
+  const [q, setQ] = useState("");
 
-  // === CALCULO DE ESTADÍSTICAS ===
+  // Lista de repuestos del depósito expandido (cuando se elige uno)
+  const repuestosPorDeposito =
+    useQuery(api.repuestos_por_deposito.listarPorDeposito, {
+      depositoId:
+        selectedDeposito === "all" ? undefined : (selectedDeposito as any),
+    }) || [];
+
+  // === HELPERS ===
+  const normalize = (v: unknown) =>
+    (v ?? "")
+      .toString()
+      .toLowerCase()
+      .normalize("NFD")
+      // @ts-ignore: unicode regex for diacritics
+      .replace(/\p{Diacritic}/gu, "");
+
+  // Filtrado por búsqueda (no altera el cálculo de stats)
+  const depositosFiltrados = useMemo(() => {
+    if (!q) return depositos;
+    const nq = normalize(q);
+    return (depositos as any[]).filter((d) => {
+      const nombre = normalize(d.nombre);
+      const provincia = normalize(d.provincia);
+      const ciudad = normalize(d.ciudad);
+      const calle = normalize(d.calle);
+      const cp = normalize(d.codigoPostal);
+      return (
+        nombre.includes(nq) ||
+        provincia.includes(nq) ||
+        ciudad.includes(nq) ||
+        calle.includes(nq) ||
+        cp.includes(nq)
+      );
+    });
+  }, [depositos, q]);
+
+  // === CÁLCULO DE ESTADÍSTICAS ===
+  // Mantengo el comportamiento original: stats dependen de "selectedDeposito", no de la búsqueda.
   const stats = useMemo(() => {
     if (!depositos || !ocupados) return null;
 
-    let filtered = depositos;
+    let filtered = depositos as any[];
     if (selectedDeposito !== "all") {
-      filtered = depositos.filter((d: any) => d._id === selectedDeposito);
+      filtered = (depositos as any[]).filter((d) => d._id === selectedDeposito);
     }
 
     let capacidadTotal = 0;
@@ -52,7 +79,7 @@ export default function DepositosPage() {
     }
 
     const porcentaje =
-      capacidadTotal > 0 ? ((ocupado / capacidadTotal) * 100).toFixed(1) : 0;
+      capacidadTotal > 0 ? ((ocupado / capacidadTotal) * 100).toFixed(1) : "0";
 
     return {
       capacidadTotal,
@@ -66,145 +93,224 @@ export default function DepositosPage() {
     await eliminarDeposito({ id: id as any });
   };
 
+  const clearSearch = () => setQ("");
+
   return (
     <div className="p-6 space-y-6">
-      <div className="flex justify-between items-center">
+      {/* HEADER */}
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <h1 className="text-2xl font-bold text-white">Gestión de Depósitos</h1>
-        <Link href="/depositos/nuevo">
-          <Button className="bg-indigo-700 text-white">Nuevo depósito</Button>
+        <Link
+          href="/depositos/nuevo"
+          className="inline-flex items-center justify-center rounded-lg bg-indigo-700 px-4 py-2 text-white hover:bg-indigo-600 transition"
+        >
+          Nuevo depósito
         </Link>
       </div>
 
-      {/* === CUADROS DE ESTADÍSTICAS === */}
+      {/* CONTROLES: STATS + SELECT + BUSCADOR */}
       {stats && (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-            <Card className="bg-zinc-800 text-white">
-              <CardContent className="p-4">
-                <p className="text-sm">Capacidad total</p>
-                <p className="text-xl font-bold">{stats.capacidadTotal}</p>
-              </CardContent>
-            </Card>
-            <Card className="bg-zinc-800 text-white">
-              <CardContent className="p-4">
-                <p className="text-sm">Ocupado</p>
-                <p className="text-xl font-bold">{stats.ocupado}</p>
-              </CardContent>
-            </Card>
-            <Card className="bg-zinc-800 text-white">
-              <CardContent className="p-4">
-                <p className="text-sm">% Ocupado</p>
-                <p className="text-xl font-bold">{stats.porcentaje}%</p>
-              </CardContent>
-            </Card>
-            <Card className="bg-zinc-800 text-white">
-              <CardContent className="p-4">
-                <p className="text-sm"># Depósitos</p>
-                <p className="text-xl font-bold">{stats.cantidadDepositos}</p>
-              </CardContent>
-            </Card>
+          {/* Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-zinc-800 rounded-xl p-4 text-white">
+              <p className="text-sm text-zinc-300">Capacidad total</p>
+              <p className="text-2xl font-bold">{stats.capacidadTotal}</p>
+            </div>
+            <div className="bg-zinc-800 rounded-xl p-4 text-white">
+              <p className="text-sm text-zinc-300">Ocupado</p>
+              <p className="text-2xl font-bold">{stats.ocupado}</p>
+            </div>
+            <div className="bg-zinc-800 rounded-xl p-4 text-white">
+              <p className="text-sm text-zinc-300">% Ocupado</p>
+              <p className="text-2xl font-bold">{stats.porcentaje}%</p>
+            </div>
+            <div className="bg-zinc-800 rounded-xl p-4 text-white">
+              <p className="text-sm text-zinc-300"># Depósitos</p>
+              <p className="text-2xl font-bold">{stats.cantidadDepositos}</p>
+            </div>
           </div>
 
-          {/* === SELECT DE DEPÓSITO === */}
-          <div className="mt-4">
-            <Select
-              value={selectedDeposito}
-              onValueChange={(val) => setSelectedDeposito(val)}
-            >
-              <SelectTrigger className="w-[250px] bg-slate-800 text-white border border-gray-600 rounded-lg px-3 py-2  ">
-                <SelectValue placeholder="Selecciona depósito" />
-              </SelectTrigger>
-              <SelectContent className="bg-gray-800 text-white">
-                <SelectItem value="all">Todos</SelectItem>
+          {/* Filtros superiores: Select + Buscador */}
+          <div className="mt-2 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            {/* Select de depósito */}
+            <div className="flex items-center gap-2">
+              <label className="sr-only" htmlFor="depositoSelect">
+                Selecciona depósito
+              </label>
+              <select
+                id="depositoSelect"
+                className="w-[260px] bg-zinc-900 text-white border border-zinc-700 rounded-lg px-3 py-2"
+                value={selectedDeposito}
+                onChange={(e) => setSelectedDeposito(e.target.value as any)}
+              >
+                <option value="all">Todos</option>
                 {depositos?.map((d: any) => (
-                  <SelectItem key={d._id} value={d._id}>
+                  <option key={d._id} value={d._id}>
                     {d.nombre}
-                  </SelectItem>
+                  </option>
                 ))}
-              </SelectContent>
-            </Select>
+              </select>
+            </div>
+
+            {/* Buscador */}
+            <div className="relative w-full md:w-[360px]">
+              <label htmlFor="searchDepositos" className="sr-only">
+                Buscar depósitos
+              </label>
+              <input
+                id="searchDepositos"
+                type="text"
+                placeholder="Buscar por nombre, ubicación, dirección o CP…"
+                className="w-full bg-zinc-900 text-white placeholder-zinc-500 border border-zinc-700 rounded-lg pl-10 pr-9 py-2 outline-none focus:ring-2 focus:ring-indigo-600"
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+              />
+              {/* Icono lupa (decorativo, sin dependencias) */}
+              <span
+                aria-hidden
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500"
+              >
+                🔎
+              </span>
+              {/* Botón clear */}
+              {q && (
+                <button
+                  type="button"
+                  onClick={clearSearch}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-200"
+                  aria-label="Limpiar búsqueda"
+                  title="Limpiar"
+                >
+                  ×
+                </button>
+              )}
+            </div>
           </div>
         </>
       )}
 
-      {/* === LISTA DE DEPÓSITOS === */}
-      <div className="grid gap-4 rounded-xl">
-  {depositos?.map((d: any) => {
-    // Mostrar SIEMPRE todos los depósitos
-    return (
-      <Card className="text-zinc-400 bg-zinc-800" key={d._id}>
-        <CardContent className="p-4">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="font-semibold text-white">{d.nombre}</p>
-              <p className="text-sm text-gray-600">
-                {d.provincia} - {d.ciudad}
-              </p>
-              <p className="text-sm">{d.calle}</p>
-              <p className="text-sm">CP: {d.codigoPostal}</p>
-              <p className="text-sm">
-                Capacidad: {d.capacidad_total ?? "Sin límite"}
-              </p>
-            </div>
-            <div className="flex gap-2">
-              <Link href={`/depositos/${d._id}`}>
-                <Button 
-                className="bg-sky-600 border-hidden text-white"
-                variant="outline">Ver detalles</Button>
-              </Link>
-              <Link href={`/depositos/${d._id}/editar`}>
-                <Button
-                  className="bg-indigo-700 border-hidden text-white"
-                  variant="outline"
-                >
-                  Editar
-                </Button>
-              </Link>
-              <Button
-                className="bg-red-600 border-hidden"
-                variant="destructive"
-                onClick={() => handleDelete(d._id)}
-              >
-                Eliminar
-              </Button>
-            </div>
-          </div>
+      {/* TABLA DE DEPÓSITOS */}
+      <div className="bg-zinc-900 rounded-xl overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-sm text-left">
+            <thead className="bg-zinc-800 text-zinc-200">
+              <tr>
+                <th className="px-4 py-3 font-semibold">Nombre</th>
+                <th className="px-4 py-3 font-semibold">Ubicación</th>
+                <th className="px-4 py-3 font-semibold">Dirección</th>
+                <th className="px-4 py-3 font-semibold">CP</th>
+                <th className="px-4 py-3 font-semibold">Capacidad</th>
+                <th className="px-4 py-3 font-semibold text-right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-800">
+              {depositosFiltrados?.map((d: any) => {
+                const isExpanded = selectedDeposito === d._id;
+                return (
+                  <React.Fragment key={d._id}>
+                    <tr className="hover:bg-zinc-800/60 transition">
+                      <td className="px-4 py-3 text-zinc-100">{d.nombre}</td>
+                      <td className="px-4 py-3 text-zinc-300">
+                        {d.provincia} - {d.ciudad}
+                      </td>
+                      <td className="px-4 py-3 text-zinc-300">{d.calle}</td>
+                      <td className="px-4 py-3 text-zinc-300">
+                        {d.codigoPostal}
+                      </td>
+                      <td className="px-4 py-3 text-zinc-300">
+                        {d.capacidad_total ?? "Sin límite"}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex justify-end gap-2">
+                          <Link
+                            href={`/depositos/${d._id}`}
+                            className="rounded-lg bg-sky-600 px-3 py-1.5 text-white hover:bg-sky-500 transition"
+                          >
+                            Ver
+                          </Link>
+                          <Link
+                            href={`/depositos/${d._id}/editar`}
+                            className="rounded-lg bg-indigo-700 px-3 py-1.5 text-white hover:bg-indigo-600 transition"
+                          >
+                            Editar
+                          </Link>
+                          <button
+                            className="rounded-lg bg-red-600 px-3 py-1.5 text-white hover:bg-red-500 transition"
+                            onClick={() => handleDelete(d._id)}
+                          >
+                            Eliminar
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
 
-          {/* Mostrar repuestos SOLO si el depósito seleccionado coincide */}
-          {selectedDeposito === d._id && repuestosPorDeposito && (
-            <Card className="bg-zinc-900 text-white mt-6">
-              <CardContent className="p-4">
-                <h2 className="text-lg font-bold mb-3">
-                  Repuestos en este depósito:
-                </h2>
-                <div className="space-y-3">
-                  {repuestosPorDeposito.map((r: any) => (
-                    <div
-                      key={r._id}
-                      className="flex items-center justify-between"
-                    >
-                      <span>{r.nombre}</span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm text-gray-400">
-                          {r.cantidad} unidades
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                  {repuestosPorDeposito.length === 0 && (
-                    <p className="text-sm text-gray-400">
-                      No hay repuestos en este depósito.
-                    </p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </CardContent>
-      </Card>
-    );
-  })}
-</div>
+                    {/* Fila expandida con repuestos del depósito seleccionado */}
+                    {isExpanded && (
+                      <tr key={`${d._id}-expanded`}>
+                        <td colSpan={6} className="bg-zinc-950 px-4 py-4">
+                          <div className="text-white">
+                            <h2 className="text-base font-semibold mb-3">
+                              Repuestos en este depósito
+                            </h2>
+
+                            <div className="overflow-x-auto rounded-lg ring-1 ring-zinc-800">
+                              <table className="min-w-full text-sm">
+                                <thead className="bg-zinc-900 text-zinc-300">
+                                  <tr>
+                                    <th className="px-3 py-2 font-medium text-left">
+                                      Repuesto
+                                    </th>
+                                    <th className="px-3 py-2 font-medium text-left">
+                                      Cantidad
+                                    </th>
+                                  </tr>
+                                </thead>
+                                <tbody className="divide-y divide-zinc-800">
+                                  {repuestosPorDeposito.map((r: any) => (
+                                    <tr key={r._id}>
+                                      <td className="px-3 py-2">{r.nombre}</td>
+                                      <td className="px-3 py-2">
+                                        {r.cantidad} unidades
+                                      </td>
+                                    </tr>
+                                  ))}
+
+                                  {repuestosPorDeposito.length === 0 && (
+                                    <tr>
+                                      <td
+                                        className="px-3 py-4 text-zinc-400"
+                                        colSpan={2}
+                                      >
+                                        No hay repuestos en este depósito.
+                                      </td>
+                                    </tr>
+                                  )}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                );
+              })}
+
+              {depositosFiltrados?.length === 0 && (
+                <tr>
+                  <td
+                    className="px-4 py-6 text-center text-zinc-400"
+                    colSpan={6}
+                  >
+                    No hay depósitos que coincidan con la búsqueda.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }

@@ -4,8 +4,6 @@
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { useState, useMemo } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { useRouter } from "next/navigation";
 
 export default function MovimientosPage() {
@@ -21,9 +19,20 @@ export default function MovimientosPage() {
     estado: "",
   });
 
-  // Filtrado en memoria
+  // Barra de búsqueda
+  const [q, setQ] = useState("");
+
+  // Normalizador para búsqueda (casefold + sin tildes)
+  const normalize = (v: unknown) =>
+    (v ?? "")
+      .toString()
+      .toLowerCase()
+      .normalize("NFD")
+      // @ts-ignore: unicode regex for diacritics
+      .replace(/\p{Diacritic}/gu, "");
+
   const movimientosFiltrados = useMemo(() => {
-    return todosMovimientos.filter((m: any) => {
+    const porSelects = todosMovimientos.filter((m: any) => {
       return (
         (filtros.depositoId ? m.depositoId === filtros.depositoId : true) &&
         (filtros.tipoMovimientoId
@@ -36,27 +45,50 @@ export default function MovimientosPage() {
           : true)
       );
     });
-  }, [todosMovimientos, filtros]);
+
+    if (!q) return porSelects;
+
+    const nq = normalize(q);
+    return porSelects.filter((m: any) => {
+      const comprobante = normalize(m.tipoComprobante?.nombre);
+      const movimiento = normalize(m.tipoMovimiento?.nombre);
+      const depositoNom = normalize(m.deposito?.nombre);
+      const fecha = normalize(m.fecha_registro);
+      const hora = normalize(m.hora_registro);
+      return (
+        comprobante.includes(nq) ||
+        movimiento.includes(nq) ||
+        depositoNom.includes(nq) ||
+        `${fecha} ${hora}`.includes(nq)
+      );
+    });
+  }, [todosMovimientos, filtros, q]);
+
+  const clearSearch = () => setQ("");
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex justify-between items-center">
+      {/* Header */}
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <h1 className="text-2xl text-white font-bold">📦 Movimientos</h1>
-        <Button
-          className="bg-indigo-700 text-white"
+        <button
+          className="inline-flex items-center justify-center rounded-lg bg-indigo-700 px-4 py-2 text-white hover:bg-indigo-600 transition"
           onClick={() => router.push("/movimientos/nuevo")}
         >
           ➕ Nuevo Movimiento
-        </Button>
+        </button>
       </div>
 
       {/* Filtros */}
-      <Card className="bg-zinc-900">
-        <CardContent className="p-4 grid md:grid-cols-3 gap-3 text-zinc-400">
+      <div className="bg-zinc-900 rounded-xl p-4 space-y-3">
+        {/* Selectores */}
+        <div className="grid md:grid-cols-3 gap-3 text-zinc-200">
           <select
-            className="border p-2 rounded"
+            className="border border-zinc-700 bg-zinc-950 p-2 rounded-lg"
             value={filtros.depositoId}
-            onChange={(e) => setFiltros({ ...filtros, depositoId: e.target.value })}
+            onChange={(e) =>
+              setFiltros({ ...filtros, depositoId: e.target.value })
+            }
           >
             <option value="">Todos los depósitos</option>
             {depositos.map((d: any) => (
@@ -67,7 +99,7 @@ export default function MovimientosPage() {
           </select>
 
           <select
-            className="border p-2 rounded"
+            className="border border-zinc-700 bg-zinc-950 p-2 rounded-lg"
             value={filtros.tipoMovimientoId}
             onChange={(e) =>
               setFiltros({ ...filtros, tipoMovimientoId: e.target.value })
@@ -82,7 +114,7 @@ export default function MovimientosPage() {
           </select>
 
           <select
-            className="border p-2 rounded"
+            className="border border-zinc-700 bg-zinc-950 p-2 rounded-lg"
             value={filtros.estado}
             onChange={(e) => setFiltros({ ...filtros, estado: e.target.value })}
           >
@@ -90,37 +122,108 @@ export default function MovimientosPage() {
             <option value="confirmado">Confirmados</option>
             <option value="pendiente">Pendientes</option>
           </select>
-        </CardContent>
-      </Card>
+        </div>
 
-      {/* Lista */}
-      <div className="grid gap-4">
-        {movimientosFiltrados.map((m: any) => (
-          <Card key={m._id} className="bg-zinc-800">
-            <CardContent className="flex justify-between items-center p-4">
-              <div>
-                <p className="font-semibold text-white">
-                  {m.tipoComprobante?.nombre} - {m.tipoMovimiento?.nombre}
-                </p>
-                <p className="text-sm text-zinc-400">
-                  Depósito: {m.deposito?.nombre}
-                </p>
-                <p className="text-sm text-zinc-400">
-                  Fecha: {m.fecha_registro} {m.hora_registro}
-                </p>
-                <p className="text-sm text-zinc-400">
-                  Estado: {m.confirmado ? "✅ Confirmado" : "⏳ Pendiente"}
-                </p>
-              </div>
-              <Button
-                className="bg-indigo-700 text-white"
-                onClick={() => router.push(`/movimientos/${m._id}`)}
-              >
-                Abrir
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
+        {/* Buscador */}
+        <div className="relative">
+          <label htmlFor="buscarMovimientos" className="sr-only">
+            Buscar movimientos
+          </label>
+          <input
+            id="buscarMovimientos"
+            type="text"
+            placeholder="Buscar por comprobante, movimiento, depósito, fecha u hora…"
+            className="w-full bg-zinc-950 text-white placeholder-zinc-500 border border-zinc-700 rounded-lg pl-10 pr-9 py-2 outline-none focus:ring-2 focus:ring-indigo-600"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+          />
+          <span
+            aria-hidden
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500"
+          >
+            🔎
+          </span>
+          {q && (
+            <button
+              type="button"
+              onClick={clearSearch}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-200"
+              aria-label="Limpiar búsqueda"
+              title="Limpiar"
+            >
+              ×
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Tabla */}
+      <div className="bg-zinc-900 rounded-xl p-0 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-sm text-left">
+            <thead className="bg-zinc-800 text-zinc-200">
+              <tr>
+                <th className="px-4 py-3 font-semibold">Comprobante</th>
+                <th className="px-4 py-3 font-semibold">Movimiento</th>
+                <th className="px-4 py-3 font-semibold">Depósito</th>
+                <th className="px-4 py-3 font-semibold">Fecha</th>
+                <th className="px-4 py-3 font-semibold">Estado</th>
+                <th className="px-4 py-3 font-semibold text-right">Acción</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-800">
+              {movimientosFiltrados.map((m: any) => (
+                <tr key={m._id} className="hover:bg-zinc-800/60 transition">
+                  <td className="px-4 py-3 text-zinc-100">
+                    {m.tipoComprobante?.nombre ?? "-"}
+                  </td>
+                  <td className="px-4 py-3 text-zinc-300">
+                    {m.tipoMovimiento?.nombre ?? "-"}
+                  </td>
+                  <td className="px-4 py-3 text-zinc-300">
+                    {m.deposito?.nombre ?? "-"}
+                  </td>
+                  <td className="px-4 py-3 text-zinc-300 whitespace-nowrap">
+                    {m.fecha_registro} {m.hora_registro}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span
+                      className={
+                        "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium " +
+                        (m.confirmado
+                          ? "bg-green-500/15 text-green-400 ring-1 ring-green-500/30"
+                          : "bg-yellow-500/15 text-yellow-400 ring-1 ring-yellow-500/30")
+                      }
+                    >
+                      {m.confirmado ? "Confirmado" : "Pendiente"}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex justify-end">
+                      <button
+                        className="rounded-lg bg-indigo-700 px-3 py-1.5 text-white hover:bg-indigo-600 transition"
+                        onClick={() => router.push(`/movimientos/${m._id}`)}
+                      >
+                        Abrir
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+
+              {movimientosFiltrados.length === 0 && (
+                <tr>
+                  <td
+                    className="px-4 py-6 text-center text-zinc-400"
+                    colSpan={6}
+                  >
+                    No hay resultados con los filtros y la búsqueda actual.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
