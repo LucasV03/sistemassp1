@@ -54,7 +54,7 @@ export default defineSchema({
     vehiculo: v.string(),
     marca: v.optional(v.string()),
     modeloCompatible: v.optional(v.string()),
-    precioUnitario: v.number(),
+    precioUnitario: v.optional(v.number()),
 
     categoriaId: v.optional(v.id("categorias")),
     marcaId: v.optional(v.id("marcas")),
@@ -178,7 +178,7 @@ export default defineSchema({
     totalDescuento: v.number(),
     totalImpuestos: v.number(),
     totalGeneral: v.number(),
-    compradorUsuario: v.string(),
+    
     notas: v.optional(v.string()),
     adjuntos: v.optional(v.array(v.object({ name: v.string(), url: v.string() }))),
     creadoEn: v.number(),

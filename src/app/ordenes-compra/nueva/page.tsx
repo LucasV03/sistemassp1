@@ -32,7 +32,7 @@ export default function NuevaOC() {
     moneda: "ARS" as "ARS" | "USD",
     tipoCambio: 1,
     condicionesPago: "",
-    compradorUsuario: "",
+    
     notas: "",
   });
 
@@ -91,7 +91,7 @@ export default function NuevaOC() {
         moneda: h.moneda,
         tipoCambio: Number(h.tipoCambio) || 1,
         condicionesPago: h.condicionesPago || undefined,
-        compradorUsuario: h.compradorUsuario || "",
+        
         notas: h.notas || undefined,
         items: items.map((it) => ({
           repuestoId: it.repuestoId as any,
@@ -228,15 +228,7 @@ export default function NuevaOC() {
           />
         </div>
 
-        <div>
-          <label className="block text-sm text-neutral-300 mb-1">Comprador</label>
-          <input
-            className="w-full bg-neutral-900 border border-neutral-800 rounded p-2"
-            placeholder="Nombre del comprador"
-            value={h.compradorUsuario}
-            onChange={(e) => setH(s => ({ ...s, compradorUsuario: e.target.value }))}
-          />
-        </div>
+        
 
         <div className="lg:col-span-3">
           <label className="block text-sm text-neutral-300 mb-1">Notas</label>

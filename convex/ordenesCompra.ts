@@ -185,7 +185,7 @@ export const crear = mutation({
     tipoCambio: v.optional(v.number()),
     condicionesPago: v.optional(v.string()),
     incoterm: v.optional(v.string()),
-    compradorUsuario: v.string(),
+
     notas: v.optional(v.string()),
     items: v.array(
       v.object({
@@ -225,7 +225,6 @@ export const crear = mutation({
       incoterm: a.incoterm,
       estado: "BORRADOR",
       ...totales,
-      compradorUsuario: a.compradorUsuario,
       notas: a.notas,
       creadoEn: ahora,
       actualizadoEn: ahora,

@@ -11,7 +11,7 @@ export const crear = mutation({
     codigo: v.string(),
     nombre: v.string(),
     descripcion: v.optional(v.string()),
-    precioUnitario: v.number(),
+    precioUnitario: v.optional(v.number()),
     categoria: v.string(),
     vehiculo: v.string(),
     marca: v.optional(v.string()),
