@@ -100,7 +100,9 @@ export default function ProveedoresPage() {
               <th className="px-4 py-3 text-left text-sm font-medium">Teléfono</th>
               <th className="px-4 py-3 text-left text-sm font-medium">Email</th>
               <th className="px-4 py-3 text-left text-sm font-medium">CUIT</th>
+              <th className="px-4 py-3 text-left text-sm font-medium">Codigo</th>
               <th className="px-4 py-3 text-left text-sm font-medium">Estado</th>
+              
               <th className="px-4 py-3 text-left text-sm font-medium">Reputación</th>
               <th className="px-4 py-3 text-left text-sm font-medium">Acciones</th>
             </tr>
@@ -113,6 +115,8 @@ export default function ProveedoresPage() {
                 <td className="px-4 py-3">{p.telefono}</td>
                 <td className="px-4 py-3">{p.email}</td>
                 <td className="px-4 py-3">{p.cuit ?? "-"}</td>
+                <td className="px-4 py-3">{p.codigo ?? "-"}</td>
+
                 <td className="px-4 py-3">
                   <span
                     className={`rounded-full px-2 py-0.5 text-xs ${

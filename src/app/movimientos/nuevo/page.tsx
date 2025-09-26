@@ -14,7 +14,7 @@ export default function NuevoMovimientoPage() {
   const router = useRouter();
 
   const depositos = useQuery(api.depositos.listar) || [];
-  const tiposComprobante = useQuery(api.tipos_comprobantes.listar) || [];
+  const tiposComprobante = useQuery(api.tipos_comprobante.listar) || [];
   const tiposMovimiento = useQuery(api.tipos_movimiento.listar) || [];
 
   const [form, setForm] = useState({

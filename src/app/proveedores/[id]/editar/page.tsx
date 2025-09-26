@@ -23,6 +23,7 @@ export default function ProveedorEditarPage() {
     email: "",
     direccion: "",
     cuit: "", // NUEVO
+    codigo: "",
     activo: true,
     reputacion: 3,
     notas: "",
@@ -39,6 +40,7 @@ export default function ProveedorEditarPage() {
         email: proveedor.email,
         direccion: proveedor.direccion,
         cuit: proveedor.cuit ?? "",
+        codigo: proveedor.codigo ?? "",
         activo: proveedor.activo,
         reputacion: proveedor.reputacion ?? 3,
         notas: proveedor.notas ?? "",
@@ -117,6 +119,11 @@ export default function ProveedorEditarPage() {
             label="CUIT*"
             value={form.cuit}
             onChange={(v) => setForm((s) => ({ ...s, cuit: v }))}
+          />
+          <Input
+            label="Codigo*"
+            value={form.codigo}
+            onChange={(v) => setForm((s) => ({ ...s, codigo: v }))}
           />
 
           <div className="flex items-center gap-2">

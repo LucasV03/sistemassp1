@@ -137,15 +137,7 @@ export default function NuevoRepuestoPage() {
               }}
             />
 
-            <Field label="Precio Unitario">
-              <Input
-                type="number"
-                name="precioUnitario"
-                value={form.precioUnitario}
-                onChange={handleChange}
-                required
-              />
-            </Field>
+            
           </div>
 
           {/* Botonera */}

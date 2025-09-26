@@ -26,7 +26,7 @@ export default function EditarRepuestoPage({
   const [form, setForm] = useState({
     nombre: "",
     descripcion: "",
-    precioUnitario: 0,
+    
     marca: "",
     modeloCompatible: "",
     categoria: "",
@@ -47,7 +47,7 @@ export default function EditarRepuestoPage({
       setForm({
         nombre: repuesto.nombre ?? "",
         descripcion: repuesto.descripcion ?? "",
-        precioUnitario: repuesto.precioUnitario ?? 0,
+        
         marca: repuesto.marca ?? "",
         modeloCompatible: repuesto.modeloCompatible ?? "",
         categoria: repuesto.categoria ?? "",
@@ -176,15 +176,7 @@ export default function EditarRepuestoPage({
               }}
             />
 
-            <Field label="Precio Unitario">
-              <Input
-                type="number"
-                name="precioUnitario"
-                value={form.precioUnitario}
-                onChange={handleChange}
-                required
-              />
-            </Field>
+            
           </div>
 
           {/* Botonera */}

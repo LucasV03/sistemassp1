@@ -16,3 +16,4 @@ export const insertar = mutation({
     return await ctx.db.insert("tipos_comprobante", args);
   },
 });
+

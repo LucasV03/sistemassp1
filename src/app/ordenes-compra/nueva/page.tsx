@@ -11,7 +11,6 @@ type ItemRow = {
   descripcion: string;
   cantidad: number;
   precio: number;
-  iva: number; // %
 };
 
 export default function NuevaOC() {
@@ -32,11 +31,10 @@ export default function NuevaOC() {
     moneda: "ARS" as "ARS" | "USD",
     tipoCambio: 1,
     condicionesPago: "",
-    compradorUsuario: "",
     notas: "",
   });
 
-  // >>> Ajuste automático del tipo de cambio según moneda
+  // Ajuste automático del tipo de cambio
   useEffect(() => {
     if (h.moneda === "ARS") {
       setH(s => ({ ...s, tipoCambio: 1 }));
@@ -50,9 +48,17 @@ export default function NuevaOC() {
   const [err, setErr] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
+  // Formateador de moneda (para totales)
+  const moneyFmt = (n: number, moneda: string) =>
+    new Intl.NumberFormat("es-AR", {
+      style: "currency",
+      currency: moneda || "ARS",
+      minimumFractionDigits: 2,
+    }).format(n ?? 0);
+
   // Quick add de fila
   const addRow = () =>
-    setItems(a => [...a, { repuestoId: "", descripcion: "", cantidad: 1, precio: 0, iva: 21 }]);
+    setItems(a => [...a, { repuestoId: "", descripcion: "", cantidad: 1, precio: 0 }]);
 
   const removeRow = (i: number) =>
     setItems(a => a.filter((_, ix) => ix !== i));
@@ -63,10 +69,7 @@ export default function NuevaOC() {
   // Totales preview
   const preview = useMemo(() => {
     const subtotal = items.reduce((acc, it) => acc + (it.cantidad || 0) * (it.precio || 0), 0);
-    const totalIva = items.reduce((acc, it) => {
-      const base = (it.cantidad || 0) * (it.precio || 0);
-      return acc + base * ((it.iva || 0) / 100);
-    }, 0);
+    const totalIva = subtotal * 0.21; // fijo 21%
     return {
       subtotal,
       totalIva,
@@ -80,7 +83,6 @@ export default function NuevaOC() {
     if (!h.depositoEntregaId) return setErr("Seleccioná el depósito de entrega.");
     if (items.length === 0) return setErr("Agregá al menos un ítem.");
 
-    // Mapeo para backend en español
     try {
       setSaving(true);
       await crear({
@@ -91,7 +93,6 @@ export default function NuevaOC() {
         moneda: h.moneda,
         tipoCambio: Number(h.tipoCambio) || 1,
         condicionesPago: h.condicionesPago || undefined,
-        compradorUsuario: h.compradorUsuario || "",
         notas: h.notas || undefined,
         items: items.map((it) => ({
           repuestoId: it.repuestoId as any,
@@ -100,12 +101,11 @@ export default function NuevaOC() {
           cantidadPedida: Number(it.cantidad) || 0,
           precioUnitario: Number(it.precio) || 0,
           descuentoPorc: 0,
-          tasaImpuesto: Number(it.iva) || 0,
+          tasaImpuesto: 21, // fijo 21%
           depositoId: h.depositoEntregaId as any,
         })),
       });
 
-      // 👉 redirigimos a la lista, como pediste
       router.push("/ordenes-compra");
     } catch (e: any) {
       setErr(e?.message ?? "No se pudo guardar la OC");
@@ -152,15 +152,12 @@ export default function NuevaOC() {
           </select>
         </div>
 
-        {/* Dirección de entrega */}
-
-
         {/* Fecha orden (solo lectura) */}
         <div>
           <label className="block text-sm text-neutral-300 mb-1">Fecha de orden</label>
           <input
             className="w-full bg-neutral-900 border border-neutral-800 rounded p-2"
-            value={new Date(h.fechaOrden).toLocaleString()}
+            value={new Date(h.fechaOrden).toLocaleString("es-AR")}
             readOnly
           />
         </div>
@@ -195,16 +192,13 @@ export default function NuevaOC() {
           <div>
             <label className="block text-sm text-neutral-300 mb-1">Tipo de cambio</label>
             {h.moneda === "ARS" ? (
-              // ARS: deshabilitado y muestra guion
               <input
                 type="text"
                 className="w-full bg-neutral-900 border border-neutral-800 rounded p-2 text-center text-neutral-400"
                 value="-"
                 disabled
-                title="No aplica tipo de cambio para ARS"
               />
             ) : (
-              // USD: editable con 1400 por defecto
               <input
                 type="number"
                 step="0.0001"
@@ -217,7 +211,7 @@ export default function NuevaOC() {
           </div>
         </div>
 
-        {/* Condiciones / Comprador */}
+        {/* Condiciones de pago */}
         <div>
           <label className="block text-sm text-neutral-300 mb-1">Condiciones de pago</label>
           <input
@@ -225,16 +219,6 @@ export default function NuevaOC() {
             placeholder="Ej: 30 días FF / Contado / Transferencia"
             value={h.condicionesPago}
             onChange={(e) => setH(s => ({ ...s, condicionesPago: e.target.value }))}
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm text-neutral-300 mb-1">Comprador</label>
-          <input
-            className="w-full bg-neutral-900 border border-neutral-800 rounded p-2"
-            placeholder="Nombre del comprador"
-            value={h.compradorUsuario}
-            onChange={(e) => setH(s => ({ ...s, compradorUsuario: e.target.value }))}
           />
         </div>
 
@@ -270,7 +254,6 @@ export default function NuevaOC() {
                 <th className="p-2 text-left">Descripción</th>
                 <th className="p-2 text-right">Cant.</th>
                 <th className="p-2 text-right">P.Unit</th>
-                <th className="p-2 text-right">IVA%</th>
                 <th className="p-2"></th>
               </tr>
             </thead>
@@ -278,7 +261,6 @@ export default function NuevaOC() {
               {items.map((it, i) => (
                 <tr key={i} className="border-t border-neutral-800">
                   <td className="p-2">
-                    {/* Selector con búsqueda simple */}
                     <select
                       className="w-full bg-neutral-900 border border-neutral-800 rounded p-1"
                       value={String(it.repuestoId ?? "")}
@@ -319,19 +301,11 @@ export default function NuevaOC() {
                   <td className="p-2 text-right">
                     <input
                       type="number"
+                      step="0.01"
                       className="w-28 bg-neutral-900 border border-neutral-800 rounded p-1 text-right"
                       placeholder="0.00"
                       value={it.precio}
                       onChange={(e) => updateRow(i, { precio: Number(e.target.value) || 0 })}
-                    />
-                  </td>
-                  <td className="p-2 text-right">
-                    <input
-                      type="number"
-                      className="w-20 bg-neutral-900 border border-neutral-800 rounded p-1 text-right"
-                      placeholder="21"
-                      value={it.iva}
-                      onChange={(e) => updateRow(i, { iva: Number(e.target.value) || 0 })}
                     />
                   </td>
                   <td className="p-2 text-right">
@@ -347,7 +321,7 @@ export default function NuevaOC() {
 
               {items.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="p-4 text-center text-neutral-400">
+                  <td colSpan={5} className="p-4 text-center text-neutral-400">
                     Agregá al menos un ítem.
                   </td>
                 </tr>
@@ -361,15 +335,15 @@ export default function NuevaOC() {
           <div className="w-full sm:w-80">
             <div className="flex justify-between py-1">
               <span>Subtotal</span>
-              <span>{preview.subtotal.toFixed(2)} {h.moneda}</span>
+              <span>{moneyFmt(preview.subtotal, h.moneda)}</span>
             </div>
             <div className="flex justify-between py-1">
-              <span>Impuesto</span>
-              <span>{preview.totalIva.toFixed(2)} {h.moneda}</span>
+              <span>IVA (21%)</span>
+              <span>{moneyFmt(preview.totalIva, h.moneda)}</span>
             </div>
             <div className="flex justify-between border-t border-neutral-800 mt-1 pt-2 font-semibold">
               <span>Total</span>
-              <span>{preview.totalGeneral.toFixed(2)} {h.moneda}</span>
+              <span>{moneyFmt(preview.totalGeneral, h.moneda)}</span>
             </div>
           </div>
         </div>
