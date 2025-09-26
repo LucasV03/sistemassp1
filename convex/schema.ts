@@ -23,7 +23,7 @@ export default defineSchema({
     .index("by_nombre", ["nombre"]),
 
   vehiculos: defineTable({
-    nombre: v.string(),         // p.ej. "Hilux"
+    nombre: v.string(), // p.ej. "Hilux"
     marcaId: v.id("marcas"),
     slug: v.string(),
     creadoEn: v.number(),
@@ -33,11 +33,11 @@ export default defineSchema({
     .index("by_marca_slug", ["marcaId", "slug"]),
 
   modelos: defineTable({
-    nombre: v.string(),         // p.ej. "2016 2.8 TDI 4x4"
+    nombre: v.string(), // p.ej. "2016 2.8 TDI 4x4"
     marcaId: v.id("marcas"),
     vehiculoId: v.id("vehiculos"),
     slug: v.string(),
-    claveUnica: v.string(),     // `${marcaId}:${vehiculoId}:${slug}`
+    claveUnica: v.string(), // `${marcaId}:${vehiculoId}:${slug}`
     creadoEn: v.number(),
     actualizadoEn: v.number(),
   })
@@ -45,7 +45,7 @@ export default defineSchema({
     .index("by_clave", ["claveUnica"]),
 
   // ======= REPUESTOS =======
-  // Mantengo tus campos de texto (compatibilidad) + nuevos por ID
+  // Campos de texto (compat) + referencias por ID
   repuestos: defineTable({
     codigo: v.string(),
     nombre: v.string(),
@@ -75,7 +75,7 @@ export default defineSchema({
     .index("byCategoria", ["categoria"])
     .index("byVehiculo", ["vehiculo"]),
 
-  // ======= LO QUE YA TENÍAS (SIN CAMBIOS) =======
+  // ======= DEPÓSITOS =======
   depositos: defineTable({
     nombre: v.string(),
     provincia: v.string(),
@@ -141,6 +141,7 @@ export default defineSchema({
     cantidad: v.number(),
   }).index("byTraspaso", ["traspasoId"]),
 
+  // ======= PROVEEDORES / COMPRAS =======
   proveedores: defineTable({
     nombre: v.string(),
     contacto_principal: v.string(),
@@ -178,7 +179,7 @@ export default defineSchema({
     totalDescuento: v.number(),
     totalImpuestos: v.number(),
     totalGeneral: v.number(),
-    
+
     notas: v.optional(v.string()),
     adjuntos: v.optional(v.array(v.object({ name: v.string(), url: v.string() }))),
     creadoEn: v.number(),
@@ -277,52 +278,135 @@ export default defineSchema({
     creadoEn: v.number(),
   }).index("byFactura", ["facturaId"]),
 
-comprobantes_prov: defineTable({
-  proveedorId: v.id("proveedores"),
-  proveedorCuit: v.string(),     // ⬅️ nuevo campo
-  tipoComprobanteId: v.id("tipos_comprobante"),
-  letra: v.string(),
-  sucursal: v.string(),
-  numero: v.string(),
-  fecha: v.string(),
-  hora: v.string(),
-  total: v.number(),
-  saldo: v.number(),
-  estado: v.union(
-    v.literal("PENDIENTE"),
-    v.literal("PARCIAL"),
-    v.literal("PAGADO"),
-    v.literal("ANULADO")
-  ),
-  creadoEn: v.number(),
-  actualizadoEn: v.number(),
-})
+  // ======= COMPROBANTES DE PROVEEDOR (rama "facturas") =======
+  comprobantes_prov: defineTable({
+    proveedorId: v.id("proveedores"),
+    proveedorCuit: v.string(), // nuevo campo
+    tipoComprobanteId: v.id("tipos_comprobante"),
+    letra: v.string(),
+    sucursal: v.string(),
+    numero: v.string(),
+    fecha: v.string(),
+    hora: v.string(),
+    total: v.number(),
+    saldo: v.number(),
+    estado: v.union(
+      v.literal("PENDIENTE"),
+      v.literal("PARCIAL"),
+      v.literal("PAGADO"),
+      v.literal("ANULADO")
+    ),
+    creadoEn: v.number(),
+    actualizadoEn: v.number(),
+  })
+    .index("byProveedor", ["proveedorId"])
+    .index("byNumero", ["sucursal", "numero"]),
 
-  .index("byProveedor", ["proveedorId"])
-  .index("byNumero", ["sucursal", "numero"]),
-  
+  detalle_comprobantes_prov: defineTable({
+    comprobanteId: v.id("comprobantes_prov"),
+    repuestoId: v.id("repuestos"),
+    cantidad: v.number(),
+    precioUnitario: v.number(),
+    subtotal: v.number(),
+  }).index("byComprobante", ["comprobanteId"]),
 
-detalle_comprobantes_prov: defineTable({
-  comprobanteId: v.id("comprobantes_prov"),
-  repuestoId: v.id("repuestos"),
-  cantidad: v.number(),
-  precioUnitario: v.number(),
-  subtotal: v.number(),
-}).index("byComprobante", ["comprobanteId"]),
+  pagos_comprobantes: defineTable({
+    comprobanteId: v.id("comprobantes_prov"),
+    fechaPago: v.string(), // ISO string
+    medio: v.union(
+      v.literal("TRANSFERENCIA"),
+      v.literal("EFECTIVO"),
+      v.literal("CHEQUE"),
+      v.literal("TARJETA"),
+      v.literal("OTRO")
+    ),
+    importe: v.number(),
+    notas: v.optional(v.string()),
+    creadoEn: v.number(),
+  }).index("byComprobante", ["comprobanteId"]),
 
+  // ======= CRM (rama mainv2) =======
+  clientes: defineTable({
+    nombre: v.string(),
+    correo: v.string(),
+    telefono: v.optional(v.string()),
+    empresa: v.optional(v.string()),
+    notas: v.optional(v.string()),
+    creadoPor: v.optional(v.string()),
+    creadoEn: v.number(),
+  })
+    .index("por_correo", ["correo"])
+    .index("por_nombre", ["nombre"]),
 
-pagos_comprobantes: defineTable({
-  comprobanteId: v.id("comprobantes_prov"),
-  fechaPago: v.string(), // ISO string
-  medio: v.union(
-    v.literal("TRANSFERENCIA"),
-    v.literal("EFECTIVO"),
-    v.literal("CHEQUE"),
-    v.literal("TARJETA"),
-    v.literal("OTRO")
-  ),
-  importe: v.number(),
-  notas: v.optional(v.string()),
-  creadoEn: v.number(),
-}).index("byComprobante", ["comprobanteId"]),
+  contratos: defineTable({
+    clienteId: v.id("clientes"),
+    titulo: v.string(),
+    fechaInicio: v.string(),
+    fechaFin: v.optional(v.string()),
+    monto: v.number(),
+    estado: v.string(),
+    notas: v.optional(v.string()),
+    creadoEn: v.number(),
+    // compat: metadatos de archivo opcionales
+    archivoId: v.optional(v.id("_storage")),
+    archivoNombre: v.optional(v.string()),
+    archivoTipo: v.optional(v.string()),
+    archivoTamanio: v.optional(v.number()),
+  })
+    .index("por_cliente", ["clienteId"])
+    .index("por_estado", ["estado"]),
+
+  interacciones: defineTable({
+    clienteId: v.id("clientes"),
+    contratoId: v.optional(v.id("contratos")),
+    tipo: v.string(),
+    resumen: v.string(),
+    proximaAccion: v.optional(v.string()),
+    creadoEn: v.number(),
+  })
+    .index("por_cliente", ["clienteId"])
+    .index("por_contrato", ["contratoId"])
+    .index("por_proximaAccion", ["proximaAccion"]),
+
+  contratos_adjuntos: defineTable({
+    contratoId: v.id("contratos"),
+    archivoId: v.id("_storage"),
+    nombre: v.optional(v.string()),
+    tipo: v.optional(v.string()),
+    tamanio: v.optional(v.number()),
+    subidoEn: v.number(),
+  }).index("por_contrato", ["contratoId"]),
+
+  contratos_historial: defineTable({
+    contratoId: v.id("contratos"),
+    cambiadoEn: v.number(),
+    estadoAnterior: v.optional(v.string()),
+    montoAnterior: v.optional(v.number()),
+    fechaInicioAnterior: v.optional(v.string()),
+    fechaFinAnterior: v.optional(v.string()),
+    notasAnteriores: v.optional(v.string()),
+    // 'actualizar' | 'agregar_adjunto' | 'agregar_adjuntos' | 'eliminar_adjunto'
+    tipoCambio: v.optional(v.string()),
+    adjuntosAnteriores: v.optional(
+      v.array(
+        v.object({
+          archivoId: v.id("_storage"),
+          nombre: v.optional(v.string()),
+          tipo: v.optional(v.string()),
+          tamanio: v.optional(v.number()),
+        })
+      )
+    ),
+  }).index("por_contrato", ["contratoId"]),
+
+  notas_financieras: defineTable({
+    clienteId: v.id("clientes"),
+    contratoId: v.id("contratos"),
+    tipo: v.union(v.literal("credito"), v.literal("debito")), // crédito = a favor del cliente
+    monto: v.number(),
+    motivo: v.string(), // texto libre
+    generadoEn: v.number(), // timestamp
+  })
+    .index("por_cliente", ["clienteId"])
+    .index("por_contrato", ["contratoId"]),
 });
