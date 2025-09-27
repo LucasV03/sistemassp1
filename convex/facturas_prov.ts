@@ -6,28 +6,21 @@ import { v } from "convex/values";
  * Helpers
  * =======================*/
 const red = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
-type AlicIva = 0 | 10.5 | 21;
 
 function calcLinea(
   cantidad: number,
   precioUnitario: number,
-  descuentoPorc: number,
-  alicuotaIva: AlicIva
+  descuentoPorc: number
 ) {
   const subtotal = cantidad * precioUnitario * (1 - (descuentoPorc ?? 0) / 100);
-  const ivaMonto = subtotal * ((alicuotaIva ?? 0) / 100);
-  const totalLinea = subtotal + ivaMonto;
-  return { subtotal: red(subtotal), ivaMonto: red(ivaMonto), totalLinea: red(totalLinea) };
+  const totalLinea = subtotal; // 👈 sin IVA
+  return { subtotal: red(subtotal), totalLinea: red(totalLinea) };
 }
 
-function sumarTotalesLineas(
-  lines: Array<{ subtotal: number; ivaMonto: number; totalLinea: number; alicuotaIva: AlicIva }>
-) {
+function sumarTotalesLineas(lines: Array<{ subtotal: number; totalLinea: number }>) {
   const neto = red(lines.reduce((a, l) => a + l.subtotal, 0));
-  const iva21 = red(lines.filter(l => l.alicuotaIva === 21).reduce((a, l) => a + l.ivaMonto, 0));
-  const iva105 = red(lines.filter(l => l.alicuotaIva === 10.5).reduce((a, l) => a + l.ivaMonto, 0));
   const total = red(lines.reduce((a, l) => a + l.totalLinea, 0));
-  return { neto, iva21, iva105, total };
+  return { neto, total };
 }
 
 /** vencimiento = fecha + N meses */
@@ -38,7 +31,7 @@ function addMonthsClamp(dateIso: string, months = 1) {
 }
 
 /* =========================
- * LISTAR (sin filtrar por estado de la OC)
+ * LISTAR
  * =======================*/
 export const listar = query({
   args: {
@@ -56,12 +49,8 @@ export const listar = query({
     buscar: v.optional(v.string()),
   },
   handler: async (ctx, a) => {
-    let list = await ctx.db
-      .query("facturas_prov")
-      .withIndex("byFechaEmision")
-      .collect();
+    let list = await ctx.db.query("facturas_prov").withIndex("byFechaEmision").collect();
 
-    // Ya no filtramos por estado de la OC
     if (a.proveedorId) list = list.filter(f => f.proveedorId === a.proveedorId);
     if (a.estado) list = list.filter(f => f.estado === a.estado);
 
@@ -83,7 +72,7 @@ export const listar = query({
 });
 
 /* =========================
- * OBTENER (cabecera + items)
+ * OBTENER
  * =======================*/
 export const obtener = query({
   args: { id: v.id("facturas_prov") },
@@ -99,7 +88,7 @@ export const obtener = query({
 });
 
 /* =========================
- * CREAR DESDE OC (vto por defecto +1 mes)
+ * CREAR DESDE OC
  * =======================*/
 export const crearDesdeOC = mutation({
   args: {
@@ -124,10 +113,7 @@ export const crearDesdeOC = mutation({
 
     const lineas = ocItems.map(it => {
       const descuento = it.descuentoPorc ?? 0;
-      const alic = (it.tasaImpuesto ?? 0) as AlicIva;
-      const { subtotal, ivaMonto, totalLinea } = calcLinea(
-        it.cantidadPedida, it.precioUnitario, descuento, alic
-      );
+      const { subtotal, totalLinea } = calcLinea(it.cantidadPedida, it.precioUnitario, descuento);
       return {
         ocItemId: it._id,
         repuestoId: it.repuestoId,
@@ -135,14 +121,12 @@ export const crearDesdeOC = mutation({
         cantidad: it.cantidadPedida,
         precioUnitario: it.precioUnitario,
         descuentoPorc: descuento,
-        alicuotaIva: alic,
-        subtotal, ivaMonto, totalLinea,
+        subtotal,
+        totalLinea,
       };
     });
 
-    const { neto, iva21, iva105, total } = sumarTotalesLineas(
-      lineas.map(l => ({ subtotal: l.subtotal, ivaMonto: l.ivaMonto, totalLinea: l.totalLinea, alicuotaIva: l.alicuotaIva }))
-    );
+    const { neto, total } = sumarTotalesLineas(lineas);
 
     const ahora = Date.now();
     const emisionISO = new Date(a.fechaEmision).toISOString();
@@ -151,9 +135,8 @@ export const crearDesdeOC = mutation({
       : addMonthsClamp(emisionISO, 1);
 
     const proveedor = await ctx.db.get(oc.proveedorId);
-    if (!proveedor) {
-      throw new Error("Proveedor no encontrado");
-    }
+    if (!proveedor) throw new Error("Proveedor no encontrado");
+
     const facturaId = await ctx.db.insert("facturas_prov", {
       ocId: a.ocId,
       proveedorId: oc.proveedorId,
@@ -165,12 +148,15 @@ export const crearDesdeOC = mutation({
       fechaVencimiento: vtoISO,
       moneda: oc.moneda,
       tipoCambio: oc.tipoCambio,
-      neto, iva21, iva105, otrosImpuestos: 0,
-      total, saldo: total,
+      neto,
+      total,
+      saldo: total,
       estado: "PENDIENTE",
-      cae: undefined, caeVto: undefined,
+      cae: undefined,
+      caeVto: undefined,
       notas: a.notas,
-      creadoEn: ahora, actualizadoEn: ahora,
+      creadoEn: ahora,
+      actualizadoEn: ahora,
     });
 
     for (const l of lineas) {
@@ -182,9 +168,7 @@ export const crearDesdeOC = mutation({
         cantidad: l.cantidad,
         precioUnitario: l.precioUnitario,
         descuentoPorc: l.descuentoPorc,
-        alicuotaIva: l.alicuotaIva,
         subtotal: l.subtotal,
-        ivaMonto: l.ivaMonto,
         totalLinea: l.totalLinea,
       });
     }
@@ -194,7 +178,7 @@ export const crearDesdeOC = mutation({
 });
 
 /* =========================
- * FACTURAS de una OC / Resumen de OC
+ * FACTURAS DE UNA OC
  * =======================*/
 export const listarDeOC = query({
   args: { ocId: v.id("ordenes_compra") },
@@ -234,18 +218,17 @@ export const registrarPago = mutation({
   args: {
     facturaId: v.id("facturas_prov"),
     fechaPago: v.string(),
-    // Aceptamos lo que viene del front…
     medio: v.union(
       v.literal("TRANSFERENCIA"),
       v.literal("EFECTIVO"),
       v.literal("CHEQUE"),
-      v.literal("TARJETA"),               // por compatibilidad
+      v.literal("TARJETA"),
       v.literal("TARJETA DE CREDITO"),
       v.literal("TARJETA DE DEBITO"),
       v.literal("OTRO")
     ),
     importe: v.number(),
-    retIva: v.optional(v.number()),
+    retIva: v.optional(v.number()), // opcional, si querés quitarlo del schema también
     retGanancias: v.optional(v.number()),
     retIIBB: v.optional(v.number()),
     referencia: v.optional(v.string()),
@@ -256,22 +239,16 @@ export const registrarPago = mutation({
     if (!fac) throw new Error("Factura no encontrada");
     if (fac.estado === "ANULADA") throw new Error("No se puede pagar una factura anulada");
 
-    // Normalizamos a los valores que admite el schema de pagos_prov (incluye "TARJETA")
-    const medioDB:
-      | "TRANSFERENCIA"
-      | "EFECTIVO"
-      | "CHEQUE"
-      | "TARJETA"
-      | "OTRO" =
+    const medioDB: "TRANSFERENCIA" | "EFECTIVO" | "CHEQUE" | "TARJETA" | "OTRO" =
       a.medio === "TARJETA DE CREDITO" || a.medio === "TARJETA DE DEBITO"
         ? "TARJETA"
-        : (a.medio as "TRANSFERENCIA" | "EFECTIVO" | "CHEQUE" | "TARJETA" | "OTRO");
+        : (a.medio as any);
 
     const retTotal = (a.retIva ?? 0) + (a.retGanancias ?? 0) + (a.retIIBB ?? 0);
     const pagoTotal = red(a.importe + retTotal);
     if (a.importe <= 0) throw new Error("El importe del pago debe ser mayor a 0");
     if (pagoTotal - fac.saldo > 0.01)
-      throw new Error("El pago (importe + retenciones) supera el saldo pendiente de la factura");
+      throw new Error("El pago supera el saldo pendiente de la factura");
 
     const ahora = Date.now();
 
@@ -298,7 +275,6 @@ export const registrarPago = mutation({
       actualizadoEn: ahora,
     });
 
-    // cerrar OC si todas sus facturas quedaron en 0
     if (fac.ocId) {
       const todas = (await ctx.db.query("facturas_prov").collect()).filter(f => f.ocId === fac.ocId);
       const saldoAPagar = todas.reduce((acc, f) => acc + (f.saldo ?? 0), 0);
@@ -329,7 +305,7 @@ export const anular = mutation({
 });
 
 /* =========================
- * A PAGAR (opcional)
+ * A PAGAR
  * =======================*/
 export const aPagar = query({
   args: {

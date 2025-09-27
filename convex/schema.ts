@@ -177,7 +177,7 @@ export default defineSchema({
     ),
     subtotal: v.number(),
     totalDescuento: v.number(),
-    totalImpuestos: v.number(),
+    
     totalGeneral: v.number(),
 
     notas: v.optional(v.string()),
@@ -199,7 +199,7 @@ export default defineSchema({
     cantidadCancelada: v.number(),
     precioUnitario: v.number(),
     descuentoPorc: v.optional(v.number()),
-    tasaImpuesto: v.optional(v.number()),
+    
     totalLinea: v.number(),
     fechaNecesidad: v.optional(v.string()),
     depositoId: v.id("depositos"),
@@ -212,52 +212,47 @@ export default defineSchema({
   }).index("por_oc", ["ocId"]),
 
   facturas_prov: defineTable({
-    ocId: v.optional(v.id("ordenes_compra")),
-    proveedorId: v.id("proveedores"),
-    proveedorNombre: v.string(),
-    numeroProveedor: v.string(),
-    puntoVenta: v.optional(v.number()),
-    tipo: v.optional(v.string()),
-    fechaEmision: v.string(),
-    fechaVencimiento: v.optional(v.string()),
-    moneda: v.union(v.literal("ARS"), v.literal("USD")),
-    tipoCambio: v.optional(v.number()),
-    neto: v.number(),
-    iva21: v.optional(v.number()),
-    iva105: v.optional(v.number()),
-    otrosImpuestos: v.optional(v.number()),
-    total: v.number(),
-    saldo: v.number(),
-    estado: v.union(
-      v.literal("PENDIENTE"),
-      v.literal("PARCIAL"),
-      v.literal("PAGADA"),
-      v.literal("ANULADA")
-    ),
-    cae: v.optional(v.string()),
-    caeVto: v.optional(v.string()),
-    notas: v.optional(v.string()),
-    creadoEn: v.number(),
-    actualizadoEn: v.number(),
-  })
-    .index("byProveedor", ["proveedorId"])
-    .index("byFechaEmision", ["fechaEmision"])
-    .index("byEstado", ["estado"])
-    .index("byNumeroProveedor", ["numeroProveedor"]),
+  ocId: v.optional(v.id("ordenes_compra")),
+  proveedorId: v.id("proveedores"),
+  proveedorNombre: v.string(),
+  numeroProveedor: v.string(),
+  puntoVenta: v.optional(v.number()),
+  tipo: v.optional(v.string()),
+  fechaEmision: v.string(),
+  fechaVencimiento: v.optional(v.string()),
+  moneda: v.union(v.literal("ARS"), v.literal("USD")),
+  tipoCambio: v.optional(v.number()),
+  neto: v.number(),
+  total: v.number(),
+  saldo: v.number(),
+  estado: v.union(
+    v.literal("PENDIENTE"),
+    v.literal("PARCIAL"),
+    v.literal("PAGADA"),
+    v.literal("ANULADA")
+  ),
+  cae: v.optional(v.string()),
+  caeVto: v.optional(v.string()),
+  notas: v.optional(v.string()),
+  creadoEn: v.number(),
+  actualizadoEn: v.number(),
+})
+  .index("byProveedor", ["proveedorId"])
+  .index("byFechaEmision", ["fechaEmision"])
+  .index("byEstado", ["estado"])
+  .index("byNumeroProveedor", ["numeroProveedor"]),
 
-  facturas_prov_items: defineTable({
-    facturaId: v.id("facturas_prov"),
-    ocItemId: v.optional(v.id("detalle_ordenes_compra")),
-    repuestoId: v.optional(v.id("repuestos")),
-    descripcion: v.string(),
-    cantidad: v.number(),
-    precioUnitario: v.number(),
-    descuentoPorc: v.optional(v.number()),
-    alicuotaIva: v.union(v.literal(0), v.literal(10.5), v.literal(21)),
-    subtotal: v.number(),
-    ivaMonto: v.number(),
-    totalLinea: v.number(),
-  }).index("byFactura", ["facturaId"]),
+facturas_prov_items: defineTable({
+  facturaId: v.id("facturas_prov"),
+  ocItemId: v.optional(v.id("detalle_ordenes_compra")),
+  repuestoId: v.optional(v.id("repuestos")),
+  descripcion: v.string(),
+  cantidad: v.number(),
+  precioUnitario: v.number(),
+  descuentoPorc: v.optional(v.number()),
+  subtotal: v.number(),
+  totalLinea: v.number(),
+}).index("byFactura", ["facturaId"]),
 
   pagos_prov: defineTable({
     facturaId: v.id("facturas_prov"),

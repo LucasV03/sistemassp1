@@ -16,37 +16,30 @@ function addMonthsClamp(dateIso: string, months = 1) {
   return d.toISOString();
 }
 
-/** Totales OC */
+/** Totales OC (sin IVA) */
 function calcularTotales(items: Array<{
   cantidadPedida: number;
   precioUnitario: number;
   descuentoPorc?: number;
-  tasaImpuesto?: number;
 }>) {
   const subtotal = items.reduce(
     (acc, it) => acc + it.cantidadPedida * it.precioUnitario,
     0
   );
+
   const totalDescuento = items.reduce(
     (acc, it) =>
       acc +
       ((it.descuentoPorc ?? 0) / 100) * (it.cantidadPedida * it.precioUnitario),
     0
   );
-  const baseImponible = subtotal - totalDescuento;
-  const totalImpuestos = items.reduce((acc, it) => {
-    const base =
-      it.cantidadPedida *
-      it.precioUnitario *
-      (1 - (it.descuentoPorc ?? 0) / 100);
-    return acc + base * ((normAlic(it.tasaImpuesto) ?? 0) / 100);
-  }, 0);
+
+  const totalGeneral = subtotal - totalDescuento;
 
   return {
     subtotal: red(subtotal),
     totalDescuento: red(totalDescuento),
-    totalImpuestos: red(totalImpuestos),
-    totalGeneral: red(baseImponible + totalImpuestos),
+    totalGeneral: red(totalGeneral),
   };
 }
 
@@ -195,7 +188,7 @@ export const crear = mutation({
         cantidadPedida: v.number(),
         precioUnitario: v.number(),
         descuentoPorc: v.optional(v.number()),
-        tasaImpuesto: v.optional(v.number()),
+        tasaImpuesto: v.optional(v.number()), // solo guardado, no usado en totales
         depositoId: v.id("depositos"),
         fechaNecesidad: v.optional(v.string()),
         centroCosto: v.optional(v.string()),
@@ -230,26 +223,28 @@ export const crear = mutation({
       actualizadoEn: ahora,
     });
 
-    for (const it of a.items) {
-      const totalLinea = it.cantidadPedida * it.precioUnitario * (1 - (it.descuentoPorc ?? 0) / 100);
-      await ctx.db.insert("detalle_ordenes_compra", {
-        ocId,
-        repuestoId: it.repuestoId,
-        descripcion: it.descripcion,
-        unidadMedida: it.unidadMedida,
-        cantidadPedida: it.cantidadPedida,
-        cantidadRecibida: 0,
-        cantidadCancelada: 0,
-        precioUnitario: it.precioUnitario,
-        descuentoPorc: it.descuentoPorc,
-        tasaImpuesto: normAlic(it.tasaImpuesto),
-        totalLinea: red(totalLinea),
-        fechaNecesidad: it.fechaNecesidad,
-        depositoId: it.depositoId,
-        centroCosto: it.centroCosto,
-        estadoLinea: "ABIERTA",
-      });
-    }
+   for (const it of a.items) {
+  const totalLinea =
+    it.cantidadPedida * it.precioUnitario * (1 - (it.descuentoPorc ?? 0) / 100);
+
+  await ctx.db.insert("detalle_ordenes_compra", {
+    ocId,
+    repuestoId: it.repuestoId,
+    descripcion: it.descripcion,
+    unidadMedida: "unid",
+    cantidadPedida: it.cantidadPedida,
+    cantidadRecibida: 0,
+    cantidadCancelada: 0,
+    precioUnitario: it.precioUnitario,
+    descuentoPorc: it.descuentoPorc,
+    
+    totalLinea: red(totalLinea),
+    fechaNecesidad: it.fechaNecesidad,
+    depositoId: it.depositoId,
+    centroCosto: it.centroCosto,
+    estadoLinea: "ABIERTA",
+  });
+}
 
     return ocId;
   },
@@ -257,8 +252,7 @@ export const crear = mutation({
 
 /* =========================
  * CAMBIAR ESTADO
- * - crea factura automática SOLO al pasar a ENVIADA
- * - setea fechaVencimiento = emision + 1 mes
+ * (factura automática con IVA se mantiene igual)
  * =======================*/
 export const cambiarEstado = mutation({
   args: {
@@ -279,16 +273,13 @@ export const cambiarEstado = mutation({
     const oc = await ctx.db.get(id);
     if (!oc) throw new Error("OC no encontrada");
 
-    // 1) actualizar estado
     await ctx.db.patch(id, { estado, actualizadoEn: ahora });
 
-    // 2) SOLO si quedó ENVIADA, intento crear factura (si no existe)
     if (estado !== "ENVIADA") return;
 
     const existe = (await ctx.db.query("facturas_prov").collect()).some(f => f.ocId === id);
     if (existe) return;
 
-    // Datos p/ factura
     const prov = await ctx.db.get(oc.proveedorId);
     const items = await ctx.db
       .query("detalle_ordenes_compra")
@@ -297,14 +288,18 @@ export const cambiarEstado = mutation({
     if (items.length === 0) return;
 
     const red = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
-    const normAlic = (x?: number) => (x === 21 ? 21 : x === 10.5 ? 10.5 : 0) as 0|10.5|21;
-    const addMonths = (iso: string, m = 1) => { const d = new Date(iso); d.setMonth(d.getMonth()+m); return d.toISOString(); };
+    const normAlic = (x?: number) => (x === 21 ? 21 : x === 10.5 ? 10.5 : 0) as 0 | 10.5 | 21;
+    const addMonths = (iso: string, m = 1) => {
+      const d = new Date(iso);
+      d.setMonth(d.getMonth() + m);
+      return d.toISOString();
+    };
 
     const lineas = items.map(it => {
       const desc = it.descuentoPorc ?? 0;
-      const alic = normAlic(it.tasaImpuesto);
-      const sub  = it.cantidadPedida * it.precioUnitario * (1 - desc/100);
-      const iva  = sub * (alic/100);
+      
+      const sub = it.cantidadPedida * it.precioUnitario * (1 - desc / 100);
+      
       return {
         ocItemId: it._id,
         repuestoId: it.repuestoId,
@@ -312,20 +307,19 @@ export const cambiarEstado = mutation({
         cantidad: it.cantidadPedida,
         precioUnitario: it.precioUnitario,
         descuentoPorc: desc,
-        alicuotaIva: alic,
+       
         subtotal: red(sub),
-        ivaMonto: red(iva),
-        totalLinea: red(sub + iva),
+        
+        totalLinea: red(sub),
       };
     });
 
-    const neto   = red(lineas.reduce((a, l) => a + l.subtotal, 0));
-    const iva21  = red(lineas.filter(l => l.alicuotaIva === 21).reduce((a, l) => a + l.ivaMonto, 0));
-    const iva105 = red(lineas.filter(l => l.alicuotaIva === 10.5).reduce((a, l) => a + l.ivaMonto, 0));
-    const total  = red(lineas.reduce((a, l) => a + l.totalLinea, 0));
+    const neto = red(lineas.reduce((a, l) => a + l.subtotal, 0));
+   
+    const total = red(lineas.reduce((a, l) => a + l.totalLinea, 0));
 
     const emisionISO = new Date().toISOString();
-    const vencISO    = addMonths(emisionISO, 1);
+    const vencISO = addMonths(emisionISO, 1);
 
     const facId = await ctx.db.insert("facturas_prov", {
       ocId: id,
@@ -336,8 +330,11 @@ export const cambiarEstado = mutation({
       fechaVencimiento: vencISO,
       moneda: oc.moneda,
       tipoCambio: oc.tipoCambio,
-      neto, iva21, iva105, otrosImpuestos: 0,
-      total, saldo: total,
+      neto,
+      
+
+      total,
+      saldo: total,
       estado: "PENDIENTE",
       notas: `Generada automáticamente al marcar OC ${oc.numeroOrden} como ENVIADA`,
       creadoEn: ahora,
@@ -353,15 +350,12 @@ export const cambiarEstado = mutation({
         cantidad: l.cantidad,
         precioUnitario: l.precioUnitario,
         descuentoPorc: l.descuentoPorc,
-        alicuotaIva: l.alicuotaIva,
         subtotal: l.subtotal,
-        ivaMonto: l.ivaMonto,
         totalLinea: l.totalLinea,
       });
     }
   },
 });
-
 
 /* =========================
  * RECEPCIÓN
@@ -407,7 +401,10 @@ export const recibir = mutation({
 
     for (const it of itemsActualizados) {
       const abierta = it.cantidadPedida > it.cantidadRecibida + it.cantidadCancelada;
-      if (abierta) { todasCerradas = false; break; }
+      if (abierta) {
+        todasCerradas = false;
+        break;
+      }
     }
 
     await ctx.db.patch(ocId, {

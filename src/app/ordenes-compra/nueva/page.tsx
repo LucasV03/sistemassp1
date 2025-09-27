@@ -69,11 +69,11 @@ export default function NuevaOC() {
   // Totales preview
   const preview = useMemo(() => {
     const subtotal = items.reduce((acc, it) => acc + (it.cantidad || 0) * (it.precio || 0), 0);
-    const totalIva = subtotal * 0.21; // fijo 21%
+    
     return {
       subtotal,
-      totalIva,
-      totalGeneral: subtotal + totalIva,
+      
+      totalGeneral: subtotal
     };
   }, [items]);
 
@@ -101,7 +101,7 @@ export default function NuevaOC() {
           cantidadPedida: Number(it.cantidad) || 0,
           precioUnitario: Number(it.precio) || 0,
           descuentoPorc: 0,
-          tasaImpuesto: 21, // fijo 21%
+          
           depositoId: h.depositoEntregaId as any,
         })),
       });
@@ -337,10 +337,7 @@ export default function NuevaOC() {
               <span>Subtotal</span>
               <span>{moneyFmt(preview.subtotal, h.moneda)}</span>
             </div>
-            <div className="flex justify-between py-1">
-              <span>IVA (21%)</span>
-              <span>{moneyFmt(preview.totalIva, h.moneda)}</span>
-            </div>
+            
             <div className="flex justify-between border-t border-neutral-800 mt-1 pt-2 font-semibold">
               <span>Total</span>
               <span>{moneyFmt(preview.totalGeneral, h.moneda)}</span>

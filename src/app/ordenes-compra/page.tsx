@@ -4,6 +4,15 @@ import Link from "next/link";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 
+// 🔑 Formato moneda argentino
+const moneyFmt = (moneda: string) =>
+  new Intl.NumberFormat("es-AR", {
+    style: "currency",
+    currency: moneda || "ARS",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+
 export default function OCList() {
   const list = useQuery(api.ordenesCompra.listarConNombres, {}) ?? [];
   const cambiarEstado = useMutation(api.ordenesCompra.cambiarEstado);
@@ -12,7 +21,10 @@ export default function OCList() {
     <div className="p-6 space-y-4 text-white">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Órdenes de compra</h1>
-        <Link href="/ordenes-compra/nueva" className="px-4 py-2 rounded bg-violet-600 text-white">
+        <Link
+          href="/ordenes-compra/nueva"
+          className="px-4 py-2 rounded bg-violet-600 text-white"
+        >
           Nueva Orden de Compra
         </Link>
       </div>
@@ -32,14 +44,19 @@ export default function OCList() {
           </thead>
           <tbody>
             {list.map((po: any) => (
-              <tr key={po._id} className="border-t border-neutral-800 hover:bg-neutral-900/40">
+              <tr
+                key={po._id}
+                className="border-t border-neutral-800 hover:bg-neutral-900/40"
+              >
                 <td className="p-3">{po.numeroOrden}</td>
                 <td className="p-3">{po.proveedorNombre}</td>
                 <td className="p-3">{po.depositoNombre}</td>
-                <td className="p-3">{new Date(po.fechaOrden).toLocaleDateString()}</td>
+                <td className="p-3">
+                  {new Date(po.fechaOrden).toLocaleDateString("es-AR")}
+                </td>
                 <td className="p-3">{po.estado}</td>
                 <td className="p-3 text-right">
-                  {po.totalGeneral.toFixed(2)} {po.moneda}
+                  {moneyFmt(po.moneda).format(po.totalGeneral)}
                 </td>
                 <td className="p-3">
                   <div className="flex gap-2 justify-end">
@@ -49,9 +66,12 @@ export default function OCList() {
                     >
                       Ver
                     </Link>
-                    {(po.estado === "BORRADOR" || po.estado === "PENDIENTE_APROBACION") && (
+                    {(po.estado === "BORRADOR" ||
+                      po.estado === "PENDIENTE_APROBACION") && (
                       <button
-                        onClick={() => cambiarEstado({ id: po._id, estado: "APROBADA" })}
+                        onClick={() =>
+                          cambiarEstado({ id: po._id, estado: "APROBADA" })
+                        }
                         className="px-3 py-1 rounded bg-indigo-600 hover:bg-indigo-500 text-white"
                       >
                         Aprobar
@@ -59,7 +79,9 @@ export default function OCList() {
                     )}
                     {po.estado === "APROBADA" && (
                       <button
-                        onClick={() => cambiarEstado({ id: po._id, estado: "ENVIADA" })}
+                        onClick={() =>
+                          cambiarEstado({ id: po._id, estado: "ENVIADA" })
+                        }
                         className="px-3 py-1 rounded bg-sky-600 hover:bg-sky-500 text-white"
                       >
                         Enviar

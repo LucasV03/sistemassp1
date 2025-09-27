@@ -14,6 +14,14 @@ type ItemRow = {
   precio: number;
 };
 
+// 🔑 Formato moneda argentino
+const moneyFmt = new Intl.NumberFormat("es-AR", {
+  style: "currency",
+  currency: "ARS",
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+
 export default function NuevaFacturaPage() {
   const router = useRouter();
 
@@ -35,9 +43,8 @@ export default function NuevaFacturaPage() {
   const [numero, setNumero] = useState("00000001");
   const [fecha, setFecha] = useState(new Date().toISOString().slice(0, 10)); // yyyy-mm-dd
   const [hora, setHora] = useState(new Date().toISOString().slice(11, 16)); // hh:mm
-  const proximoNumero = useQuery(api.comprobantes_prov.proximoNumero, {
-    sucursal,
-  }) ?? "00000001";
+  const proximoNumero =
+    useQuery(api.comprobantes_prov.proximoNumero, { sucursal }) ?? "00000001";
 
   // items
   const [items, setItems] = useState<ItemRow[]>([]);
@@ -54,7 +61,7 @@ export default function NuevaFacturaPage() {
   }, [items]);
 
   // auto-set sucursal cuando cambia proveedor
-    useEffect(() => {
+  useEffect(() => {
     if (proveedorId) {
       const p = proveedores.find((x) => String(x._id) === proveedorId);
       if (p?.codigo) setSucursal(p.codigo.padStart(4, "0"));
@@ -64,7 +71,6 @@ export default function NuevaFacturaPage() {
       setCuit("");
     }
   }, [proveedorId, proveedores]);
-
 
   useEffect(() => {
     if (sucursal) {
@@ -78,7 +84,15 @@ export default function NuevaFacturaPage() {
 
   async function submit() {
     setErr(null);
-    if (!proveedorId || !tipoComprobanteId || !tipoFactura || !sucursal || !numero || !fecha || !hora) {
+    if (
+      !proveedorId ||
+      !tipoComprobanteId ||
+      !tipoFactura ||
+      !sucursal ||
+      !numero ||
+      !fecha ||
+      !hora
+    ) {
       return setErr("Todos los campos son obligatorios.");
     }
     if (items.length === 0) return setErr("Agregá al menos un ítem.");
@@ -86,20 +100,20 @@ export default function NuevaFacturaPage() {
     try {
       setSaving(true);
       await crearComprobante({
-  proveedorId: proveedorId as any,
-  proveedorCuit: cuit,  
-  tipoComprobanteId: tipoComprobanteId as any,
-  letra: tipoFactura,
-  sucursal,
-  numero,
-  fecha,
-  hora,
-  items: items.map((it) => ({
-    repuestoId: it.repuestoId as any,
-    cantidad: it.cantidad,
-    precioUnitario: it.precio,
-  })),
-});
+        proveedorId: proveedorId as any,
+        proveedorCuit: cuit,
+        tipoComprobanteId: tipoComprobanteId as any,
+        letra: tipoFactura,
+        sucursal,
+        numero,
+        fecha,
+        hora,
+        items: items.map((it) => ({
+          repuestoId: it.repuestoId as any,
+          cantidad: it.cantidad,
+          precioUnitario: it.precio,
+        })),
+      });
 
       router.push("/facturas");
     } catch (e: any) {
@@ -136,15 +150,10 @@ export default function NuevaFacturaPage() {
             ))}
           </select>
         </LabelField>
-<LabelField label="CUIT">
-          <input
-            className="inp"
-            value={cuit}
-            readOnly
-            placeholder="CUIT"
-          />
-        </LabelField>
 
+        <LabelField label="CUIT">
+          <input className="inp" value={cuit} readOnly placeholder="CUIT" />
+        </LabelField>
 
         {/* Tipo de comprobante */}
         <LabelField label="Tipo de comprobante">
@@ -164,7 +173,11 @@ export default function NuevaFacturaPage() {
 
         {/* Tipo factura (A/B/C) */}
         <LabelField label="Tipo de factura">
-          <select className="inp" value={tipoFactura} onChange={(e) => setTipoFactura(e.target.value)}>
+          <select
+            className="inp"
+            value={tipoFactura}
+            onChange={(e) => setTipoFactura(e.target.value)}
+          >
             <option value="A">A</option>
             <option value="B">B</option>
             <option value="C">C</option>
@@ -191,29 +204,27 @@ export default function NuevaFacturaPage() {
           />
         </LabelField>
 
-
         {/* Fecha y hora */}
         <LabelField label="Fecha">
-  <input
-    type="date"
-    className="inp"
-    value={fecha}
-    onChange={(e) => setFecha(e.target.value)}
-    required
-  />
-</LabelField>
+          <input
+            type="date"
+            className="inp"
+            value={fecha}
+            onChange={(e) => setFecha(e.target.value)}
+            required
+          />
+        </LabelField>
 
-<LabelField label="Hora">
-  <input
-    type="time"
-    className="inp"
-    value={hora}
-    onChange={(e) => setHora(e.target.value)}
-    required
-  />
-</LabelField>
-
-</div>
+        <LabelField label="Hora">
+          <input
+            type="time"
+            className="inp"
+            value={hora}
+            onChange={(e) => setHora(e.target.value)}
+            required
+          />
+        </LabelField>
+      </div>
 
       {/* Items */}
       <div className="space-y-2">
@@ -251,7 +262,11 @@ export default function NuevaFacturaPage() {
                         const val = e.target.value as any;
                         updateRow(i, { repuestoId: val });
                         const r = repuestos.find((r) => String(r._id) === val);
-                        if (r) updateRow(i, { descripcion: r.nombre, precio: r.precioUnitario ?? 0 });
+                        if (r)
+                          updateRow(i, {
+                            descripcion: r.nombre,
+                            precio: r.precioUnitario ?? 0,
+                          });
                       }}
                     >
                       <option value="">Seleccione repuesto…</option>
@@ -287,7 +302,7 @@ export default function NuevaFacturaPage() {
                     />
                   </td>
                   <td className="p-2 text-right">
-                    {(it.cantidad * it.precio).toFixed(2)}
+                    {moneyFmt.format(it.cantidad * it.precio)}
                   </td>
                   <td className="p-2 text-right">
                     <button
@@ -317,7 +332,7 @@ export default function NuevaFacturaPage() {
           <div className="w-full sm:w-80">
             <div className="flex justify-between border-t border-neutral-800 mt-1 pt-2 font-semibold">
               <span>Total</span>
-              <span>{preview.subtotal.toFixed(2)} ARS</span>
+              <span>{moneyFmt.format(preview.subtotal)}</span>
             </div>
           </div>
         </div>
@@ -353,6 +368,7 @@ export default function NuevaFacturaPage() {
     </div>
   );
 }
+
 /* ---------- helper ---------- */
 function LabelField({ label, children }: { label: string; children: React.ReactNode }) {
   return (
