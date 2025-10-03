@@ -404,4 +404,94 @@ facturas_prov_items: defineTable({
   })
     .index("por_cliente", ["clienteId"])
     .index("por_contrato", ["contratoId"]),
+
+
+// ======= VENTAS (basado en distancias) =======
+clientes_ventas: defineTable({
+  nombre: v.string(),
+  razonSocial: v.string(),
+  cuit: v.string(),
+  direccion: v.string(),
+  telefono: v.string(),
+  email: v.string(),
+  estado: v.union(v.literal("ACTIVO"), v.literal("INACTIVO")),
+  creadoEn: v.number(),
+  actualizadoEn: v.number(),
+})
+  .index("by_cuit", ["cuit"])
+  .index("by_nombre", ["nombre"]),
+
+contratos_servicios: defineTable({
+  clienteId: v.id("clientes_ventas"),
+  tipo: v.union(v.literal("POR_KM"), v.literal("POR_VIAJE"), v.literal("POR_TONKM")),
+  tarifaBase: v.number(),            // valor en ARS
+  minimo: v.optional(v.number()),    // mínimo facturable
+  descripcion: v.optional(v.string()),
+  fechaInicio: v.string(),
+  fechaFin: v.optional(v.string()),
+  estado: v.union(v.literal("VIGENTE"), v.literal("FINALIZADO")),
+  creadoEn: v.number(),
+})
+  .index("by_cliente", ["clienteId"])
+  .index("by_estado", ["estado"]),
+
+
+facturas_ventas: defineTable({
+  clienteId: v.id("clientes_ventas"),
+  contratoId: v.optional(v.id("contratos_servicios")),
+  numero: v.string(),
+  tipoComprobante: v.union(v.literal("FACTURA_A"), v.literal("FACTURA_B"), v.literal("FACTURA_C")),
+  fecha: v.string(),
+  hora: v.string(),
+  items: v.array(
+    v.object({
+      viajeId: v.id("viajes"),
+      descripcion: v.string(),   // Ej: "Mina X → Planta Y"
+      cantidad: v.number(),      // normalmente 1 viaje
+      precioUnitario: v.number(),
+      subtotal: v.number(),
+    })
+  ),
+  subtotal: v.number(),
+  iva: v.number(),
+  total: v.number(),
+  estado: v.union(v.literal("EMITIDA"), v.literal("PAGADA"), v.literal("VENCIDA")),
+  creadoEn: v.number(),
+  actualizadoEn: v.number(),
+})
+  .index("by_cliente", ["clienteId"])
+  .index("by_fecha", ["fecha"])
+  .index("by_estado", ["estado"]),
+
+
+
+  choferes: defineTable({
+  nombre: v.string(),
+  dni: v.string(),
+  telefono: v.optional(v.string()),
+  licencia: v.string(),
+  estado: v.union(v.literal("ACTIVO"), v.literal("INACTIVO")),
+  creadoEn: v.number(),
+}),
+
+viajes: defineTable({
+  clienteId: v.id("clientes"),
+  choferId: v.id("choferes"),
+  origen: v.string(),
+  destino: v.string(),
+  distanciaKm: v.number(),
+  fecha: v.string(), // ISO date
+  estado: v.union(
+    v.literal("PENDIENTE"),
+    v.literal("EN_CURSO"),
+    v.literal("FINALIZADO"),
+    v.literal("CANCELADO")
+  ),
+  notas: v.optional(v.string()),
+  creadoEn: v.number(),
+})
+  .index("byCliente", ["clienteId"])
+  .index("byChofer", ["choferId"])
+  .index("byFecha", ["fecha"]),
+
 });
