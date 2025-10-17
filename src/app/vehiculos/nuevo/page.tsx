@@ -13,7 +13,6 @@ export default function NuevoVehiculoPage() {
   const crearMarca = useMutation(api.marcas_vehiculos.crear);
   const marcas = useQuery(api.marcas_vehiculos.listar, {}) ?? [];
 
-  // Estado del formulario
   const [nombre, setNombre] = useState("");
   const [marcaVehiculoId, setMarcaVehiculoId] = useState("");
   const [patente, setPatente] = useState("");
@@ -57,7 +56,6 @@ export default function NuevoVehiculoPage() {
     }
   };
 
-  // Crear nueva marca
   const handleCrearMarca = async () => {
     if (!nuevaMarca.trim()) return;
     setLoadingMarca(true);
@@ -75,9 +73,9 @@ export default function NuevoVehiculoPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0d1b1e] text-[#e8f9f9] p-8 space-y-8 transition-colors duration-300">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-[#0d1b1e] text-[#e8f9f9] p-6">
       {/* HEADER */}
-      <div className="flex items-center gap-3 mb-6">
+      <div className="w-full max-w-2xl mb-6 flex items-center justify-between">
         <Link
           href="/vehiculos"
           className="flex items-center gap-2 text-[#36b6b0] hover:text-[#2ca6a4] transition"
@@ -85,13 +83,15 @@ export default function NuevoVehiculoPage() {
           <ArrowLeft size={20} />
           Volver
         </Link>
-        <h1 className="text-2xl font-bold">Nuevo Vehículo</h1>
+        <h1 className="text-2xl font-bold text-center flex-1 text-[#e8f9f9]">
+          Nuevo Vehículo
+        </h1>
       </div>
 
-      {/* FORMULARIO */}
+      {/* FORMULARIO CENTRADO */}
       <form
         onSubmit={handleSubmit}
-        className="max-w-2xl bg-[#24474d] border border-[#2f6368] rounded-xl shadow-lg p-8 space-y-6"
+        className="w-full max-w-2xl bg-[#24474d] border border-[#2f6368] rounded-xl shadow-2xl p-8 space-y-6"
       >
         {error && (
           <div className="p-3 rounded bg-red-900/30 text-red-400 border border-red-800">
@@ -109,7 +109,6 @@ export default function NuevoVehiculoPage() {
           />
         </Field>
 
-        {/* Marca + Nueva */}
         <Field label="Marca *">
           <div className="flex gap-2">
             <select
@@ -137,7 +136,6 @@ export default function NuevoVehiculoPage() {
           </div>
         </Field>
 
-        {/* Patente */}
         <Field label="Patente">
           <input
             type="text"
@@ -148,7 +146,6 @@ export default function NuevoVehiculoPage() {
           />
         </Field>
 
-        {/* Tipo de transporte */}
         <Field label="Tipo de transporte *">
           <select
             value={tipo}
@@ -162,7 +159,6 @@ export default function NuevoVehiculoPage() {
           </select>
         </Field>
 
-        {/* Capacidad */}
         <Field label="Capacidad (personas)">
           <input
             type="number"
@@ -175,7 +171,6 @@ export default function NuevoVehiculoPage() {
           />
         </Field>
 
-        {/* Estado */}
         <Field label="Estado">
           <select
             value={estado}
@@ -188,7 +183,6 @@ export default function NuevoVehiculoPage() {
           </select>
         </Field>
 
-        {/* Botones */}
         <div className="flex justify-end mt-8 gap-4">
           <Link
             href="/vehiculos"
