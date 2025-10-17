@@ -18,6 +18,7 @@ import type * as categorias from "../categorias.js";
 import type * as choferes from "../choferes.js";
 import type * as clientes from "../clientes.js";
 import type * as clientes_ventas from "../clientes_ventas.js";
+import type * as combos_pago from "../combos_pago.js";
 import type * as comprobantes_prov from "../comprobantes_prov.js";
 import type * as contratos from "../contratos.js";
 import type * as contratos_servicios from "../contratos_servicios.js";
@@ -58,6 +59,7 @@ declare const fullApi: ApiFromModules<{
   choferes: typeof choferes;
   clientes: typeof clientes;
   clientes_ventas: typeof clientes_ventas;
+  combos_pago: typeof combos_pago;
   comprobantes_prov: typeof comprobantes_prov;
   contratos: typeof contratos;
   contratos_servicios: typeof contratos_servicios;

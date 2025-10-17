@@ -315,20 +315,25 @@ facturas_prov_items: defineTable({
     subtotal: v.number(),
   }).index("byComprobante", ["comprobanteId"]),
 
-  pagos_comprobantes: defineTable({
-    comprobanteId: v.id("comprobantes_prov"),
-    fechaPago: v.string(), // ISO string
-    medio: v.union(
-      v.literal("TRANSFERENCIA"),
-      v.literal("EFECTIVO"),
-      v.literal("CHEQUE"),
-      v.literal("TARJETA"),
-      v.literal("OTRO")
-    ),
-    importe: v.number(),
-    notas: v.optional(v.string()),
-    creadoEn: v.number(),
-  }).index("byComprobante", ["comprobanteId"]),
+pagos_comprobantes: defineTable({
+  proveedorId: v.id("proveedores"), // 🔹 nuevo, útil para agrupar pagos
+  facturasIds: v.array(v.id("comprobantes_prov")), // 🔹 reemplaza comprobanteId
+  fechaPago: v.string(), // ISO string
+  medio: v.union(
+    v.literal("TRANSFERENCIA"),
+    v.literal("EFECTIVO"),
+    v.literal("CHEQUE"),
+    v.literal("TARJETA"),
+    v.literal("OTRO")
+  ),
+  importe: v.number(),
+  referencia: v.optional(v.string()), // opcional
+  notas: v.optional(v.string()),
+  creadoEn: v.number(),
+})
+  .index("byProveedor", ["proveedorId"])
+  .index("byFecha", ["fechaPago"]),
+
 
   // ======= CRM (rama mainv2) =======
   clientes: defineTable({
@@ -555,4 +560,30 @@ marcas_vehiculos: defineTable({
   .index("by_nombre", ["nombre"])
   .index("by_slug", ["slug"]),
 
+
+
+combos_pago: defineTable({
+  nombre: v.string(),
+  descripcion: v.optional(v.string()),
+  componentes: v.array(
+    v.object({
+      medio: v.union(
+        v.literal("EFECTIVO"),
+        v.literal("TRANSFERENCIA"),
+        v.literal("CHEQUE"),
+        v.literal("TARJETA"),
+        v.literal("OTRO")
+      ),
+      porcentaje: v.optional(v.number()),
+      montoFijo: v.optional(v.number()),
+    })
+  ),
+  activo: v.boolean(),
+  creadoEn: v.number(),
+  actualizadoEn: v.optional(v.number()), // ✅ agregá esta línea
+})
+  .index("byActivo", ["activo"])
+  .index("byNombre", ["nombre"]),
+
 });
+

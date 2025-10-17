@@ -6,21 +6,35 @@ import { api } from "../../../../../convex/_generated/api";
 import type { Doc } from "../../../../../convex/_generated/dataModel";
 import { useState, useMemo } from "react";
 
+// 🔹 Tipos
 type Medio = "TRANSFERENCIA" | "EFECTIVO" | "CHEQUE" | "TARJETA" | "OTRO";
+
+type ComboComponent = {
+  medio: Medio;
+  porcentaje?: number;
+  montoFijo?: number;
+};
+
+type Combo = {
+  _id: string;
+  nombre: string;
+  componentes: ComboComponent[];
+};
 
 export default function NuevoPagoPage() {
   const router = useRouter();
   const proveedores = useQuery(api.proveedores.listar, { soloActivos: true }) ?? [];
   const comprobantes = useQuery(api.comprobantes_prov.listar, {}) ?? [];
+  const combos = useQuery(api.combos_pago.listar) ?? []; // ✅ combos dinámicos desde Convex
   const registrarPagoMultiple = useMutation(api.comprobantes_prov.registrarPagoMultiple);
 
   const [proveedorId, setProveedorId] = useState<string>("");
   const [searchProveedor, setSearchProveedor] = useState<string>("");
   const [focusProveedor, setFocusProveedor] = useState(false);
   const [facturasSel, setFacturasSel] = useState<string[]>([]);
-  const [pagos, setPagos] = useState<{ medio: Medio; importe: number; notas?: string }[]>([
-    { medio: "EFECTIVO", importe: 0 },
-  ]);
+  const [pagos, setPagos] = useState<
+    { medio: Medio; importe: number; notas?: string; referencia?: string }[]
+  >([{ medio: "EFECTIVO", importe: 0 }]);
 
   // 🔎 lista de proveedores filtrados
   const proveedoresFiltrados = useMemo(() => {
@@ -29,7 +43,7 @@ export default function NuevoPagoPage() {
     return proveedores.filter((p) => p.nombre.toLowerCase().includes(q));
   }, [searchProveedor, proveedores]);
 
-  // facturas pendientes del proveedor
+  // 🔹 Facturas pendientes del proveedor
   const pendientes = useMemo(() => {
     return comprobantes.filter(
       (c: any) =>
@@ -38,18 +52,20 @@ export default function NuevoPagoPage() {
     );
   }, [proveedorId, comprobantes]);
 
+  // 🔹 Total seleccionado
   const totalSeleccionado = useMemo(() => {
     return pendientes
       .filter((c: any) => facturasSel.includes(String(c._id)))
       .reduce((a, c) => a + (c.saldo ?? 0), 0);
   }, [facturasSel, pendientes]);
 
+  // 🔹 Total de pagos cargados
   const totalPagos = useMemo(
     () => pagos.reduce((a, p) => a + (p.importe || 0), 0),
     [pagos]
   );
 
-  // 🔎 Simulación de distribución de pagos parciales
+  // 🔹 Distribución de pagos simulada
   function calcularDistribucion(facturas: any[], totalDisponible: number) {
     const resultado: { factura: any; aplicado: number; saldoFinal: number }[] = [];
     for (const f of facturas) {
@@ -75,20 +91,39 @@ export default function NuevoPagoPage() {
     return calcularDistribucion(seleccionadas, totalPagos);
   }, [pendientes, facturasSel, totalPagos]);
 
+  // 🔹 Confirmar pago
   async function confirmarPago() {
-    // Usamos mensajes en el console o modales custom en lugar de alert()
     if (!proveedorId || facturasSel.length === 0) {
-      return console.error("Error: Seleccioná proveedor y facturas.");
+      alert("Seleccioná proveedor y al menos una factura.");
+      return;
     }
 
     if (totalPagos <= 0) {
-      return console.error("Error: Ingresá un importe válido en los métodos de pago.");
+      alert("Ingresá un importe válido en los métodos de pago.");
+      return;
     }
 
-    if (totalPagos > totalSeleccionado) {
-      return console.error(
-        "Error: El total de los métodos de pago no puede superar el total de facturas seleccionadas."
+    const diferencia = totalPagos - totalSeleccionado;
+    if (diferencia > 1) {
+      alert(
+        `El total de los métodos de pago supera el total de facturas seleccionadas.\n\n` +
+          `Total facturas: ${totalSeleccionado.toLocaleString("es-AR", {
+            style: "currency",
+            currency: "ARS",
+          })}\n` +
+          `Total métodos: ${totalPagos.toLocaleString("es-AR", {
+            style: "currency",
+            currency: "ARS",
+          })}`
       );
+      return;
+    }
+
+    for (const p of pagos) {
+      if (p.medio === "TRANSFERENCIA" && !p.referencia) {
+        alert("Falta número de referencia en una transferencia.");
+        return;
+      }
     }
 
     await registrarPagoMultiple({
@@ -99,17 +134,17 @@ export default function NuevoPagoPage() {
     router.push("/facturas/pagos");
   }
 
+  // 🔹 Render principal
   return (
-    // Fondo principal: Usamos el color oscuro `#0b1618`
     <div className="min-h-screen bg-[#0b1618] p-6 space-y-8 text-gray-100">
       <h1 className="text-2xl font-bold text-white">Nuevo Pago</h1>
 
-      {/* Proveedor con búsqueda/autocomplete */}
+      {/* 🔍 Proveedor con búsqueda/autocomplete */}
       <div className="space-y-2 relative max-w-xl">
         <label className="text-sm text-gray-400">Proveedor</label>
         <input
           type="text"
-          className="inp" // Clase .inp definida en <style jsx>
+          className="inp"
           placeholder="Buscar o seleccionar proveedor…"
           value={searchProveedor}
           onChange={(e) => {
@@ -117,11 +152,9 @@ export default function NuevoPagoPage() {
             setProveedorId("");
           }}
           onFocus={() => setFocusProveedor(true)}
-          onBlur={() => setTimeout(() => setFocusProveedor(false), 200)} // delay para permitir click
+          onBlur={() => setTimeout(() => setFocusProveedor(false), 200)}
         />
-
         {(focusProveedor || searchProveedor.length > 0) && (
-          // Contenedor de autocompletado
           <div className="absolute z-10 bg-[#1a3035] border border-[#1e3c42] rounded-xl mt-1 w-full max-h-40 overflow-y-auto shadow-xl">
             {proveedoresFiltrados.map((p) => (
               <div
@@ -144,12 +177,10 @@ export default function NuevoPagoPage() {
         )}
       </div>
 
-      {/* Facturas pendientes */}
+      {/* 🧾 Facturas pendientes */}
       {proveedorId && (
-        // Contenedor de la tabla: Usamos el color de caja/fondo secundario: `#11292e`
         <div className="rounded-xl border border-[#1e3c42] overflow-hidden bg-[#11292e] shadow-lg max-w-4xl">
           <table className="w-full text-sm">
-            {/* Encabezado de la tabla */}
             <thead className="bg-[#1e3c42] text-gray-300">
               <tr>
                 <th className="p-3 w-10"></th>
@@ -200,14 +231,46 @@ export default function NuevoPagoPage() {
         </div>
       )}
 
-      {/* Métodos de pago */}
+      {/* 💳 Métodos de pago */}
       {facturasSel.length > 0 && (
         <div className="space-y-4 max-w-4xl">
           <h2 className="font-medium text-lg text-white">Métodos de pago</h2>
+
+          {/* Selector de combo */}
+          <div>
+            <label className="text-sm text-gray-400">Combo de métodos</label>
+            <select
+              onChange={(e) => {
+                const combo = combos.find((c) => c._id === e.target.value);
+                if (combo) {
+                  setPagos(
+                    combo.componentes.map((c) => ({
+                      medio: c.medio,
+                      importe:
+                        c.montoFijo ??
+                        Math.round(
+                          (totalSeleccionado * (c.porcentaje ?? 0)) / 100
+                        ),
+                    }))
+                  );
+                }
+              }}
+              className="inp w-64"
+            >
+              <option value="">Seleccionar combo</option>
+              {combos.map((c) => (
+                <option key={c._id} value={c._id}>
+                  {c.nombre}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Campos de métodos */}
           {pagos.map((pago, idx) => (
-            <div key={idx} className="flex gap-3 items-center">
+            <div key={idx} className="flex flex-wrap gap-3 items-center">
               <select
-                className="inp w-40" // Clase .inp definida en <style jsx>
+                className="inp w-40"
                 value={pago.medio}
                 onChange={(e) => {
                   const updated = [...pagos];
@@ -223,7 +286,7 @@ export default function NuevoPagoPage() {
               </select>
               <input
                 type="number"
-                className="inp w-40 text-right" // Clase .inp definida en <style jsx>
+                className="inp w-32 text-right"
                 value={pago.importe}
                 onChange={(e) => {
                   const updated = [...pagos];
@@ -231,6 +294,19 @@ export default function NuevoPagoPage() {
                   setPagos(updated);
                 }}
               />
+              {pago.medio === "TRANSFERENCIA" && (
+                <input
+                  type="text"
+                  placeholder="N° de referencia"
+                  className="inp w-56"
+                  value={pago.referencia || ""}
+                  onChange={(e) => {
+                    const updated = [...pagos];
+                    updated[idx].referencia = e.target.value;
+                    setPagos(updated);
+                  }}
+                />
+              )}
               <button
                 onClick={() => setPagos(pagos.filter((_, i) => i !== idx))}
                 className="text-red-500 hover:text-red-400 transition"
@@ -239,16 +315,15 @@ export default function NuevoPagoPage() {
               </button>
             </div>
           ))}
+
           <button
             onClick={() => setPagos([...pagos, { medio: "EFECTIVO", importe: 0 }])}
-            // Botón Agregar método (teal/acento)
             className="px-3 py-1 rounded-lg bg-[#36b6b0] hover:bg-[#2ca6a4] text-white font-medium transition"
           >
             + Agregar método
           </button>
 
           {/* Totales */}
-          {/* Contenedor de totales */}
           <div className="mt-6 p-4 bg-[#1a3035] border border-[#1e3c42] rounded-xl shadow-inner">
             <div className="flex justify-between text-lg font-semibold">
               <span>Total seleccionado</span>
@@ -272,14 +347,12 @@ export default function NuevoPagoPage() {
         </div>
       )}
 
-      {/* Distribución del pago */}
+      {/* 📊 Distribución */}
       {distribucion.length > 0 && (
         <div className="space-y-2 max-w-4xl">
           <h2 className="font-medium text-lg text-white">Distribución del pago</h2>
-          {/* Contenedor de la tabla: Usamos el color de caja/fondo secundario: `#11292e` */}
           <div className="rounded-xl border border-[#1e3c42] overflow-hidden bg-[#11292e] shadow-lg">
             <table className="w-full text-sm">
-              {/* Encabezado de la tabla */}
               <thead className="bg-[#1e3c42] text-gray-300">
                 <tr>
                   <th className="p-3 text-left">Factura</th>
@@ -306,8 +379,9 @@ export default function NuevoPagoPage() {
                         currency: "ARS",
                       })}
                     </td>
-                    <td className="p-3 text-right font-medium"
-                      style={{ color: d.saldoFinal > 0 ? '#fbbf24' : '#10b981' }} // Amarillo para saldo > 0, Verde si es 0
+                    <td
+                      className="p-3 text-right font-medium"
+                      style={{ color: d.saldoFinal > 0 ? "#fbbf24" : "#10b981" }}
                     >
                       {d.saldoFinal.toLocaleString("es-AR", {
                         style: "currency",
@@ -322,19 +396,17 @@ export default function NuevoPagoPage() {
         </div>
       )}
 
-      {/* Botonera */}
+      {/* 🧭 Botonera */}
       {facturasSel.length > 0 && (
         <div className="flex gap-3 max-w-4xl pt-4">
           <button
             onClick={confirmarPago}
-            // Botón Confirmar Pago (Verde/Éxito)
             className="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-medium transition shadow-md"
           >
             Confirmar Pago
           </button>
           <button
             onClick={() => router.back()}
-            // Botón Cancelar (Secundario/Gris oscuro)
             className="px-5 py-2 rounded-lg bg-[#1e3c42] hover:bg-[#1a3035] text-white transition"
           >
             Cancelar
@@ -342,15 +414,14 @@ export default function NuevoPagoPage() {
         </div>
       )}
 
-      {/* Ajuste de la clase .inp para la nueva estética oscura */}
       <style jsx>{`
         .inp {
-          background: #1a3035; /* Fondo de inputs más oscuro que la caja principal */
-          border: 1px solid #1e3c42; /* Borde más sutil */
-          color: #e6f6f7; /* Texto blanco/gris claro */
+          background: #1a3035;
+          border: 1px solid #1e3c42;
+          color: #e6f6f7;
           border-radius: 0.5rem;
-          padding: 0.5rem 0.75rem; /* Ajuste padding */
-          width: 100%; /* Aseguramos que ocupe todo el ancho disponible */
+          padding: 0.5rem 0.75rem;
+          width: 100%;
         }
       `}</style>
     </div>

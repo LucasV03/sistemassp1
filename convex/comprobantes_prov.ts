@@ -1,6 +1,6 @@
 // convex/comprobantes_prov.ts
 import { mutation, query } from "./_generated/server";
-import { v } from "convex/values";
+import { v, ConvexError} from "convex/values";
 export const crear = mutation({
   args: {
     proveedorId: v.id("proveedores"),
@@ -146,7 +146,7 @@ export const proximoNumero = query({
 
 
 // =====================
-// Registrar pago (una factura)
+// Registrar pago (una factura individual)
 // =====================
 export const registrarPago = mutation({
   args: {
@@ -161,38 +161,47 @@ export const registrarPago = mutation({
           v.literal("OTRO")
         ),
         importe: v.number(),
+        referencia: v.optional(v.string()),
         notas: v.optional(v.string()),
       })
     ),
   },
   handler: async (ctx, { comprobanteId, pagos }) => {
     const comp = await ctx.db.get(comprobanteId);
-    if (!comp) throw new Error("Comprobante no encontrado");
+    if (!comp) throw new ConvexError("Comprobante no encontrado");
 
     const ahora = Date.now();
-    let totalPagado = 0;
+    const proveedorId = comp.proveedorId;
+    const totalPagado = pagos.reduce((acc, p) => acc + p.importe, 0);
 
+    if (totalPagado <= 0)
+      throw new ConvexError("El monto total debe ser mayor a cero.");
+
+    // Validar transferencias con referencia
+    for (const p of pagos) {
+      if (p.medio === "TRANSFERENCIA" && !p.referencia) {
+        throw new ConvexError("La transferencia requiere un número de referencia.");
+      }
+    }
+
+    // Registrar cada método de pago (un registro por método)
     for (const p of pagos) {
       await ctx.db.insert("pagos_comprobantes", {
-        comprobanteId,
+        proveedorId,
+        facturasIds: [comprobanteId], // ✅ array con una sola factura
         fechaPago: new Date().toISOString(),
         medio: p.medio,
         importe: p.importe,
-        notas: p.notas,
+        referencia: p.referencia ?? "",
+        notas: p.notas ?? "",
         creadoEn: ahora,
       });
-      totalPagado += p.importe;
     }
 
-    // actualizar saldo
+    // Actualizar saldo y estado del comprobante
     const nuevoSaldo = Math.max(0, comp.saldo - totalPagado);
-
-    let nuevoEstado: "PENDIENTE" | "PARCIAL" | "PAGADO" = "PENDIENTE";
-    if (nuevoSaldo <= 0) {
-      nuevoEstado = "PAGADO";
-    } else if (nuevoSaldo < comp.total) {
-      nuevoEstado = "PARCIAL";
-    }
+    const nuevoEstado =
+      nuevoSaldo <= 0 ? "PAGADO" : nuevoSaldo < comp.total ? "PARCIAL" : "PENDIENTE";
 
     await ctx.db.patch(comprobanteId, {
       saldo: nuevoSaldo,
@@ -205,7 +214,8 @@ export const registrarPago = mutation({
 });
 
 // =====================
-// Registrar pago (múltiples facturas)
+// Registrar pago (múltiples facturas, sin duplicaciones)
+// =====================
 export const registrarPagoMultiple = mutation({
   args: {
     facturasIds: v.array(v.id("comprobantes_prov")),
@@ -219,57 +229,68 @@ export const registrarPagoMultiple = mutation({
           v.literal("OTRO")
         ),
         importe: v.number(),
+        referencia: v.optional(v.string()),
         notas: v.optional(v.string()),
       })
     ),
   },
-  handler: async (ctx, { facturasIds, pagos }) => {
-    const resultados: { id: string; nuevoSaldo: number; nuevoEstado: string }[] = [];
+  handler: async (ctx, args) => {
+    const ahora = Date.now();
+    const facturas = await Promise.all(args.facturasIds.map((id) => ctx.db.get(id)));
+    const validas = facturas.filter(Boolean);
 
-    // total global disponible
-    let totalDisponible = pagos.reduce((a, p) => a + p.importe, 0);
+    if (validas.length === 0)
+      throw new ConvexError("No se encontraron facturas válidas.");
 
-    for (const facturaId of facturasIds) {
-      const comp = await ctx.db.get(facturaId);
-      if (!comp || totalDisponible <= 0) continue;
+    // Verificar proveedor común
+    const proveedorId = validas[0]!.proveedorId;
+    const distintos = validas.some((f) => f!.proveedorId !== proveedorId);
+    if (distintos)
+      throw new ConvexError("Todas las facturas deben pertenecer al mismo proveedor.");
 
-      let montoAplicado = 0;
-      const ahora = Date.now();
+    // Totales
+    const totalFacturas = validas.reduce((a, f) => a + (f!.saldo ?? 0), 0);
+    const totalPagos = args.pagos.reduce((a, p) => a + p.importe, 0);
+    if (totalPagos <= 0) throw new ConvexError("El monto total debe ser mayor a cero.");
+    if (totalPagos > totalFacturas)
+      throw new ConvexError("El total de pagos no puede superar el saldo total.");
 
-      // cuánto aplicar a esta factura
-      const aplicar = Math.min(totalDisponible, comp.saldo);
-
-      if (aplicar > 0) {
-        // registrar pago (lo tratamos como un único pago global, no duplicado)
-        await ctx.db.insert("pagos_comprobantes", {
-          comprobanteId: facturaId,
-          fechaPago: new Date().toISOString(),
-          medio: "EFECTIVO", // ⚠️ por ahora usamos un medio único
-          importe: aplicar,
-          notas: "",
-          creadoEn: ahora,
-        });
-
-        montoAplicado = aplicar;
-        totalDisponible -= aplicar;
+    // Validar transferencias
+    for (const p of args.pagos) {
+      if (p.medio === "TRANSFERENCIA" && !p.referencia) {
+        throw new ConvexError("Las transferencias requieren un número de referencia.");
       }
+    }
 
-      // actualizar saldo y estado de la factura
-      const nuevoSaldo = Math.max(0, comp.saldo - montoAplicado);
-      let nuevoEstado: "PENDIENTE" | "PARCIAL" | "PAGADO" = "PENDIENTE";
-      if (nuevoSaldo <= 0) nuevoEstado = "PAGADO";
-      else if (nuevoSaldo < comp.total) nuevoEstado = "PARCIAL";
+    // 🔹 Registrar un pago por cada método, afectando todas las facturas seleccionadas
+    for (const p of args.pagos) {
+      await ctx.db.insert("pagos_comprobantes", {
+        proveedorId,
+        facturasIds: args.facturasIds, // 👈 todas las facturas involucradas
+        fechaPago: new Date().toISOString(),
+        medio: p.medio,
+        importe: p.importe,
+        referencia: p.referencia ?? "",
+        notas: p.notas ?? "",
+        creadoEn: ahora,
+      });
+    }
 
-      await ctx.db.patch(facturaId, {
+    // 🔹 Distribuir el monto total proporcionalmente
+    for (const f of validas) {
+      const proporcion = (f!.saldo ?? 0) / totalFacturas;
+      const aplicado = totalPagos * proporcion;
+      const nuevoSaldo = Math.max((f!.saldo ?? 0) - aplicado, 0);
+      const nuevoEstado =
+        nuevoSaldo <= 0.01 ? "PAGADO" : nuevoSaldo < f!.total ? "PARCIAL" : "PENDIENTE";
+
+      await ctx.db.patch(f!._id, {
         saldo: nuevoSaldo,
         estado: nuevoEstado,
         actualizadoEn: ahora,
       });
-
-      resultados.push({ id: facturaId, nuevoSaldo, nuevoEstado });
     }
 
-    return resultados;
+    return { ok: true };
   },
 });
-
