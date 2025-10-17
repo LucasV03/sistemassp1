@@ -211,7 +211,7 @@ export default function Sidebar() {
               isActive={pathname.startsWith("/viajes")}
             />
             <SubMenuItem
-              href="/ventas"
+              href="/facturas-ventas"
               label="Facturación"
               icon={Receipt}
               isActive={pathname.startsWith("/ventas")}

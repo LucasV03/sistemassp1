@@ -120,7 +120,7 @@ export default function NuevoViajePage() {
               <option value="">Seleccionar chofer</option>
               {choferes.map((ch: any) => (
                 <option key={ch._id} value={ch._id}>
-                  {ch.nombre}
+                  {ch.nombre} {ch.apellido}
                 </option>
               ))}
             </select>

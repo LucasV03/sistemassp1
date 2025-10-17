@@ -71,11 +71,17 @@ export const actualizar = mutation({
     if (!viaje) throw new ConvexError("Viaje no encontrado.");
 
     await ctx.db.patch(a.id, {
-      ...a,
+      ...(a.clienteId ? { clienteId: a.clienteId } : {}),
+      ...(a.choferId ? { choferId: a.choferId } : {}),
+      ...(a.origen ? { origen: a.origen.trim() } : {}),
+      ...(a.destino ? { destino: a.destino.trim() } : {}),
+      ...(a.distanciaKm !== undefined ? { distanciaKm: a.distanciaKm } : {}),
+      ...(a.estado ? { estado: a.estado } : {}),
       actualizadoEn: Date.now(),
     });
   },
 });
+
 
 /* ---------- ELIMINAR ---------- */
 export const eliminar = mutation({
@@ -87,27 +93,7 @@ export const eliminar = mutation({
   },
 });
 
-/* ---------- LISTAR CON NOMBRES (JOIN) ---------- */
-export const listarConNombres = query({
-  args: {},
-  handler: async (ctx) => {
-    const viajes = await ctx.db.query("viajes").collect();
-    const clientes = await ctx.db.query("clientes_ventas").collect();
-    const choferes = await ctx.db.query("choferes").collect();
 
-    return viajes.map((v) => ({
-      ...v,
-      clienteNombre:
-        clientes.find((c) => c._id === v.clienteId)?.alias ||
-        clientes.find((c) => c._id === v.clienteId)?.razonSocial ||
-        "—",
-      choferNombre:
-        choferes.find((ch) => ch._id === v.choferId)?.nombre + " " +
-        (choferes.find((ch) => ch._id === v.choferId)?.apellido ?? "") ||
-        "—",
-    }));
-  },
-});
 
 /* ---------- ESTADÍSTICAS ---------- */
 export const estadisticas = query({
@@ -136,5 +122,60 @@ export const estadisticas = query({
       totalDistancia,
       promedioDistancia,
     };
+  },
+});
+export const listarConNombres = query({
+  args: {},
+  handler: async (ctx) => {
+    const viajes = await ctx.db.query("viajes").order("desc").collect();
+
+    // 🔹 Cache para evitar llamadas repetidas a la BD
+    const cacheClientes = new Map();
+    const cacheChoferes = new Map();
+    const cacheVehiculos = new Map();
+
+    const resultados = await Promise.all(
+      viajes.map(async (v) => {
+        // 🟢 Cliente
+        if (!cacheClientes.has(v.clienteId)) {
+          cacheClientes.set(v.clienteId, await ctx.db.get(v.clienteId));
+        }
+        const cliente = cacheClientes.get(v.clienteId);
+
+        // 🟢 Chofer
+        if (!cacheChoferes.has(v.choferId)) {
+          cacheChoferes.set(v.choferId, await ctx.db.get(v.choferId));
+        }
+        const chofer = cacheChoferes.get(v.choferId);
+
+        // 🟢 Vehículo (opcional)
+        let vehiculo = null;
+        if (v.vehiculoId) {
+          if (!cacheVehiculos.has(v.vehiculoId)) {
+            cacheVehiculos.set(v.vehiculoId, await ctx.db.get(v.vehiculoId));
+          }
+          vehiculo = cacheVehiculos.get(v.vehiculoId);
+        }
+
+        // 🔹 Construcción final
+        return {
+          ...v,
+          clienteNombre:
+            cliente?.razonSocial ||
+            cliente?.alias ||
+            "—",
+          choferNombre: chofer
+            ? `${chofer.nombre ?? ""} ${chofer.apellido ?? ""}`.trim()
+            : "—",
+          vehiculoNombre: vehiculo?.nombre ?? "—",
+          origen: v.origen,
+          destino: v.destino,
+          distanciaKm: v.distanciaKm ?? 0,
+          estado: v.estado ?? "PENDIENTE",
+        };
+      })
+    );
+
+    return resultados;
   },
 });

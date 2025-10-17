@@ -1,14 +1,33 @@
 "use client";
 import React, { useState } from "react";
 import Link from "next/link";
-import { useQuery } from "convex/react";
-import { api } from "../../../convex/_generated/api";
-import { Search, MoreVertical, Truck, Plus } from "lucide-react";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "@convex/_generated/api";
+import {
+  Search,
+  MoreVertical,
+  Truck,
+  Plus,
+  Pencil,
+  Trash2,
+  Eye,
+} from "lucide-react";
+import type { Id } from "@convex/_generated/dataModel";
 
 export default function ViajesPage() {
   const data = useQuery(api.viajes.listarConNombres) ?? [];
   const stats = useQuery(api.viajes.estadisticas);
+  const eliminar = useMutation(api.viajes.eliminar);
   const [busqueda, setBusqueda] = useState("");
+  const [menuActivo, setMenuActivo] = useState<string | null>(null);
+
+  const handleEliminar = async (id: string) => {
+    if (confirm("¿Seguro que deseas eliminar este viaje?")) {
+      await eliminar({ id: id as Id<"viajes"> });
+
+      alert("✅ Viaje eliminado correctamente.");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#0d1b1e] p-8 text-[#e8f9f9]">
@@ -65,6 +84,7 @@ export default function ViajesPage() {
                 <th className="p-3 font-medium">Destino</th>
                 <th className="p-3 font-medium">Distancia</th>
                 <th className="p-3 font-medium">Estado</th>
+                <th className="p-3 font-medium text-center">Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -75,7 +95,10 @@ export default function ViajesPage() {
                     v.choferNombre?.toLowerCase().includes(busqueda.toLowerCase())
                 )
                 .map((v: any) => (
-                  <tr key={v._id} className="border-t border-[#1e3c42] hover:bg-[#15393f] transition">
+                  <tr
+                    key={v._id}
+                    className="border-t border-[#1e3c42] hover:bg-[#15393f] transition relative"
+                  >
                     <td className="p-3 text-[#d6f4f4]">{v.clienteNombre}</td>
                     <td className="p-3 text-[#d6f4f4]">{v.choferNombre}</td>
                     <td className="p-3 text-[#d6f4f4]">{v.origen}</td>
@@ -83,6 +106,41 @@ export default function ViajesPage() {
                     <td className="p-3 text-[#d6f4f4]">{v.distanciaKm} km</td>
                     <td className="p-3">
                       <EstadoPill estado={v.estado} />
+                    </td>
+
+                    {/* Acciones */}
+                    <td className="p-3 text-center relative">
+                      <button
+                        onClick={() =>
+                          setMenuActivo(menuActivo === v._id ? null : v._id)
+                        }
+                        className="text-[#36b6b0] hover:text-[#2ca6a4] transition"
+                      >
+                        <MoreVertical size={18} />
+                      </button>
+
+                      {menuActivo === v._id && (
+                        <div className="absolute right-6 top-8 z-20 bg-[#0f2327] border border-[#1e3c42] rounded-lg shadow-lg w-40 text-sm text-gray-200">
+                          <Link
+                            href={`/viajes/${v._id}`}
+                            className="flex items-center gap-2 px-3 py-2 hover:bg-[#15393f] transition"
+                          >
+                            <Pencil size={14} /> Editar
+                          </Link>
+                          <Link
+                            href={`/viajes/${v._id}`}
+                            className="flex items-center gap-2 px-3 py-2 hover:bg-[#15393f] transition"
+                          >
+                            <Eye size={14} /> Ver detalle
+                          </Link>
+                          <button
+                            onClick={() => handleEliminar(v._id)}
+                            className="w-full flex items-center gap-2 px-3 py-2 text-red-400 hover:bg-red-900/30 transition"
+                          >
+                            <Trash2 size={14} /> Eliminar
+                          </button>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -94,6 +152,7 @@ export default function ViajesPage() {
   );
 }
 
+/* ---------- COMPONENTES AUXILIARES ---------- */
 function KpiCard({ icon: Icon, color, label, value }: any) {
   return (
     <div className="bg-[#11292e] rounded-xl border border-[#1e3c42] shadow-md p-6 relative">
@@ -106,7 +165,6 @@ function KpiCard({ icon: Icon, color, label, value }: any) {
           <p className="text-3xl font-bold text-[#e8f8f8]">{value}</p>
         </div>
       </div>
-      <MoreVertical className="absolute right-4 top-4 text-[#7bbdb7]" size={18} />
     </div>
   );
 }
