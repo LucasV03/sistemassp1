@@ -95,6 +95,13 @@ export default function ComprobantesProvPage() {
           >
             + Nuevo Comprobante
           </Link>
+          {/* Historial de pagos */}
+          <Link
+            href="/facturas/pagos"
+            className="px-3 py-2 rounded-lg border border-[#2f6368] bg-[#2b5a60] hover:bg-[#2f6368] text-white font-semibold shadow-sm"
+          >
+            Historial de pagos
+          </Link>
           {/* Botón secundario */}
            <Link
               href="/facturas/pagos/nuevo"

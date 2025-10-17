@@ -1,63 +1,37 @@
 "use client";
 
+import { useMemo } from "react";
 import dynamic from "next/dynamic";
-import type { Bus } from "../components/BusMap";
+import { useQuery } from "convex/react";
+import { api } from "../../convex/_generated/api";
 
-
-const BusMap = dynamic(() => import("../components/BusMap"), {
-  ssr: false,
-  loading: () => (
-    // Ajustado al nuevo fondo oscuro
-    <div className="h-[420px] w-full rounded-xl bg-[#1a3035] animate-pulse" /> 
-  ),
-});
+const BusMap = dynamic(() => import("../components/BusMap"), { ssr: false });
 
 export default function Home() {
-  
-  const KPIS = [
-    { label: "Unidades activas", value: "42 / 58" },
-    { label: "Puntualidad", value: "92%" },
-    { label: "Alertas abiertas", value: "3" },
-    { label: "", value: "........." },
-  ];
+  // Datos reales desde Convex
+  const vehStats = useQuery(api.vehiculos.estadisticas, {}) as
+    | { total: number; operativos: number; mantenimiento: number; fuera: number }
+    | undefined;
+  const viaStats = useQuery(api.viajes.estadisticas, {}) as
+    | { total: number; finalizados: number; enCurso: number; pendientes: number }
+    | undefined;
+  const mantStats = useQuery(api.mantenimientos.estadisticas, {}) as
+    | { total: number; pendientes: number; enCurso: number; finalizados: number }
+    | undefined;
+  const comprobantes = (useQuery(api.comprobantes_prov.listar, {}) ?? []) as any[];
+  const pagos = (useQuery(api.pagos_comprobantes.listar, {}) ?? []) as any[];
+  const viajes = (useQuery(api.viajes.listarConNombres, {}) ?? []) as any[];
 
-  const PRIORIDADES = [
-    "Incidencia crítica: BUS-214 – lectora SUBE intermitente",
-    "Demora por tráfico en Ruta C→D – ajustar frecuencia",
-    "Unidad BUS-031 entra a mantenimiento hoy 18:00",
-  ];
-
-  const VIAJES_HOY = [
-    { unidad: "BUS-102", ruta: "A → B", salida: "12:30", estado: "A tiempo" },
-    { unidad: "BUS-088", ruta: "C → D", salida: "12:45", estado: "Demora 5’" },
-    { unidad: "BUS-031", ruta: "E → A", salida: "13:10", estado: "A tiempo" },
-    { unidad: "BUS-214", ruta: "B → C", salida: "13:30", estado: "Reasignado" },
-    { unidad: "BUS-131", ruta: "Terminal → Norte", salida: "13:45", estado: "A tiempo" },
-    { unidad: "BUS-077", ruta: "Sur → Centro", salida: "14:00", estado: "Demora 10’" },
-  ];
-
-  const FUERA_SERVICIO = [
-    { unidad: "BUS-214", motivo: "Lectora SUBE", estado: "Diagnóstico" },
-    { unidad: "BUS-031", motivo: "Mantenimiento programado", estado: "18:00" },
-  ];
-
-  const INCIDENCIAS = [
-    { sev: "Alta", texto: "Demora en Acceso Norte (obras)" },
-    { sev: "Media", texto: "Parada 123 sin luz – reportada" },
-    { sev: "Baja", texto: "Cartelería desactualizada en Ruta E" },
-  ];
-
-  const PERSONAL = [
-    "2 choferes sin asignación para la franja 14–16 h",
-    "Ausencia reportada: J. Pérez (turno tarde)",
-    "Vencimiento licencia: M. Gómez (30 días)",
-  ];
-
-  const BUSES: Bus[] = [
-    { id: "BUS-102", lat: -24.787, lng: -65.41, route: "A → B", speedKmH: 38, heading: 45, updatedAt: new Date().toISOString() },
-    { id: "BUS-088", lat: -24.8, lng: -65.44, route: "C → D", speedKmH: 22, heading: 320, updatedAt: new Date().toISOString() },
-    { id: "BUS-031", lat: -24.775, lng: -65.43, route: "E → A", speedKmH: 41, heading: 190, updatedAt: new Date().toISOString() },
-  ];
+  const kpis = useMemo(() => {
+    const pendientes = comprobantes.filter((c) => c.estado !== "PAGADO");
+    const totalPendiente = pendientes.reduce((a, c) => a + (c.saldo ?? 0), 0);
+    return [
+      { label: "Vehículos operativos", value: `${vehStats?.operativos ?? 0} / ${vehStats?.total ?? 0}` },
+      { label: "Viajes en curso", value: viaStats?.enCurso ?? 0 },
+      { label: "Mantenimientos", value: mantStats?.pendientes ?? 0 },
+      { label: "Pendiente a pagar", value: new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS" }).format(totalPendiente) },
+    ];
+  }, [vehStats, viaStats, mantStats, comprobantes]);
 
   return (
     // Fondo principal: Usamos el color oscuro `#0b1618`
@@ -75,7 +49,7 @@ export default function Home() {
 
       {/* KPIs (flex + wrap) */}
       <section className="flex flex-wrap gap-4">
-        {KPIS.map((k) => (
+        {kpis.map((k) => (
           <div
             key={k.label}
             className="
@@ -96,45 +70,38 @@ export default function Home() {
       </section>
 
       {/* Dos columnas con flex (col -> row en xl) */}
-      <section className="flex flex-col xl:flex-row gap-6">
-        {/* Columna principal */}
+      <section className="flex flex-col gap-6">
         <div className="flex-1 flex flex-col gap-4">
-          {/* Prioridades */}
-          <Card title="Prioridades de hoy">
-            <ul className="list-disc pl-5 space-y-1 text-gray-300">
-              {PRIORIDADES.map((t, i) => <li key={i}>{t}</li>)}
-            </ul>
-          </Card>
-
-          {/* Salidas próximas */}
-          <Card title="Salidas próximas (hoy)">
+          {/* Últimos viajes */}
+          <Card title="Últimos viajes">
             <div className="max-h-40 overflow-y-auto rounded-xl border border-[#1e3c42]">
               <table className="min-w-full text-sm">
                 {/* Encabezado de la tabla ajustado */}
                 <thead className="sticky top-0 bg-[#1e3c42] text-gray-400 text-xs">
                   <tr>
-                    <Th>Unidad</Th>
+                    <Th>Cliente</Th>
+                    <Th>Chofer</Th>
                     <Th>Ruta</Th>
-                    <Th>Salida</Th>
                     <Th>Estado</Th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#1e3c42]">
-                  {VIAJES_HOY.map((v, i) => (
+                  {viajes.slice(0, 8).map((v: any, i: number) => (
                     <tr key={i} className="hover:bg-[#1a3035]">
-                      <Td className="font-medium text-white">{v.unidad}</Td>
-                      <Td className="text-gray-300">{v.ruta}</Td>
-                      <Td className="text-gray-400">{v.salida}</Td>
+                      <Td className="font-medium text-white">{v.clienteNombre ?? "—"}</Td>
+                      <Td className="text-gray-300">{v.choferNombre ?? "—"}</Td>
+                      <Td className="text-gray-300">{`${v.origen ?? "?"} → ${v.destino ?? "?"}`}</Td>
                       <Td>
                         <span
                           className={[
                             "rounded-full px-2 py-0.5 text-xs ring-1 font-semibold",
-                            // Demora: Amarillo/Naranja
-                            v.estado.includes("Demora") ? "bg-amber-800/20 text-amber-400 ring-amber-700/30" :
-                            // Reasignado: Gris/Neutral
-                            v.estado.includes("Reasignado") ? "bg-gray-700/20 text-gray-400 ring-gray-600/30" :
-                            // A tiempo: Verde
-                            "bg-emerald-800/20 text-emerald-400 ring-emerald-700/30"
+                            v.estado === "FINALIZADO"
+                              ? "bg-emerald-800/20 text-emerald-400 ring-emerald-700/30"
+                              : v.estado === "EN_CURSO"
+                              ? "bg-sky-800/20 text-sky-300 ring-sky-700/30"
+                              : v.estado === "PENDIENTE"
+                              ? "bg-amber-800/20 text-amber-400 ring-amber-700/30"
+                              : "bg-gray-700/20 text-gray-400 ring-gray-600/30"
                           ].join(" ")}
                         >
                           {v.estado}
@@ -147,73 +114,65 @@ export default function Home() {
             </div>
           </Card>
 
-          {/* Incidencias + Personal (flex responsivo) */}
+          {/* Pagos recientes debajo de Últimos viajes, ancho completo */}
+          <Card title="Pagos recientes">
+            <div className="max-h-40 overflow-y-auto rounded-xl border border-[#1e3c42]">
+              <table className="min-w-full text-sm">
+                <thead className="sticky top-0 bg-[#1e3c42] text-gray-400 text-xs">
+                  <tr>
+                    <Th>Proveedor</Th>
+                    <Th>Fecha</Th>
+                    <Th>Medio</Th>
+                    <Th className="text-right">Importe</Th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#1e3c42]">
+                  {pagos.slice(0, 8).map((p: any) => (
+                    <tr key={p._id} className="hover:bg-[#1a3035]">
+                      <Td className="text-white">{p.proveedorNombre ?? "—"}</Td>
+                      <Td className="text-gray-300">{new Date(p.fechaPago).toLocaleDateString("es-AR")}</Td>
+                      <Td className="text-gray-300">{p.medio}</Td>
+                      <Td className="text-right text-gray-200">
+                        {p.importe?.toLocaleString("es-AR", { style: "currency", currency: "ARS" })}
+                      </Td>
+                    </tr>
+                  ))}
+                  {pagos.length === 0 && (
+                    <tr><Td className="text-gray-400">No hay pagos aún.</Td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+
+          {/* Resúmenes */}
           <div className="flex flex-wrap gap-4">
             <Card
-              title="Incidencias"
+              title="Resumen de mantenimiento"
               className="flex-1 basis-full md:basis-[calc(50%-0.5rem)] min-w-[260px]"
             >
-              <ul className="space-y-2 text-sm">
-                {INCIDENCIAS.map((i, idx) => (
-                  <li key={idx} className="rounded-lg border border-[#1e3c42] p-2 bg-[#1a3035]">
-                    <span
-                      className={[
-                        "mr-2 rounded px-2 py-0.5 text-xs ring-1 font-semibold",
-                        // Alta: Rojo
-                        i.sev === "Alta"
-                          ? "bg-rose-800/20 text-rose-400 ring-rose-700/30"
-                          : i.sev === "Media"
-                          // Media: Amarillo/Naranja
-                          ? "bg-amber-800/20 text-amber-400 ring-amber-700/30"
-                          // Baja: Gris/Neutral
-                          : "bg-gray-700/20 text-gray-400 ring-gray-600/30",
-                      ].join(" ")}
-                    >
-                      {i.sev}
-                    </span>
-                    <span className="text-gray-300">{i.texto}</span>
-                  </li>
-                ))}
-                {INCIDENCIAS.length === 0 && (
-                  <li className="text-gray-400">Sin incidencias.</li>
-                )}
+              <ul className="space-y-2 text-sm text-gray-300">
+                <li>Pendientes: <b>{mantStats?.pendientes ?? 0}</b></li>
+                <li>En curso: <b>{mantStats?.enCurso ?? 0}</b></li>
+                <li>Finalizados: <b>{mantStats?.finalizados ?? 0}</b></li>
+                <li>Total: <b>{mantStats?.total ?? 0}</b></li>
               </ul>
             </Card>
 
             <Card
-              title="Personal"
+              title="Comprobantes y pagos"
               className="flex-1 basis-full md:basis-[calc(50%-0.5rem)] min-w-[260px]"
             >
-              <ul className="list-disc pl-5 space-y-2 text-sm text-gray-300">
-                {PERSONAL.map((t, i) => <li key={i}>{t}</li>)}
+              <ul className="space-y-2 text-sm text-gray-300">
+                <li>Comprobantes: <b>{comprobantes.length}</b></li>
+                <li>Pagos registrados: <b>{pagos.length}</b></li>
+                <li>
+                  Último pago: <b>{pagos[0] ? new Date(pagos[0].fechaPago).toLocaleString("es-AR") : "—"}</b>
+                </li>
               </ul>
             </Card>
           </div>
         </div>
-
-        {/* Columna lateral */}
-        <aside className="w-full xl:w-96 flex flex-col gap-6">
-          <Card title="Mapa — flota en vivo">
-            {/* El componente BusMap maneja su propio estilo y loader */}
-            <div className="h-[420px] -m-4"> 
-              <BusMap buses={BUSES} />
-            </div>
-          </Card>
-
-          <Card title="Flota — fuera de servicio">
-            <ul className="space-y-2 text-sm">
-              {FUERA_SERVICIO.map((u) => (
-                <li key={u.unidad} className="flex items-center justify-between rounded-lg border border-[#1e3c42] p-2 bg-[#1a3035]">
-                  <span className="font-medium text-white">{u.unidad}</span>
-                  <span className="text-gray-400">{u.motivo} — {u.estado}</span>
-                </li>
-              ))}
-              {FUERA_SERVICIO.length === 0 && (
-                <li className="text-gray-400">Sin novedades.</li>
-              )}
-            </ul>
-          </Card>
-        </aside>
       </section>
     </main>
   );
