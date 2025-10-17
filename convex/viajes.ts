@@ -179,3 +179,9 @@ export const listarConNombres = query({
     return resultados;
   },
 });
+export const listar = query({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.db.query("viajes").collect();
+  },
+});
