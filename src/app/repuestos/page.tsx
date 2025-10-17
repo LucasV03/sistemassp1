@@ -1,3 +1,4 @@
+// src/app/repuestos/page.tsx
 "use client";
 
 import Link from "next/link";
@@ -63,20 +64,23 @@ export default function RepuestosPage() {
   }, [list, buscar, marcaFiltro, modeloFiltro, categoriaFiltro, vehiculoFiltro]);
 
   return (
-    <div className="p-6 space-y-4 text-white">
+    // Fondo principal: Usamos el color oscuro `#0b1618`
+    <div className="min-h-screen bg-[#0b1618] p-6 space-y-4 text-gray-100">
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">📦 Repuestos</h1>
+        <h1 className="text-2xl font-semibold text-white">📦 Repuestos</h1>
         <div className="flex gap-2">
+          {/* Botón Asignar Repuesto (teal/acento) */}
           <Link
             href="/repuestos/asignar"
-            className="px-4 py-2 rounded bg-sky-600 hover:bg-sky-500 text-white"
+            className="px-4 py-2 rounded-lg bg-[#36b6b0] hover:bg-[#2ca6a4] text-white font-semibold transition shadow-md"
           >
             Asignar Repuesto
           </Link>
+          {/* Botón Nuevo Repuesto (teal/acento) */}
           <Link
             href="/repuestos/nuevo"
-            className="px-4 py-2 rounded bg-violet-600 text-white"
+            className="px-4 py-2 rounded-lg bg-[#36b6b0] hover:bg-[#2ca6a4] text-white font-semibold transition shadow-md"
           >
             Nuevo Repuesto
           </Link>
@@ -84,28 +88,30 @@ export default function RepuestosPage() {
       </div>
 
       {/* Buscador + filtros */}
-      <div className="flex flex-wrap gap-3 items-center">
+      <div className="flex flex-wrap gap-3 items-center p-4 rounded-xl bg-[#11292e] border border-[#1e3c42] shadow-lg">
         {/* Buscador */}
         <input
           value={buscar}
           onChange={(e) => setBuscar(e.target.value)}
           placeholder="Buscar..."
-          className="px-3 py-2 text-sm rounded-lg border border-neutral-700 bg-zinc-900 text-white min-w-[250px]"
+          // Input ajustado para la estética oscura
+          className="px-3 py-2 text-sm rounded-lg border border-[#1e3c42] bg-[#1a3035] text-white min-w-[250px] placeholder-gray-400 focus:ring-2 focus:ring-[#36b6b0] outline-none"
         />
         {buscar && (
           <button
             onClick={() => setBuscar("")}
-            className="px-3 py-2 text-sm rounded border border-neutral-600 bg-neutral-800 hover:bg-neutral-700"
+            // Botón Limpiar ajustado
+            className="px-3 py-2 text-sm rounded-lg border border-[#1e3c42] bg-[#1a3035] hover:bg-[#1e3c42] text-gray-300 transition"
           >
             Limpiar
           </button>
         )}
 
-        {/* Select filtros */}
+        {/* Select filtros - Ajustados para la estética oscura */}
         <select
           value={marcaFiltro}
           onChange={(e) => setMarcaFiltro(e.target.value)}
-          className="px-3 py-2 rounded border border-neutral-700 bg-zinc-900 text-white text-sm"
+          className="px-3 py-2 rounded-lg border border-[#1e3c42] bg-[#1a3035] text-gray-300 text-sm focus:ring-2 focus:ring-[#36b6b0] outline-none"
         >
           <option value="">Todas las marcas</option>
           {marcas.map((m) => (
@@ -118,7 +124,7 @@ export default function RepuestosPage() {
         <select
           value={modeloFiltro}
           onChange={(e) => setModeloFiltro(e.target.value)}
-          className="px-3 py-2 rounded border border-neutral-700 bg-zinc-900 text-white text-sm"
+          className="px-3 py-2 rounded-lg border border-[#1e3c42] bg-[#1a3035] text-gray-300 text-sm focus:ring-2 focus:ring-[#36b6b0] outline-none"
         >
           <option value="">Todos los modelos</option>
           {modelos.map((m) => (
@@ -131,7 +137,7 @@ export default function RepuestosPage() {
         <select
           value={categoriaFiltro}
           onChange={(e) => setCategoriaFiltro(e.target.value)}
-          className="px-3 py-2 rounded border border-neutral-700 bg-zinc-900 text-white text-sm"
+          className="px-3 py-2 rounded-lg border border-[#1e3c42] bg-[#1a3035] text-gray-300 text-sm focus:ring-2 focus:ring-[#36b6b0] outline-none"
         >
           <option value="">Todas las categorías</option>
           {categorias.map((c) => (
@@ -144,7 +150,7 @@ export default function RepuestosPage() {
         <select
           value={vehiculoFiltro}
           onChange={(e) => setVehiculoFiltro(e.target.value)}
-          className="px-3 py-2 rounded border border-neutral-700 bg-zinc-900 text-white text-sm"
+          className="px-3 py-2 rounded-lg border border-[#1e3c42] bg-[#1a3035] text-gray-300 text-sm focus:ring-2 focus:ring-[#36b6b0] outline-none"
         >
           <option value="">Todos los vehículos</option>
           {vehiculos.map((v) => (
@@ -156,10 +162,11 @@ export default function RepuestosPage() {
       </div>
 
       {/* Tabla con scroll */}
-      <div className="rounded border border-neutral-800 overflow-hidden">
+      <div className="rounded-xl border border-[#1e3c42] overflow-hidden bg-[#11292e] shadow-lg">
         <div className="max-h-[600px] overflow-y-auto">
           <table className="w-full text-sm">
-            <thead className="bg-neutral-900 sticky top-0 z-10">
+            {/* Encabezado de la tabla */}
+            <thead className="bg-[#1e3c42] sticky top-0 z-10 text-gray-300">
               <tr>
                 <th className="p-3 text-left">Código</th>
                 <th className="p-3 text-left">Nombre</th>
@@ -176,35 +183,39 @@ export default function RepuestosPage() {
               {filtered.map((r: any) => (
                 <tr
                   key={r._id}
-                  className="border-t border-neutral-800 hover:bg-neutral-900/40"
+                  // Fila ajustada
+                  className="border-t border-[#1e3c42] hover:bg-[#1a3035] transition"
                 >
-                  <td className="p-3">{r.codigo}</td>
-                  <td className="p-3">{r.nombre}</td>
-                  <td className="p-3 max-w-[280px] truncate" title={r.descripcion}>
+                  <td className="p-3 font-medium text-white">{r.codigo}</td>
+                  <td className="p-3 text-gray-300">{r.nombre}</td>
+                  <td className="p-3 max-w-[280px] truncate text-gray-400" title={r.descripcion}>
                     {r.descripcion}
                   </td>
-                  <td className="p-3">{r.categoria}</td>
-                  <td className="p-3">{r.vehiculo}</td>
-                  <td className="p-3">{r.marca}</td>
-                  <td className="p-3">{r.modeloCompatible}</td>
+                  <td className="p-3 text-gray-400">{r.categoria}</td>
+                  <td className="p-3 text-gray-400">{r.vehiculo}</td>
+                  <td className="p-3 text-gray-400">{r.marca}</td>
+                  <td className="p-3 text-gray-400">{r.modeloCompatible}</td>
                   
                   <td className="p-3">
                     <div className="flex gap-2 justify-end">
+                      {/* Botón Ver (secundario) */}
                       <Link
-                        className="px-3 py-1 rounded bg-neutral-800 hover:bg-neutral-700 text-neutral-100"
+                        className="px-3 py-1.5 rounded-lg bg-[#1e3c42] hover:bg-[#2b5a60] text-gray-300 text-xs font-medium transition"
                         href={`/repuestos/${r._id}`}
                       >
                         Ver
                       </Link>
+                      {/* Botón Editar (teal/acento) */}
                       <Link
-                        className="px-3 py-1 rounded bg-indigo-600 hover:bg-indigo-500 text-white"
+                        className="px-3 py-1.5 rounded-lg bg-[#36b6b0] hover:bg-[#2ca6a4] text-white text-xs font-medium transition"
                         href={`/repuestos/${r.codigo}/editar`}
                       >
                         Editar
                       </Link>
+                      {/* Botón Eliminar (Rojo ajustado) */}
                       <button
                         onClick={() => eliminarRepuesto({ id: r._id })}
-                        className="px-3 py-1 rounded bg-rose-600 hover:bg-rose-500 text-white"
+                        className="px-3 py-1.5 rounded-lg bg-red-700/70 hover:bg-red-600/80 text-white text-xs font-medium transition"
                       >
                         Eliminar
                       </button>
@@ -214,7 +225,7 @@ export default function RepuestosPage() {
               ))}
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={9} className="p-4 text-center text-neutral-400">
+                  <td colSpan={9} className="p-4 text-center text-gray-400">
                     No se encontraron repuestos.
                   </td>
                 </tr>

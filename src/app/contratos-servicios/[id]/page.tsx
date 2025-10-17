@@ -53,14 +53,14 @@ export default function EditContratoPage() {
 
   if (!data)
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#1b3a3f] text-[#e8f9f9]">
+      <div className="min-h-screen flex items-center justify-center bg-[#0d1b1e] text-[#e8f9f9]">
         Cargando contrato...
       </div>
     );
 
   return (
-    <div className="min-h-screen bg-[#1b3a3f] p-8 text-[#e8f9f9]">
-      <div className="max-w-3xl mx-auto bg-[#24474d] rounded-xl border border-[#2f6368] shadow-lg p-8 space-y-6">
+    <div className="min-h-screen bg-[#0d1b1e] p-8 text-[#e8f9f9]">
+      <div className="max-w-3xl mx-auto bg-[#11292e] rounded-2xl border border-[#1e3c42] shadow-lg p-8 space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Editar Contrato</h1>
           <Link
@@ -80,11 +80,11 @@ export default function EditContratoPage() {
         <form onSubmit={handleSave} className="grid gap-4">
           {/* Cliente */}
           <div>
-            <label className="text-sm mb-1 block">Cliente</label>
+            <label className="text-sm mb-1 block text-[#93c6c1]">Cliente</label>
             <select
               value={data.clienteId}
               onChange={(e) => handleChange("clienteId", e.target.value)}
-              className="w-full px-4 py-2 rounded-lg border border-[#2f6368] bg-[#1b3a3f]"
+              className="w-full px-4 py-2 rounded-lg border border-[#23454e] bg-[#11292e] text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#36b6b0]"
             >
               {clientes.map((c: any) => (
                 <option key={c._id} value={c._id}>
@@ -98,11 +98,11 @@ export default function EditContratoPage() {
 
           {/* Tipo de servicio */}
           <div>
-            <label className="text-sm mb-1 block">Tipo de servicio</label>
+            <label className="text-sm mb-1 block text-[#93c6c1]">Tipo de servicio</label>
             <select
               value={data.tipo}
               onChange={(e) => handleChange("tipo", e.target.value)}
-              className="w-full px-4 py-2 rounded-lg border border-[#2f6368] bg-[#1b3a3f]"
+              className="w-full px-4 py-2 rounded-lg border border-[#23454e] bg-[#11292e] text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#36b6b0]"
             >
               {tiposServicio.map((t) => (
                 <option key={t} value={t}>
@@ -117,7 +117,7 @@ export default function EditContratoPage() {
             value={data.tarifaBase}
             onChange={(e) => handleChange("tarifaBase", e.target.value)}
             placeholder="Tarifa base"
-            className="px-4 py-2 rounded-lg border border-[#2f6368] bg-[#1b3a3f]"
+            className="px-4 py-2 rounded-lg border border-[#23454e] bg-[#11292e] text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#36b6b0]"
           />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -125,20 +125,20 @@ export default function EditContratoPage() {
               type="date"
               value={data.fechaInicio}
               onChange={(e) => handleChange("fechaInicio", e.target.value)}
-              className="px-4 py-2 rounded-lg border border-[#2f6368] bg-[#1b3a3f]"
+              className="px-4 py-2 rounded-lg border border-[#23454e] bg-[#11292e] text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#36b6b0]"
             />
             <input
               type="date"
               value={data.fechaFin || ""}
               onChange={(e) => handleChange("fechaFin", e.target.value)}
-              className="px-4 py-2 rounded-lg border border-[#2f6368] bg-[#1b3a3f]"
+              className="px-4 py-2 rounded-lg border border-[#23454e] bg-[#11292e] text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#36b6b0]"
             />
           </div>
 
           <select
             value={data.estado}
             onChange={(e) => handleChange("estado", e.target.value)}
-            className="px-4 py-2 rounded-lg border border-[#2f6368] bg-[#1b3a3f]"
+            className="px-4 py-2 rounded-lg border border-[#23454e] bg-[#11292e] text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#36b6b0]"
           >
             <option value="VIGENTE">VIGENTE</option>
             <option value="FINALIZADO">FINALIZADO</option>
@@ -150,7 +150,7 @@ export default function EditContratoPage() {
             onChange={(e) => handleChange("notas", e.target.value)}
             rows={3}
             placeholder="Notas"
-            className="px-4 py-2 rounded-lg border border-[#2f6368] bg-[#1b3a3f]"
+            className="px-4 py-2 rounded-lg border border-[#23454e] bg-[#11292e] text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#36b6b0]"
           />
 
           <div className="flex items-center gap-3 mt-2">

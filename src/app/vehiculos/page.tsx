@@ -18,7 +18,7 @@ export default function VehiculosPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#1b3a3f] text-[#e8f9f9] p-8 space-y-8 transition-colors duration-300">
+    <div className="min-h-screen bg-[#0d1b1e] text-[#e8f9f9] p-8 space-y-8 transition-colors duration-300">
       {/* HEADER */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -59,19 +59,20 @@ export default function VehiculosPage() {
       </div>
 
       {/* TABLA */}
-      <div className="bg-[#24474d] rounded-xl shadow-md border border-[#2f6368] p-6">
-        <h2 className="text-xl font-semibold mb-4">Listado de Vehículos</h2>
+      <div className="bg-[#11292e] rounded-2xl shadow-md border border-[#1e3c42] p-6 transition-all">
+        <h2 className="text-xl font-bold text-[#e8f8f8] mb-4">Listado de Vehículos</h2>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="text-[#b7e2de] border-b border-[#2f6368] text-sm">
+              <tr className="bg-[#0e2529] text-[#9ed1cd] text-sm">
                 <th className="p-3 font-medium">Nombre</th>
                 <th className="p-3 font-medium">Marca</th>
                 <th className="p-3 font-medium">Patente</th>
                 <th className="p-3 font-medium">Tipo</th>
                 <th className="p-3 font-medium">Capacidad</th>
                 <th className="p-3 font-medium">Estado</th>
+                <th className="p-3 font-medium text-right">Acciones</th>
               </tr>
             </thead>
 
@@ -84,26 +85,36 @@ export default function VehiculosPage() {
                     )
                   )
                   .map((v: any) => (
-                    <tr
-                      key={v._id}
-                      className="border-b border-[#2f6368] hover:bg-[#2b5a60] transition"
-                    >
-                      <td className="p-3">{v.nombre}</td>
-                      <td className="p-3">{v.marcaNombre || "—"}</td>
-                      <td className="p-3">{v.patente || "—"}</td>
-                      <td className="p-3">{v.tipo || "—"}</td>
-                      <td className="p-3">{v.capacidad ? `${v.capacidad} kg` : "—"}</td>
+                    <tr key={v._id} className="border-t border-[#1e3c42] hover:bg-[#15393f] transition">
+                      <td className="p-3 text-[#d6f4f4] font-medium">{v.nombre}</td>
+                      <td className="p-3 text-[#d6f4f4]">{v.marcaNombre || "—"}</td>
+                      <td className="p-3 text-[#d6f4f4]">{v.patente || "—"}</td>
+                      <td className="p-3 text-[#d6f4f4]">{v.tipo || "—"}</td>
+                      <td className="p-3 text-[#d6f4f4]">{v.capacidad ? `${v.capacidad} kg` : "—"}</td>
                       <td className="p-3">
                         <Estado estado={v.estado} />
+                      </td>
+                      <td className="p-3">
+                        <div className="flex gap-2 justify-end">
+                          <Link
+                            href={`/vehiculos/${String(v._id)}`}
+                            className="px-3 py-1.5 rounded-lg bg-[#2ca6a4] hover:bg-[#249390] text-white text-xs font-medium transition"
+                          >
+                            Ver
+                          </Link>
+                          <Link
+                            href={`/vehiculos/${String(v._id)}/editar`}
+                            className="px-3 py-1.5 rounded-lg bg-[#2ca6a4] hover:bg-[#249390] text-white text-xs font-medium transition"
+                          >
+                            Editar
+                          </Link>
+                        </div>
                       </td>
                     </tr>
                   ))
               ) : (
                 <tr>
-                  <td
-                    colSpan={6}
-                    className="text-center py-6 text-[#b7e2de] text-sm"
-                  >
+                  <td colSpan={7} className="text-center py-6 text-gray-400 text-sm">
                     No hay vehículos registrados aún.
                   </td>
                 </tr>
@@ -119,14 +130,14 @@ export default function VehiculosPage() {
 /* ---------- COMPONENTES ---------- */
 function KpiCard({ icon: Icon, color, label, value }: any) {
   return (
-    <div className="bg-[#24474d] rounded-xl border border-[#2f6368] shadow-md p-6 relative hover:shadow-lg transition">
+    <div className="bg-[#11292e] rounded-xl border border-[#1e3c42] shadow-md p-6 relative hover:shadow-lg transition">
       <div className="flex items-center gap-4">
         <div className="p-4 rounded-xl" style={{ backgroundColor: `${color}22` }}>
           <Icon style={{ color }} size={28} />
         </div>
         <div>
-          <p className="text-sm text-[#a8d8d3] mb-1">{label}</p>
-          <p className="text-3xl font-bold">{value}</p>
+          <p className="text-sm text-[#93c6c1] mb-1">{label}</p>
+          <p className="text-3xl font-bold text-[#e8f8f8]">{value}</p>
         </div>
       </div>
     </div>

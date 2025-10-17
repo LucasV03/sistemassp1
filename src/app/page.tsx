@@ -1,4 +1,3 @@
-
 "use client";
 
 import dynamic from "next/dynamic";
@@ -8,7 +7,8 @@ import type { Bus } from "../components/BusMap";
 const BusMap = dynamic(() => import("../components/BusMap"), {
   ssr: false,
   loading: () => (
-    <div className="h-[420px] w-full rounded-lg bg-slate-100 dark:bg-neutral-800 animate-pulse" />
+    // Ajustado al nuevo fondo oscuro
+    <div className="h-[420px] w-full rounded-xl bg-[#1a3035] animate-pulse" /> 
   ),
 });
 
@@ -60,13 +60,15 @@ export default function Home() {
   ];
 
   return (
-    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
+    // Fondo principal: Usamos el color oscuro `#0b1618`
+    <main className="min-h-screen bg-[#0b1618] max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
       {/* Encabezado */}
-      <header className="rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-5 text-center">
-        <h1 className="text-2xl sm:text-3xl font-semibold text-neutral-900 dark:text-neutral-100">
+      {/* Tarjeta ajustada a la estética oscura */}
+      <header className="rounded-xl border border-[#1e3c42] bg-[#11292e] p-5 text-center shadow-lg">
+        <h1 className="text-2xl sm:text-3xl font-semibold text-white">
           Panel operativo
         </h1>
-        <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-400">
+        <p className="text-sm sm:text-base text-gray-400">
           Estado actual de flota, viajes e incidencias
         </p>
       </header>
@@ -79,14 +81,14 @@ export default function Home() {
             className="
               flex-1 basis-full sm:basis-[calc(50%-0.5rem)] lg:basis-[calc(25%-0.75rem)]
               min-w-[220px]
-              rounded-xl border border-neutral-200 dark:border-neutral-800
-              bg-white dark:bg-neutral-900 p-4 shadow-sm
+              rounded-xl border border-[#1e3c42] 
+              bg-[#11292e] p-4 shadow-lg
             "
           >
-            <div className="text-xs uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+            <div className="text-xs uppercase tracking-wide text-gray-400">
               {k.label || "\u00A0"}
             </div>
-            <div className="mt-1 text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
+            <div className="mt-1 text-2xl font-semibold text-white">
               {k.value}
             </div>
           </div>
@@ -99,16 +101,17 @@ export default function Home() {
         <div className="flex-1 flex flex-col gap-4">
           {/* Prioridades */}
           <Card title="Prioridades de hoy">
-            <ul className="list-disc pl-5 space-y-1 text-neutral-700 dark:text-neutral-300">
+            <ul className="list-disc pl-5 space-y-1 text-gray-300">
               {PRIORIDADES.map((t, i) => <li key={i}>{t}</li>)}
             </ul>
           </Card>
 
           {/* Salidas próximas */}
           <Card title="Salidas próximas (hoy)">
-            <div className="max-h-40 overflow-y-auto rounded border border-neutral-200 dark:border-neutral-800">
+            <div className="max-h-40 overflow-y-auto rounded-xl border border-[#1e3c42]">
               <table className="min-w-full text-sm">
-                <thead className="sticky top-0 bg-neutral-50 dark:bg-neutral-800/60 text-neutral-500 dark:text-neutral-400 text-xs">
+                {/* Encabezado de la tabla ajustado */}
+                <thead className="sticky top-0 bg-[#1e3c42] text-gray-400 text-xs">
                   <tr>
                     <Th>Unidad</Th>
                     <Th>Ruta</Th>
@@ -116,19 +119,22 @@ export default function Home() {
                     <Th>Estado</Th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-[#1e3c42]">
                   {VIAJES_HOY.map((v, i) => (
-                    <tr key={i} className="border-t border-neutral-200 dark:border-neutral-800">
-                      <Td className="font-medium text-neutral-900 dark:text-neutral-100">{v.unidad}</Td>
-                      <Td>{v.ruta}</Td>
-                      <Td>{v.salida}</Td>
+                    <tr key={i} className="hover:bg-[#1a3035]">
+                      <Td className="font-medium text-white">{v.unidad}</Td>
+                      <Td className="text-gray-300">{v.ruta}</Td>
+                      <Td className="text-gray-400">{v.salida}</Td>
                       <Td>
                         <span
                           className={[
-                            "rounded-full px-2 py-0.5 text-xs ring-1",
-                            v.estado.includes("Demora") ? "bg-amber-100 text-amber-700 ring-amber-200" :
-                            v.estado.includes("Reasignado") ? "bg-neutral-100 text-neutral-700 ring-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:ring-neutral-700" :
-                            "bg-emerald-100 text-emerald-700 ring-emerald-200"
+                            "rounded-full px-2 py-0.5 text-xs ring-1 font-semibold",
+                            // Demora: Amarillo/Naranja
+                            v.estado.includes("Demora") ? "bg-amber-800/20 text-amber-400 ring-amber-700/30" :
+                            // Reasignado: Gris/Neutral
+                            v.estado.includes("Reasignado") ? "bg-gray-700/20 text-gray-400 ring-gray-600/30" :
+                            // A tiempo: Verde
+                            "bg-emerald-800/20 text-emerald-400 ring-emerald-700/30"
                           ].join(" ")}
                         >
                           {v.estado}
@@ -149,24 +155,27 @@ export default function Home() {
             >
               <ul className="space-y-2 text-sm">
                 {INCIDENCIAS.map((i, idx) => (
-                  <li key={idx} className="rounded-lg border border-neutral-200 dark:border-neutral-800 p-2">
+                  <li key={idx} className="rounded-lg border border-[#1e3c42] p-2 bg-[#1a3035]">
                     <span
                       className={[
-                        "mr-2 rounded px-2 py-0.5 text-xs ring-1",
+                        "mr-2 rounded px-2 py-0.5 text-xs ring-1 font-semibold",
+                        // Alta: Rojo
                         i.sev === "Alta"
-                          ? "bg-rose-100 text-rose-700 ring-rose-200"
+                          ? "bg-rose-800/20 text-rose-400 ring-rose-700/30"
                           : i.sev === "Media"
-                          ? "bg-amber-100 text-amber-700 ring-amber-200"
-                          : "bg-neutral-100 text-neutral-700 ring-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:ring-neutral-700",
+                          // Media: Amarillo/Naranja
+                          ? "bg-amber-800/20 text-amber-400 ring-amber-700/30"
+                          // Baja: Gris/Neutral
+                          : "bg-gray-700/20 text-gray-400 ring-gray-600/30",
                       ].join(" ")}
                     >
                       {i.sev}
                     </span>
-                    {i.texto}
+                    <span className="text-gray-300">{i.texto}</span>
                   </li>
                 ))}
                 {INCIDENCIAS.length === 0 && (
-                  <li className="text-neutral-500 dark:text-neutral-400">Sin incidencias.</li>
+                  <li className="text-gray-400">Sin incidencias.</li>
                 )}
               </ul>
             </Card>
@@ -175,7 +184,7 @@ export default function Home() {
               title="Personal"
               className="flex-1 basis-full md:basis-[calc(50%-0.5rem)] min-w-[260px]"
             >
-              <ul className="list-disc pl-5 space-y-2 text-sm text-neutral-700 dark:text-neutral-300">
+              <ul className="list-disc pl-5 space-y-2 text-sm text-gray-300">
                 {PERSONAL.map((t, i) => <li key={i}>{t}</li>)}
               </ul>
             </Card>
@@ -185,7 +194,8 @@ export default function Home() {
         {/* Columna lateral */}
         <aside className="w-full xl:w-96 flex flex-col gap-6">
           <Card title="Mapa — flota en vivo">
-            <div className="h-[420px]">
+            {/* El componente BusMap maneja su propio estilo y loader */}
+            <div className="h-[420px] -m-4"> 
               <BusMap buses={BUSES} />
             </div>
           </Card>
@@ -193,13 +203,13 @@ export default function Home() {
           <Card title="Flota — fuera de servicio">
             <ul className="space-y-2 text-sm">
               {FUERA_SERVICIO.map((u) => (
-                <li key={u.unidad} className="flex items-center justify-between rounded-lg border border-neutral-200 dark:border-neutral-800 p-2">
-                  <span className="font-medium text-neutral-900 dark:text-neutral-100">{u.unidad}</span>
-                  <span className="text-neutral-600 dark:text-neutral-300">{u.motivo} — {u.estado}</span>
+                <li key={u.unidad} className="flex items-center justify-between rounded-lg border border-[#1e3c42] p-2 bg-[#1a3035]">
+                  <span className="font-medium text-white">{u.unidad}</span>
+                  <span className="text-gray-400">{u.motivo} — {u.estado}</span>
                 </li>
               ))}
               {FUERA_SERVICIO.length === 0 && (
-                <li className="text-neutral-500 dark:text-neutral-400">Sin novedades.</li>
+                <li className="text-gray-400">Sin novedades.</li>
               )}
             </ul>
           </Card>
@@ -211,6 +221,7 @@ export default function Home() {
 
 
 
+// Componente Card ajustado a la estética oscura
 function Card({
   title,
   children,
@@ -223,23 +234,25 @@ function Card({
   return (
     <section
       className={[
-        "rounded-xl border border-neutral-200 dark:border-neutral-800",
-        "bg-white dark:bg-neutral-900 p-4 shadow-sm",
+        // Usamos el color de caja/fondo secundario: `#11292e` y borde `#1e3c42`
+        "rounded-xl border border-[#1e3c42]",
+        "bg-[#11292e] p-4 shadow-lg",
         className,
       ].join(" ")}
     >
       <div className="mb-3">
-        <h2 className="text-base sm:text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+        <h2 className="text-base sm:text-lg font-semibold text-white">
           {title}
         </h2>
       </div>
-      <div className="text-neutral-700 dark:text-neutral-300">
+      <div className="text-gray-300">
         {children}
       </div>
     </section>
   );
 }
 
+// Th ajustado al texto oscuro
 function Th({ children }: { children: React.ReactNode }) {
   return (
     <th className="px-3 py-2 text-left font-medium">
@@ -248,6 +261,7 @@ function Th({ children }: { children: React.ReactNode }) {
   );
 }
 
+// Td ajustado al texto oscuro
 function Td({
   children,
   className = "",
@@ -256,7 +270,7 @@ function Td({
   className?: string;
 }) {
   return (
-    <td className={["px-3 py-2 text-neutral-700 dark:text-neutral-300", className].join(" ")}>
+    <td className={["px-3 py-2 text-gray-300", className].join(" ")}>
       {children}
     </td>
   );

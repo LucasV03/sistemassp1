@@ -75,7 +75,7 @@ export default function NuevoVehiculoPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#1b3a3f] text-[#e8f9f9] p-8 space-y-8 transition-colors duration-300">
+    <div className="min-h-screen bg-[#0d1b1e] text-[#e8f9f9] p-8 space-y-8 transition-colors duration-300">
       {/* HEADER */}
       <div className="flex items-center gap-3 mb-6">
         <Link

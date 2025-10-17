@@ -67,12 +67,14 @@ export default function MovimientosPage() {
   const clearSearch = () => setQ("");
 
   return (
-    <div className="p-6 space-y-6">
+    // Fondo principal: Usamos el color oscuro `#0b1618`
+    <div className="min-h-screen bg-[#0b1618] text-gray-100 p-6 space-y-8">
       {/* Header */}
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <h1 className="text-2xl text-white font-bold">📦 Movimientos</h1>
+        <h1 className="text-2xl font-bold text-white">📦 Movimientos</h1>
+        {/* Botón Nuevo Movimiento (teal/acento) */}
         <button
-          className="inline-flex items-center justify-center rounded-lg bg-indigo-700 px-4 py-2 text-white hover:bg-indigo-600 transition"
+          className="inline-flex items-center justify-center rounded-lg bg-[#36b6b0] px-4 py-2 text-white hover:bg-[#2ca6a4] transition font-semibold shadow-md"
           onClick={() => router.push("/movimientos/nuevo")}
         >
           ➕ Nuevo Movimiento
@@ -80,11 +82,13 @@ export default function MovimientosPage() {
       </div>
 
       {/* Filtros */}
-      <div className="bg-zinc-900 rounded-xl p-4 space-y-3">
+      {/* Contenedor de filtros - Usamos el color de caja/fondo secundario: `#11292e` */}
+      <div className="bg-[#11292e] border border-[#1e3c42] rounded-xl p-4 space-y-3 shadow-lg">
         {/* Selectores */}
-        <div className="grid md:grid-cols-3 gap-3 text-zinc-200">
+        <div className="grid md:grid-cols-3 gap-3">
           <select
-            className="border border-zinc-700 bg-zinc-950 p-2 rounded-lg"
+            // Select ajustado para la estética oscura
+            className="border border-[#1e3c42] bg-[#1a3035] p-2 rounded-lg text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#36b6b0]"
             value={filtros.depositoId}
             onChange={(e) =>
               setFiltros({ ...filtros, depositoId: e.target.value })
@@ -99,7 +103,8 @@ export default function MovimientosPage() {
           </select>
 
           <select
-            className="border border-zinc-700 bg-zinc-950 p-2 rounded-lg"
+            // Select ajustado para la estética oscura
+            className="border border-[#1e3c42] bg-[#1a3035] p-2 rounded-lg text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#36b6b0]"
             value={filtros.tipoMovimientoId}
             onChange={(e) =>
               setFiltros({ ...filtros, tipoMovimientoId: e.target.value })
@@ -114,7 +119,8 @@ export default function MovimientosPage() {
           </select>
 
           <select
-            className="border border-zinc-700 bg-zinc-950 p-2 rounded-lg"
+            // Select ajustado para la estética oscura
+            className="border border-[#1e3c42] bg-[#1a3035] p-2 rounded-lg text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#36b6b0]"
             value={filtros.estado}
             onChange={(e) => setFiltros({ ...filtros, estado: e.target.value })}
           >
@@ -133,13 +139,14 @@ export default function MovimientosPage() {
             id="buscarMovimientos"
             type="text"
             placeholder="Buscar por comprobante, movimiento, depósito, fecha u hora…"
-            className="w-full bg-zinc-950 text-white placeholder-zinc-500 border border-zinc-700 rounded-lg pl-10 pr-9 py-2 outline-none focus:ring-2 focus:ring-indigo-600"
+            // Input ajustado para la estética oscura
+            className="w-full bg-[#1a3035] text-gray-100 placeholder-gray-400 border border-[#1e3c42] rounded-lg pl-10 pr-9 py-2 outline-none focus:ring-2 focus:ring-[#36b6b0]"
             value={q}
             onChange={(e) => setQ(e.target.value)}
           />
           <span
             aria-hidden
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500"
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
           >
             🔎
           </span>
@@ -147,7 +154,7 @@ export default function MovimientosPage() {
             <button
               type="button"
               onClick={clearSearch}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-200"
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
               aria-label="Limpiar búsqueda"
               title="Limpiar"
             >
@@ -158,10 +165,12 @@ export default function MovimientosPage() {
       </div>
 
       {/* Tabla */}
-      <div className="bg-zinc-900 rounded-xl p-0 overflow-hidden">
+      {/* Contenedor de la tabla - Usamos el color de caja/fondo secundario: `#11292e` */}
+      <div className="bg-[#11292e] border border-[#1e3c42] rounded-xl p-0 overflow-hidden shadow-lg">
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm text-left">
-            <thead className="bg-zinc-800 text-zinc-200">
+            {/* Encabezado de la tabla */}
+            <thead className="bg-[#1e3c42] text-gray-300">
               <tr>
                 <th className="px-4 py-3 font-semibold">Comprobante</th>
                 <th className="px-4 py-3 font-semibold">Movimiento</th>
@@ -171,19 +180,19 @@ export default function MovimientosPage() {
                 <th className="px-4 py-3 font-semibold text-right">Acción</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-800">
+            <tbody className="divide-y divide-[#1e3c42]">
               {movimientosFiltrados.map((m: any) => (
-                <tr key={m._id} className="hover:bg-zinc-800/60 transition">
-                  <td className="px-4 py-3 text-zinc-100">
+                <tr key={m._id} className="hover:bg-[#1a3035] transition">
+                  <td className="px-4 py-3 text-white font-medium">
                     {m.tipoComprobante?.nombre ?? "-"}
                   </td>
-                  <td className="px-4 py-3 text-zinc-300">
+                  <td className="px-4 py-3 text-gray-300">
                     {m.tipoMovimiento?.nombre ?? "-"}
                   </td>
-                  <td className="px-4 py-3 text-zinc-300">
+                  <td className="px-4 py-3 text-gray-300">
                     {m.deposito?.nombre ?? "-"}
                   </td>
-                  <td className="px-4 py-3 text-zinc-300 whitespace-nowrap">
+                  <td className="px-4 py-3 text-gray-400 whitespace-nowrap">
                     {m.fecha_registro} {m.hora_registro}
                   </td>
                   <td className="px-4 py-3">
@@ -200,8 +209,9 @@ export default function MovimientosPage() {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex justify-end">
+                      {/* Botón Abrir (teal/acento) */}
                       <button
-                        className="rounded-lg bg-indigo-700 px-3 py-1.5 text-white hover:bg-indigo-600 transition"
+                        className="rounded-lg bg-[#36b6b0] px-3 py-1.5 text-white hover:bg-[#2ca6a4] transition"
                         onClick={() => router.push(`/movimientos/${m._id}`)}
                       >
                         Abrir
@@ -214,7 +224,7 @@ export default function MovimientosPage() {
               {movimientosFiltrados.length === 0 && (
                 <tr>
                   <td
-                    className="px-4 py-6 text-center text-zinc-400"
+                    className="px-4 py-6 text-center text-gray-400"
                     colSpan={6}
                   >
                     No hay resultados con los filtros y la búsqueda actual.

@@ -115,8 +115,8 @@ export default function NuevaOC() {
   }
 
   return (
-    <div className="p-6 space-y-6 text-white">
-      <h1 className="text-2xl font-semibold">Nueva orden de compra</h1>
+    <div className="min-h-screen bg-[#1b3a3f] text-[#e6f6f7] p-6 space-y-6">
+      <h1 className="text-2xl font-bold">Nueva orden de compra</h1>
 
       {err && <div className="rounded border border-red-600 bg-red-900/30 text-red-200 px-3 py-2">{err}</div>}
 
@@ -124,9 +124,9 @@ export default function NuevaOC() {
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
         {/* Proveedor */}
         <div>
-          <label className="block text-sm text-neutral-300 mb-1">Proveedor</label>
+          <label className="block text-sm text-[#a8d8d3] mb-1">Proveedor</label>
           <select
-            className="w-full bg-neutral-900 border border-neutral-800 rounded p-2"
+            className="w-full bg-[#24474d] border border-[#2c5a60] rounded p-2 focus:outline-none focus:ring-2 focus:ring-[#36b6b0]"
             value={h.proveedorId ?? ""}
             onChange={(e) => setH(s => ({ ...s, proveedorId: e.target.value as any }))}
           >
@@ -139,9 +139,9 @@ export default function NuevaOC() {
 
         {/* Depósito destino */}
         <div>
-          <label className="block text-sm text-neutral-300 mb-1">Depósito de entrega</label>
+          <label className="block text-sm text-[#a8d8d3] mb-1">Depósito de entrega</label>
           <select
-            className="w-full bg-neutral-900 border border-neutral-800 rounded p-2"
+            className="w-full bg-[#24474d] border border-[#2c5a60] rounded p-2 focus:outline-none focus:ring-2 focus:ring-[#36b6b0]"
             value={h.depositoEntregaId ?? ""}
             onChange={(e) => setH(s => ({ ...s, depositoEntregaId: e.target.value as any }))}
           >
@@ -154,9 +154,9 @@ export default function NuevaOC() {
 
         {/* Fecha orden (solo lectura) */}
         <div>
-          <label className="block text-sm text-neutral-300 mb-1">Fecha de orden</label>
+          <label className="block text-sm text-[#a8d8d3] mb-1">Fecha de orden</label>
           <input
-            className="w-full bg-neutral-900 border border-neutral-800 rounded p-2"
+            className="w-full bg-[#24474d] border border-[#2c5a60] rounded p-2"
             value={new Date(h.fechaOrden).toLocaleString("es-AR")}
             readOnly
           />
@@ -164,10 +164,10 @@ export default function NuevaOC() {
 
         {/* Fecha esperada */}
         <div>
-          <label className="block text-sm text-neutral-300 mb-1">Fecha esperada</label>
+          <label className="block text-sm text-[#a8d8d3] mb-1">Fecha esperada</label>
           <input
             type="date"
-            className="w-full bg-neutral-900 border border-neutral-800 rounded p-2"
+            className="w-full bg-[#24474d] border border-[#2c5a60] rounded p-2 focus:outline-none focus:ring-2 focus:ring-[#36b6b0]"
             placeholder="Fecha prevista de entrega"
             onChange={(e) => {
               const d = e.target.value ? new Date(e.target.value) : null;
@@ -179,9 +179,9 @@ export default function NuevaOC() {
         {/* Moneda / Tipo de cambio */}
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <label className="block text-sm text-neutral-300 mb-1">Moneda</label>
+            <label className="block text-sm text-[#a8d8d3] mb-1">Moneda</label>
             <select
-              className="w-full bg-neutral-900 border border-neutral-800 rounded p-2"
+              className="w-full bg-[#24474d] border border-[#2c5a60] rounded p-2 focus:outline-none focus:ring-2 focus:ring-[#36b6b0]"
               value={h.moneda}
               onChange={(e) => setH(s => ({ ...s, moneda: e.target.value as any }))}
             >
@@ -190,11 +190,11 @@ export default function NuevaOC() {
             </select>
           </div>
           <div>
-            <label className="block text-sm text-neutral-300 mb-1">Tipo de cambio</label>
+            <label className="block text-sm text-[#a8d8d3] mb-1">Tipo de cambio</label>
             {h.moneda === "ARS" ? (
               <input
                 type="text"
-                className="w-full bg-neutral-900 border border-neutral-800 rounded p-2 text-center text-neutral-400"
+                className="w-full bg-[#24474d] border border-[#2c5a60] rounded p-2 text-center text-[#a8d8d3]"
                 value="-"
                 disabled
               />
@@ -202,7 +202,7 @@ export default function NuevaOC() {
               <input
                 type="number"
                 step="0.0001"
-                className="w-full bg-neutral-900 border border-neutral-800 rounded p-2"
+                className="w-full bg-[#24474d] border border-[#2c5a60] rounded p-2 focus:outline-none focus:ring-2 focus:ring-[#36b6b0]"
                 placeholder="Ej: 1400.00"
                 value={h.tipoCambio}
                 onChange={(e) => setH(s => ({ ...s, tipoCambio: Number(e.target.value) || 1 }))}
@@ -213,9 +213,9 @@ export default function NuevaOC() {
 
         {/* Condiciones de pago */}
         <div>
-          <label className="block text-sm text-neutral-300 mb-1">Condiciones de pago</label>
+          <label className="block text-sm text-[#a8d8d3] mb-1">Condiciones de pago</label>
           <input
-            className="w-full bg-neutral-900 border border-neutral-800 rounded p-2"
+            className="w-full bg-[#24474d] border border-[#2c5a60] rounded p-2 focus:outline-none focus:ring-2 focus:ring-[#36b6b0]"
             placeholder="Ej: 30 días FF / Contado / Transferencia"
             value={h.condicionesPago}
             onChange={(e) => setH(s => ({ ...s, condicionesPago: e.target.value }))}
@@ -223,10 +223,10 @@ export default function NuevaOC() {
         </div>
 
         <div className="lg:col-span-3">
-          <label className="block text-sm text-neutral-300 mb-1">Notas</label>
+          <label className="block text-sm text-[#a8d8d3] mb-1">Notas</label>
           <textarea
             rows={3}
-            className="w-full bg-neutral-900 border border-neutral-800 rounded p-2"
+            className="w-full bg-[#24474d] border border-[#2c5a60] rounded p-2 focus:outline-none focus:ring-2 focus:ring-[#36b6b0]"
             placeholder="Observaciones / instrucciones de entrega…"
             value={h.notas}
             onChange={(e) => setH(s => ({ ...s, notas: e.target.value }))}

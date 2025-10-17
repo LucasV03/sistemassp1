@@ -39,14 +39,14 @@ export default function EditViajePage() {
 
   if (!data)
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#1b3a3f] text-[#e8f9f9]">
+      <div className="min-h-screen flex items-center justify-center bg-[#0d1b1e] text-[#e8f9f9]">
         Cargando viaje...
       </div>
     );
 
   return (
-    <div className="min-h-screen bg-[#1b3a3f] p-8 text-[#e8f9f9]">
-      <div className="max-w-3xl mx-auto bg-[#24474d] rounded-xl border border-[#2f6368] p-8 space-y-6">
+    <div className="min-h-screen bg-[#0d1b1e] p-8 text-[#e8f9f9]">
+      <div className="max-w-3xl mx-auto bg-[#11292e] rounded-2xl border border-[#1e3c42] p-8 space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Editar Viaje</h1>
           <Link href="/viajes" className="flex items-center gap-2 text-[#36b6b0] hover:text-[#2ca6a4]">
@@ -60,7 +60,7 @@ export default function EditViajePage() {
           <select
             value={data.clienteId}
             onChange={(e) => handleChange("clienteId", e.target.value)}
-            className="px-4 py-2 rounded-lg border border-[#2f6368] bg-[#1b3a3f]"
+            className="px-4 py-2 rounded-lg border border-[#23454e] bg-[#11292e] text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#36b6b0]"
           >
             {clientes.map((c: any) => (
               <option key={c._id} value={c._id}>
@@ -72,7 +72,7 @@ export default function EditViajePage() {
           <select
             value={data.choferId}
             onChange={(e) => handleChange("choferId", e.target.value)}
-            className="px-4 py-2 rounded-lg border border-[#2f6368] bg-[#1b3a3f]"
+            className="px-4 py-2 rounded-lg border border-[#23454e] bg-[#11292e] text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#36b6b0]"
           >
             {choferes.map((ch: any) => (
               <option key={ch._id} value={ch._id}>
@@ -86,7 +86,7 @@ export default function EditViajePage() {
             value={data.origen}
             onChange={(e) => handleChange("origen", e.target.value)}
             placeholder="Origen"
-            className="px-4 py-2 rounded-lg border border-[#2f6368] bg-[#1b3a3f]"
+            className="px-4 py-2 rounded-lg border border-[#23454e] bg-[#11292e] text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#36b6b0]"
           />
 
           <input
@@ -94,7 +94,7 @@ export default function EditViajePage() {
             value={data.destino}
             onChange={(e) => handleChange("destino", e.target.value)}
             placeholder="Destino"
-            className="px-4 py-2 rounded-lg border border-[#2f6368] bg-[#1b3a3f]"
+            className="px-4 py-2 rounded-lg border border-[#23454e] bg-[#11292e] text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#36b6b0]"
           />
 
           <input
@@ -102,13 +102,13 @@ export default function EditViajePage() {
             value={data.distanciaKm}
             onChange={(e) => handleChange("distanciaKm", e.target.value)}
             placeholder="Distancia (km)"
-            className="px-4 py-2 rounded-lg border border-[#2f6368] bg-[#1b3a3f]"
+            className="px-4 py-2 rounded-lg border border-[#23454e] bg-[#11292e] text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#36b6b0]"
           />
 
           <select
             value={data.estado}
             onChange={(e) => handleChange("estado", e.target.value)}
-            className="px-4 py-2 rounded-lg border border-[#2f6368] bg-[#1b3a3f]"
+            className="px-4 py-2 rounded-lg border border-[#23454e] bg-[#11292e] text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#36b6b0]"
           >
             <option value="PENDIENTE">PENDIENTE</option>
             <option value="EN_CURSO">EN CURSO</option>

@@ -96,13 +96,15 @@ export default function DepositosPage() {
   const clearSearch = () => setQ("");
 
   return (
-    <div className="p-6 space-y-6">
+    // Fondo principal: Usamos el color oscuro `#0b1618`
+    <div className="min-h-screen bg-[#0b1618] text-gray-100 p-6 space-y-8">
       {/* HEADER */}
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <h1 className="text-2xl font-bold text-white">Gestión de Depósitos</h1>
+        {/* Botón Nuevo depósito (teal/acento) */}
         <Link
           href="/depositos/nuevo"
-          className="inline-flex items-center justify-center rounded-lg bg-indigo-700 px-4 py-2 text-white hover:bg-indigo-600 transition"
+          className="inline-flex items-center justify-center rounded-lg bg-[#36b6b0] px-4 py-2 text-white hover:bg-[#2ca6a4] transition font-semibold shadow-md"
         >
           Nuevo depósito
         </Link>
@@ -111,23 +113,23 @@ export default function DepositosPage() {
       {/* CONTROLES: STATS + SELECT + BUSCADOR */}
       {stats && (
         <>
-          {/* Stats */}
+          {/* Stats - Usamos el color de caja/fondo secundario: `#11292e` */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-zinc-800 rounded-xl p-4 text-white">
-              <p className="text-sm text-zinc-300">Capacidad total</p>
-              <p className="text-2xl font-bold">{stats.capacidadTotal}</p>
+            <div className="bg-[#11292e] border border-[#1e3c42] rounded-xl p-4 shadow-lg">
+              <p className="text-sm text-gray-400">Capacidad total</p>
+              <p className="text-2xl font-bold text-white">{stats.capacidadTotal}</p>
             </div>
-            <div className="bg-zinc-800 rounded-xl p-4 text-white">
-              <p className="text-sm text-zinc-300">Ocupado</p>
-              <p className="text-2xl font-bold">{stats.ocupado}</p>
+            <div className="bg-[#11292e] border border-[#1e3c42] rounded-xl p-4 shadow-lg">
+              <p className="text-sm text-gray-400">Ocupado</p>
+              <p className="text-2xl font-bold text-white">{stats.ocupado}</p>
             </div>
-            <div className="bg-zinc-800 rounded-xl p-4 text-white">
-              <p className="text-sm text-zinc-300">% Ocupado</p>
-              <p className="text-2xl font-bold">{stats.porcentaje}%</p>
+            <div className="bg-[#11292e] border border-[#1e3c42] rounded-xl p-4 shadow-lg">
+              <p className="text-sm text-gray-400">% Ocupado</p>
+              <p className="text-2xl font-bold text-white">{stats.porcentaje}%</p>
             </div>
-            <div className="bg-zinc-800 rounded-xl p-4 text-white">
-              <p className="text-sm text-zinc-300"># Depósitos</p>
-              <p className="text-2xl font-bold">{stats.cantidadDepositos}</p>
+            <div className="bg-[#11292e] border border-[#1e3c42] rounded-xl p-4 shadow-lg">
+              <p className="text-sm text-gray-400"># Depósitos</p>
+              <p className="text-2xl font-bold text-white">{stats.cantidadDepositos}</p>
             </div>
           </div>
 
@@ -140,7 +142,8 @@ export default function DepositosPage() {
               </label>
               <select
                 id="depositoSelect"
-                className="w-[260px] bg-zinc-900 text-white border border-zinc-700 rounded-lg px-3 py-2"
+                // Select ajustado para la estética oscura
+                className="w-[260px] bg-[#1a3035] text-gray-100 border border-[#1e3c42] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#36b6b0]"
                 value={selectedDeposito}
                 onChange={(e) => setSelectedDeposito(e.target.value as any)}
               >
@@ -162,14 +165,15 @@ export default function DepositosPage() {
                 id="searchDepositos"
                 type="text"
                 placeholder="Buscar por nombre, ubicación, dirección o CP…"
-                className="w-full bg-zinc-900 text-white placeholder-zinc-500 border border-zinc-700 rounded-lg pl-10 pr-9 py-2 outline-none focus:ring-2 focus:ring-indigo-600"
+                // Input ajustado para la estética oscura
+                className="w-full bg-[#1a3035] text-gray-100 placeholder-gray-400 border border-[#1e3c42] rounded-lg pl-10 pr-9 py-2 outline-none focus:ring-2 focus:ring-[#36b6b0]"
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
               />
-              {/* Icono lupa (decorativo, sin dependencias) */}
+              {/* Icono lupa */}
               <span
                 aria-hidden
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500"
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
               >
                 🔎
               </span>
@@ -178,7 +182,7 @@ export default function DepositosPage() {
                 <button
                   type="button"
                   onClick={clearSearch}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-200"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
                   aria-label="Limpiar búsqueda"
                   title="Limpiar"
                 >
@@ -191,10 +195,12 @@ export default function DepositosPage() {
       )}
 
       {/* TABLA DE DEPÓSITOS */}
-      <div className="bg-zinc-900 rounded-xl overflow-hidden">
+      {/* Contenedor principal de la tabla - Usamos el color de caja/fondo secundario: `#11292e` */}
+      <div className="bg-[#11292e] border border-[#1e3c42] rounded-xl overflow-hidden shadow-lg">
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm text-left">
-            <thead className="bg-zinc-800 text-zinc-200">
+            {/* Encabezado de la tabla */}
+            <thead className="bg-[#1e3c42] text-gray-300">
               <tr>
                 <th className="px-4 py-3 font-semibold">Nombre</th>
                 <th className="px-4 py-3 font-semibold">Ubicación</th>
@@ -204,39 +210,43 @@ export default function DepositosPage() {
                 <th className="px-4 py-3 font-semibold text-right">Acciones</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-800">
+            <tbody className="divide-y divide-[#1e3c42]">
               {depositosFiltrados?.map((d: any) => {
                 const isExpanded = selectedDeposito === d._id;
                 return (
                   <React.Fragment key={d._id}>
-                    <tr className="hover:bg-zinc-800/60 transition">
-                      <td className="px-4 py-3 text-zinc-100">{d.nombre}</td>
-                      <td className="px-4 py-3 text-zinc-300">
+                    {/* Fila del depósito */}
+                    <tr className="hover:bg-[#1a3035] transition">
+                      <td className="px-4 py-3 font-medium text-white">{d.nombre}</td>
+                      <td className="px-4 py-3 text-gray-400">
                         {d.provincia} - {d.ciudad}
                       </td>
-                      <td className="px-4 py-3 text-zinc-300">{d.calle}</td>
-                      <td className="px-4 py-3 text-zinc-300">
+                      <td className="px-4 py-3 text-gray-400">{d.calle}</td>
+                      <td className="px-4 py-3 text-gray-400">
                         {d.codigoPostal}
                       </td>
-                      <td className="px-4 py-3 text-zinc-300">
+                      <td className="px-4 py-3 text-gray-400">
                         {d.capacidad_total ?? "Sin límite"}
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex justify-end gap-2">
+                          {/* Botón Ver (teal/acento) */}
                           <Link
                             href={`/depositos/${d._id}`}
-                            className="rounded-lg bg-sky-600 px-3 py-1.5 text-white hover:bg-sky-500 transition"
+                            className="rounded-lg bg-[#36b6b0] px-3 py-1.5 text-white hover:bg-[#2ca6a4] transition text-xs font-medium"
                           >
                             Ver
                           </Link>
+                          {/* Botón Editar (teal/acento) */}
                           <Link
                             href={`/depositos/${d._id}/editar`}
-                            className="rounded-lg bg-indigo-700 px-3 py-1.5 text-white hover:bg-indigo-600 transition"
+                            className="rounded-lg bg-[#36b6b0] px-3 py-1.5 text-white hover:bg-[#2ca6a4] transition text-xs font-medium"
                           >
                             Editar
                           </Link>
+                          {/* Botón Eliminar (Rojo ajustado) */}
                           <button
-                            className="rounded-lg bg-red-600 px-3 py-1.5 text-white hover:bg-red-500 transition"
+                            className="rounded-lg bg-red-700/70 px-3 py-1.5 text-white hover:bg-red-600/80 transition text-xs font-medium"
                             onClick={() => handleDelete(d._id)}
                           >
                             Eliminar
@@ -248,40 +258,34 @@ export default function DepositosPage() {
                     {/* Fila expandida con repuestos del depósito seleccionado */}
                     {isExpanded && (
                       <tr key={`${d._id}-expanded`}>
-                        <td colSpan={6} className="bg-zinc-950 px-4 py-4">
-                          <div className="text-white">
-                            <h2 className="text-base font-semibold mb-3">
+                        {/* Fondo de la fila expandida ligeramente diferente para distinción */}
+                        <td colSpan={6} className="bg-[#1a3035] px-4 py-4 border-t border-[#1e3c42]">
+                          <div>
+                            <h2 className="text-base font-semibold mb-3 text-white">
                               Repuestos en este depósito
                             </h2>
 
-                            <div className="overflow-x-auto rounded-lg ring-1 ring-zinc-800">
+                            <div className="overflow-x-auto rounded-lg ring-1 ring-[#1e3c42]">
                               <table className="min-w-full text-sm">
-                                <thead className="bg-zinc-900 text-zinc-300">
+                                {/* Encabezado de la tabla interna */}
+                                <thead className="bg-[#1e3c42] text-gray-300">
                                   <tr>
-                                    <th className="px-3 py-2 font-medium text-left">
-                                      Repuesto
-                                    </th>
-                                    <th className="px-3 py-2 font-medium text-left">
-                                      Cantidad
-                                    </th>
+                                    <th className="px-3 py-2 font-medium text-left">Repuesto</th>
+                                    <th className="px-3 py-2 font-medium text-left">Cantidad</th>
                                   </tr>
                                 </thead>
-                                <tbody className="divide-y divide-zinc-800">
+                                {/* Cuerpo de la tabla interna */}
+                                <tbody className="divide-y divide-[#1e3c42]">
                                   {repuestosPorDeposito.map((r: any) => (
                                     <tr key={r._id}>
-                                      <td className="px-3 py-2">{r.nombre}</td>
-                                      <td className="px-3 py-2">
-                                        {r.cantidad} unidades
-                                      </td>
+                                      <td className="px-3 py-2 text-gray-400">{r.nombre}</td>
+                                      <td className="px-3 py-2 text-gray-400">{r.cantidad} unidades</td>
                                     </tr>
                                   ))}
 
                                   {repuestosPorDeposito.length === 0 && (
                                     <tr>
-                                      <td
-                                        className="px-3 py-4 text-zinc-400"
-                                        colSpan={2}
-                                      >
+                                      <td className="px-3 py-4 text-gray-400" colSpan={2}>
                                         No hay repuestos en este depósito.
                                       </td>
                                     </tr>
@@ -300,7 +304,7 @@ export default function DepositosPage() {
               {depositosFiltrados?.length === 0 && (
                 <tr>
                   <td
-                    className="px-4 py-6 text-center text-zinc-400"
+                    className="px-4 py-6 text-center text-gray-400"
                     colSpan={6}
                   >
                     No hay depósitos que coincidan con la búsqueda.

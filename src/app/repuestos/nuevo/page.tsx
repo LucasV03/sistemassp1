@@ -64,11 +64,9 @@ export default function NuevoRepuestoPage() {
   };
 
   return (
-    <main className="p-6 max-w-3xl mx-auto">
-      <article className="border border-neutral-200 dark:border-neutral-800 rounded-xl p-6 shadow-sm bg-white dark:bg-neutral-900 hover:shadow-md transition">
-        <h1 className="text-2xl font-bold mb-6 text-neutral-900 dark:text-neutral-100">
-          ➕ Nuevo Repuesto
-        </h1>
+    <main className="min-h-screen bg-[#1b3a3f] text-[#e6f6f7] p-6">
+      <article className="max-w-3xl mx-auto bg-[#24474d] rounded-xl border border-[#2f6368] p-6 shadow-sm">
+        <h1 className="text-2xl font-bold mb-6">➕ Nuevo Repuesto</h1>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           <div className="flex flex-wrap gap-5">
@@ -145,7 +143,7 @@ export default function NuevoRepuestoPage() {
             <button
               type="button"
               onClick={() => router.back()}
-              className="px-4 py-2 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-700"
+              className="px-4 py-2 rounded-lg border border-[#2f6368] bg-[#2b5a60] hover:bg-[#2f6368] text-[#e6f6f7]"
             >
               Cancelar
             </button>
@@ -153,7 +151,7 @@ export default function NuevoRepuestoPage() {
               type="submit"
               disabled={loading}
               className={`px-6 py-2.5 rounded-lg text-white font-semibold shadow transition ${
-                loading ? "bg-gray-400" : "bg-indigo-600 hover:bg-indigo-500"
+                loading ? "bg-gray-400" : "bg-[#2ca6a4] hover:bg-[#249390]"
               }`}
             >
               {loading ? "Guardando..." : "Guardar"}
@@ -178,7 +176,7 @@ function Field({
 }) {
   return (
     <div className={`flex flex-col flex-1 min-w-[220px] ${className}`}>
-      <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+      <label className="text-sm font-medium text-[#b7e2de] mb-1">
         {label}
       </label>
       {children}
@@ -196,13 +194,13 @@ function Input({
       type={type}
       {...props}
       className={[
-        "border border-neutral-300 dark:border-neutral-700",
-        "bg-white dark:bg-neutral-900",
-        "text-neutral-900 dark:text-neutral-100",
-        "placeholder-neutral-400 dark:placeholder-neutral-500",
+        "border border-[#2c5a60]",
+        "bg-[#24474d]",
+        "text-gray-100",
+        "placeholder-gray-400",
         "caret-current",
         "rounded-lg px-3 py-2 w-full text-sm shadow-sm",
-        "focus:ring-2 focus:ring-indigo-500 focus:outline-none",
+        "focus:ring-2 focus:ring-[#36b6b0] focus:outline-none",
         className,
       ].join(" ")}
     />
@@ -217,13 +215,13 @@ function Textarea({
     <textarea
       {...props}
       className={[
-        "border border-neutral-300 dark:border-neutral-700",
-        "bg-white dark:bg-neutral-900",
-        "text-neutral-900 dark:text-neutral-100",
-        "placeholder-neutral-400 dark:placeholder-neutral-500",
+        "border border-[#2c5a60]",
+        "bg-[#24474d]",
+        "text-gray-100",
+        "placeholder-gray-400",
         "caret-current",
         "rounded-lg px-3 py-2 w-full text-sm shadow-sm",
-        "focus:ring-2 focus:ring-indigo-500 focus:outline-none",
+        "focus:ring-2 focus:ring-[#36b6b0] focus:outline-none",
         "resize-y",
         className,
       ].join(" ")}

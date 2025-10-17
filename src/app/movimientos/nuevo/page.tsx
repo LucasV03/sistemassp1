@@ -158,17 +158,17 @@ export default function NuevoMovimientoPage() {
   }
 
   return (
-    <div className="p-6 space-y-6 text-white">
+    <div className="min-h-screen bg-[#1b3a3f] text-[#e6f6f7] p-6 space-y-6">
       <h1 className="text-2xl font-bold">➕ Nuevo Movimiento</h1>
 
       {/* Card de encabezado */}
-      <Card className="bg-zinc-900">
+      <Card className="bg-[#24474d] border border-[#2f6368]">
         <CardContent className="p-4 space-y-4">
           {/* Tipo comprobante */}
           <div>
             <label className="block mb-2">Comprobante</label>
             <select
-              className="border p-2 rounded text-black w-full bg-slate-700"
+              className="border border-[#2c5a60] p-2 rounded w-full bg-[#24474d] text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#36b6b0]"
               value={form.tipoComprobanteId}
               onChange={(e) =>
                 setForm({ ...form, tipoComprobanteId: e.target.value })
@@ -187,7 +187,7 @@ export default function NuevoMovimientoPage() {
           <div>
             <label className="block mb-2">Depósito Origen</label>
             <select
-              className="border p-2 rounded text-black w-full bg-slate-700"
+              className="border border-[#2c5a60] p-2 rounded w-full bg-[#24474d] text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#36b6b0]"
               value={form.depositoOrigen}
               onChange={(e) =>
                 setForm({ ...form, depositoOrigen: e.target.value })
@@ -206,7 +206,7 @@ export default function NuevoMovimientoPage() {
           <div>
             <label className="block mb-2">Tipo Movimiento</label>
             <select
-              className="border p-2 rounded text-black w-full bg-slate-700"
+              className="border border-[#2c5a60] p-2 rounded w-full bg-[#24474d] text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#36b6b0]"
               value={form.tipoMovimiento}
               onChange={(e) =>
                 setForm({
@@ -235,7 +235,7 @@ export default function NuevoMovimientoPage() {
               </label>
               {form.esTraspaso && (
                 <select
-                  className="border p-2 rounded text-black w-full mt-2"
+                  className="border border-[#2c5a60] p-2 rounded w-full mt-2 bg-[#24474d] text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#36b6b0]"
                   value={form.depositoDestino}
                   onChange={(e) =>
                     setForm({ ...form, depositoDestino: e.target.value })
@@ -257,11 +257,13 @@ export default function NuevoMovimientoPage() {
           {/* Fecha y hora */}
           <Input
             type="date"
+            className="bg-[#24474d] border border-[#2c5a60] text-gray-100"
             value={form.fecha}
             onChange={(e) => setForm({ ...form, fecha: e.target.value })}
           />
           <Input
             type="time"
+            className="bg-[#24474d] border border-[#2c5a60] text-gray-100"
             value={form.hora}
             onChange={(e) => setForm({ ...form, hora: e.target.value })}
           />
@@ -270,7 +272,7 @@ export default function NuevoMovimientoPage() {
 
       {/* Card de ítems */}
       {form.depositoOrigen && repuestosEnDeposito.length > 0 && (
-        <Card className="bg-zinc-800 mt-6">
+        <Card className="bg-[#24474d] border border-[#2f6368] mt-6">
           <CardContent className="p-4 space-y-4">
             <h2 className="text-lg font-semibold text-white">
               ➕ Agregar Repuestos
@@ -278,7 +280,7 @@ export default function NuevoMovimientoPage() {
 
             <div className="flex gap-2 items-center">
               <select
-                className="border p-2 rounded text-black flex-1"
+                className="border border-[#2c5a60] p-2 rounded flex-1 bg-[#24474d] text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#36b6b0]"
                 value={repuestoSeleccionado}
                 onChange={(e) => setRepuestoSeleccionado(e.target.value)}
               >
@@ -293,7 +295,7 @@ export default function NuevoMovimientoPage() {
 
               <input
                 type="number"
-                className="border p-2 rounded text-black w-24"
+                className="border border-[#2c5a60] p-2 rounded w-24 bg-[#24474d] text-gray-100"
                 placeholder="0"
                 min="0"
                 value={cantidad}
@@ -301,7 +303,7 @@ export default function NuevoMovimientoPage() {
               />
 
               <Button
-                className="bg-indigo-700 text-white"
+                className="bg-[#2ca6a4] hover:bg-[#249390] text-white"
                 onClick={() => {
                   if (repuestoSeleccionado && cantidad > 0) {
                     handleCantidadChange(repuestoSeleccionado, cantidad);
@@ -324,7 +326,7 @@ export default function NuevoMovimientoPage() {
                   return (
                     <li
                       key={d.repuestoId}
-                      className="flex justify-between items-center border-b border-zinc-700 pb-1"
+                      className="flex justify-between items-center border-b border-[#2f6368] pb-1"
                     >
                       <span>
                         {rep?.repuesto?.codigo} - {rep?.repuesto?.nombre}
@@ -343,7 +345,7 @@ export default function NuevoMovimientoPage() {
 
       {/* Botón final */}
       <Button
-        className="bg-indigo-700 text-white w-full"
+        className="bg-[#2ca6a4] hover:bg-[#249390] text-white w-full"
         onClick={handleSubmit}
       >
         Guardar

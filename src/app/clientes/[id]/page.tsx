@@ -118,13 +118,13 @@ export default function DetalleCliente() {
   // ====== Renderizado ======
   if (!cliente)
     return (
-      <div className="min-h-screen bg-[#1b3a3f] text-[#e8f9f9] flex items-center justify-center">
+      <div className="min-h-screen bg-[#0d1b1e] text-[#e8f9f9] flex items-center justify-center">
         Cargando información del cliente...
       </div>
     );
 
   return (
-    <div className="min-h-screen bg-[#1b3a3f] text-[#e8f9f9] p-8 space-y-10">
+    <div className="min-h-screen bg-[#0d1b1e] text-[#e8f9f9] p-8 space-y-10">
       {/* 🔹 Encabezado */}
       <section className="flex items-start justify-between border-b border-[#2f6368] pb-4">
         <div>
@@ -153,26 +153,23 @@ export default function DetalleCliente() {
         <h2 className="text-2xl font-semibold">Gestión de contratos</h2>
 
         {/* Formulario de contrato */}
-        <form
-          onSubmit={(e) => e.preventDefault()}
-          className="bg-[#24474d] rounded-xl p-6 shadow-md space-y-4 border border-[#2f6368]"
-        >
+        <form onSubmit={(e) => e.preventDefault()} className="bg-[#11292e] rounded-2xl p-6 shadow-md space-y-4 border border-[#1e3c42]">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <input
-              className="bg-[#1b3a3f] border border-[#2f6368] rounded px-3 py-2 text-[#e8f9f9] placeholder-gray-400"
+              className="bg-[#11292e] border border-[#23454e] rounded px-3 py-2 text-gray-200 placeholder-gray-400"
               placeholder="Título *"
               value={cTitulo}
               onChange={(e) => setCTitulo(e.target.value)}
             />
             <input
               type="date"
-              className="bg-[#1b3a3f] border border-[#2f6368] rounded px-3 py-2 text-[#e8f9f9]"
+              className="bg-[#11292e] border border-[#23454e] rounded px-3 py-2 text-gray-200"
               value={cInicio}
               onChange={(e) => setCInicio(e.target.value)}
             />
             <input
               type="date"
-              className="bg-[#1b3a3f] border border-[#2f6368] rounded px-3 py-2 text-[#e8f9f9]"
+              className="bg-[#11292e] border border-[#23454e] rounded px-3 py-2 text-gray-200"
               value={cFin}
               onChange={(e) => setCFin(e.target.value)}
             />
@@ -180,13 +177,13 @@ export default function DetalleCliente() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <input
-              className="bg-[#1b3a3f] border border-[#2f6368] rounded px-3 py-2 text-[#e8f9f9]"
+              className="bg-[#11292e] border border-[#23454e] rounded px-3 py-2 text-gray-200"
               placeholder="Monto *"
               value={cMonto}
               onChange={(e) => setCMonto(e.target.value)}
             />
             <select
-              className="bg-[#1b3a3f] border border-[#2f6368] rounded px-3 py-2 text-[#e8f9f9]"
+              className="bg-[#11292e] border border-[#23454e] rounded px-3 py-2 text-gray-200"
               value={cEstado}
               onChange={(e) => setCEstado(e.target.value)}
             >
@@ -196,7 +193,7 @@ export default function DetalleCliente() {
               <option value="cancelado">Cancelado</option>
             </select>
             <input
-              className="bg-[#1b3a3f] border border-[#2f6368] rounded px-3 py-2 text-[#e8f9f9]"
+              className="bg-[#11292e] border border-[#23454e] rounded px-3 py-2 text-gray-200"
               placeholder="Notas"
               value={cNotas}
               onChange={(e) => setCNotas(e.target.value)}
@@ -220,14 +217,14 @@ export default function DetalleCliente() {
         </form>
 
         {/* Lista de contratos */}
-        <ul className="divide-y divide-[#2f6368] bg-[#24474d] rounded-xl border border-[#2f6368]">
+        <ul className="divide-y divide-[#1e3c42] bg-[#11292e] rounded-2xl border border-[#1e3c42]">
           {contratos.map((c: any) => (
-            <li key={c._id} className="p-4 flex items-start justify-between hover:bg-[#2b5a60] transition">
+            <li key={c._id} className="p-4 flex items-start justify-between hover:bg-[#15393f] transition">
               <div>
                 <div className="font-semibold text-[#e8f9f9]">
                   {c.titulo} — {c.estado}
                 </div>
-                <div className="text-[#a8d8d3] text-sm">
+                <div className="text-[#93c6c1] text-sm">
                   {c.fechaInicio}
                   {c.fechaFin ? ` → ${c.fechaFin}` : ""} • ${c.monto.toLocaleString()}
                 </div>
@@ -249,10 +246,10 @@ export default function DetalleCliente() {
       {/* 🔹 Interacciones */}
       <section className="space-y-4">
         <h2 className="text-2xl font-semibold">Seguimiento de interacciones</h2>
-        <form className="bg-[#24474d] p-6 rounded-xl border border-[#2f6368] shadow space-y-3">
+        <form className="bg-[#11292e] p-6 rounded-2xl border border-[#1e3c42] shadow space-y-3">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <select
-              className="bg-[#1b3a3f] border border-[#2f6368] rounded px-3 py-2 text-[#e8f9f9]"
+              className="bg-[#11292e] border border-[#23454e] rounded px-3 py-2 text-gray-200"
               value={iTipo}
               onChange={(e) => setITipo(e.target.value)}
             >
@@ -263,13 +260,13 @@ export default function DetalleCliente() {
             </select>
             <input
               type="date"
-              className="bg-[#1b3a3f] border border-[#2f6368] rounded px-3 py-2 text-[#e8f9f9]"
+              className="bg-[#11292e] border border-[#23454e] rounded px-3 py-2 text-gray-200"
               value={iProx}
               onChange={(e) => setIProx(e.target.value)}
             />
           </div>
           <textarea
-            className="bg-[#1b3a3f] border border-[#2f6368] rounded px-3 py-2 text-[#e8f9f9] placeholder-gray-400"
+            className="bg-[#11292e] border border-[#23454e] rounded px-3 py-2 text-gray-200 placeholder-gray-400"
             rows={3}
             placeholder="Resumen de la interacción"
             value={iResumen}

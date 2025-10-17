@@ -49,17 +49,14 @@ export default function NuevoChoferPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8fafa] dark:bg-[#0b1618] p-6 text-gray-900 dark:text-gray-100 transition-colors">
-      <div className="max-w-2xl mx-auto bg-white dark:bg-[#11292e] rounded-2xl shadow-lg border border-[#e1efef] dark:border-[#1e3c42] p-8 transition-all">
+    <div className="min-h-screen bg-[#1b3a3f] text-[#e6f6f7] p-6">
+      <div className="max-w-2xl mx-auto bg-[#24474d] rounded-2xl shadow border border-[#2f6368] p-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold text-[#1a3b47] dark:text-[#e6f6f7]">
             Nuevo Chofer
           </h1>
-          <Link
-            href="/choferes"
-            className="flex items-center gap-2 text-[#36b6b0] hover:text-[#2ca6a4] transition"
-          >
+          <Link href="/choferes" className="px-3 py-1.5 rounded-lg border border-[#2f6368] bg-[#2b5a60] hover:bg-[#2f6368]">
             <ArrowLeft size={18} /> Volver
           </Link>
         </div>
@@ -75,24 +72,24 @@ export default function NuevoChoferPage() {
           {/* Nombre y Apellido */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Nombre</label>
+              <label className="block text-sm font-medium mb-1 text-[#b7e2de]">Nombre</label>
               <input
                 type="text"
                 value={nombre}
                 onChange={(e) => setNombre(e.target.value)}
                 required
-                className="w-full px-4 py-2 rounded-lg border border-[#d2e6e9] dark:border-[#23454e] bg-white dark:bg-[#11292e] focus:ring-2 focus:ring-[#36b6b0] focus:outline-none"
+                className="w-full px-3 py-2 rounded-lg border border-[#2c5a60] bg-[#24474d] text-gray-100 focus:ring-2 focus:ring-[#36b6b0] focus:outline-none"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1">Apellido</label>
+              <label className="block text-sm font-medium mb-1 text-[#b7e2de]">Apellido</label>
               <input
                 type="text"
                 value={apellido}
                 onChange={(e) => setApellido(e.target.value)}
                 required
-                className="w-full px-4 py-2 rounded-lg border border-[#d2e6e9] dark:border-[#23454e] bg-white dark:bg-[#11292e] focus:ring-2 focus:ring-[#36b6b0] focus:outline-none"
+                className="w-full px-3 py-2 rounded-lg border border-[#2c5a60] bg-[#24474d] text-gray-100 focus:ring-2 focus:ring-[#36b6b0] focus:outline-none"
               />
             </div>
           </div>
@@ -100,45 +97,45 @@ export default function NuevoChoferPage() {
           {/* DNI y Licencia */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-1">DNI</label>
+              <label className="block text-sm font-medium mb-1 text-[#b7e2de]">DNI</label>
               <input
                 type="text"
                 value={dni}
                 onChange={(e) => setDni(e.target.value)}
                 required
-                className="w-full px-4 py-2 rounded-lg border border-[#d2e6e9] dark:border-[#23454e] bg-white dark:bg-[#11292e]"
+                className="w-full px-3 py-2 rounded-lg border border-[#2c5a60] bg-[#24474d] text-gray-100"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Licencia</label>
+              <label className="block text-sm font-medium mb-1 text-[#b7e2de]">Licencia</label>
               <input
                 type="text"
                 value={licencia}
                 onChange={(e) => setLicencia(e.target.value)}
                 required
-                className="w-full px-4 py-2 rounded-lg border border-[#d2e6e9] dark:border-[#23454e] bg-white dark:bg-[#11292e]"
+                className="w-full px-3 py-2 rounded-lg border border-[#2c5a60] bg-[#24474d] text-gray-100"
               />
             </div>
           </div>
 
           {/* Teléfono */}
           <div>
-            <label className="block text-sm font-medium mb-1">Teléfono</label>
+            <label className="block text-sm font-medium mb-1 text-[#b7e2de]">Teléfono</label>
             <input
               type="text"
               value={telefono}
               onChange={(e) => setTelefono(e.target.value)}
-              className="w-full px-4 py-2 rounded-lg border border-[#d2e6e9] dark:border-[#23454e] bg-white dark:bg-[#11292e]"
+              className="w-full px-3 py-2 rounded-lg border border-[#2c5a60] bg-[#24474d] text-gray-100"
             />
           </div>
 
           {/* Estado */}
           <div>
-            <label className="block text-sm font-medium mb-1">Estado</label>
+            <label className="block text-sm font-medium mb-1 text-[#b7e2de]">Estado</label>
             <select
               value={estado}
               onChange={(e) => setEstado(e.target.value as "ACTIVO" | "INACTIVO")}
-              className="w-full px-4 py-2 rounded-lg border border-[#d2e6e9] dark:border-[#23454e] bg-white dark:bg-[#11292e]"
+              className="w-full px-3 py-2 rounded-lg border border-[#2c5a60] bg-[#24474d] text-gray-100"
             >
               <option value="ACTIVO">Activo</option>
               <option value="INACTIVO">Inactivo</option>
@@ -146,11 +143,7 @@ export default function NuevoChoferPage() {
           </div>
 
           {/* Botón */}
-          <button
-            type="submit"
-            disabled={loading}
-            className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#36b6b0] text-white font-medium hover:bg-[#2ca6a4] transition disabled:opacity-60"
-          >
+          <button type="submit" disabled={loading} className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#2ca6a4] hover:bg-[#249390] text-white font-medium transition disabled:opacity-60">
             <Save size={18} />
             {loading ? "Guardando..." : "Guardar Chofer"}
           </button>

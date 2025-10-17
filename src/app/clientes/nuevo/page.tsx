@@ -37,18 +37,19 @@ export default function NuevoCliente() {
   };
 
   return (
-    <div className="p-6 text-white bg-black min-h-screen">
-      <h1 className="text-xl font-bold mb-4">Registrar nuevo cliente</h1>
-      <form onSubmit={handleSubmit}>
+    <div className="min-h-screen bg-[#0d1b1e] text-[#e6f6f7] p-6 flex items-center justify-center">
+      <article className="w-full max-w-xl bg-[#11292e] border border-[#1e3c42] rounded-2xl p-6 shadow-sm">
+      <h1 className="text-2xl font-bold mb-4">Registrar nuevo cliente</h1>
+      <form onSubmit={handleSubmit} className="space-y-3">
         <input
-          className="border rounded px-3 py-2 mb-2 w-full bg-black text-white placeholder-gray-400"
+          className="w-full rounded-lg border border-[#23454e] bg-[#11292e] text-gray-200 placeholder-gray-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#36b6b0]"
           placeholder="Nombre"
           value={nombre}
           onChange={e => setNombre(e.target.value)}
           required
         />
         <input
-          className="border rounded px-3 py-2 mb-2 w-full bg-black text-white placeholder-gray-400"
+          className="w-full rounded-lg border border-[#23454e] bg-[#11292e] text-gray-200 placeholder-gray-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#36b6b0]"
           placeholder="Correo"
           type="email"
           value={correo}
@@ -56,24 +57,25 @@ export default function NuevoCliente() {
           required
         />
         <input
-          className="border rounded px-3 py-2 mb-2 w-full bg-black text-white placeholder-gray-400"
+          className="w-full rounded-lg border border-[#23454e] bg-[#11292e] text-gray-200 placeholder-gray-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#36b6b0]"
           placeholder="Teléfono"
           value={telefono}
           onChange={e => setTelefono(e.target.value)}
           required
         />
         <input
-          className="border rounded px-3 py-2 mb-2 w-full bg-black text-white placeholder-gray-400"
+          className="w-full rounded-lg border border-[#23454e] bg-[#11292e] text-gray-200 placeholder-gray-400 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#36b6b0]"
           placeholder="Empresa"
           value={empresa}
           onChange={e => setEmpresa(e.target.value)}
         />
-        <button className="px-4 py-2 rounded bg-white text-black" type="submit">
+        <button className="px-6 py-2.5 rounded-lg bg-[#2ca6a4] hover:bg-[#249390] text-white font-semibold shadow-sm" type="submit">
           Guardar
         </button>
-        {error && <div className="mt-2 text-red-400">{error}</div>}
-        {exito && <div className="mt-2 text-green-400">Cliente registrado correctamente.</div>}
+        {error && <div className="mt-2 text-red-300">{error}</div>}
+        {exito && <div className="mt-2 text-emerald-300">Cliente registrado correctamente.</div>}
       </form>
+      </article>
     </div>
   );
 }

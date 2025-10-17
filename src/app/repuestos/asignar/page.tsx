@@ -30,19 +30,17 @@ export default function AsignarRepuestoPage() {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen p-6">
-      <Card className="w-full max-w-md shadow-lg rounded-2xl bg-slate-500">
+    <div className="flex justify-center items-center min-h-screen p-6 bg-[#1b3a3f] text-[#e6f6f7]">
+      <Card className="w-full max-w-md shadow-lg rounded-2xl bg-[#24474d] border border-[#2f6368]">
         <CardContent className="p-6 space-y-6">
-          <h1 className="text-xl font-bold text-gray-800">
-            ➕ Asignar Repuesto a Depósito
-          </h1>
+          <h1 className="text-xl font-bold">➕ Asignar Repuesto a Depósito</h1>
 
           {/* Select Depósito */}
           <div className="space-y-2">
             <Label htmlFor="deposito">Depósito</Label>
             <select
               id="deposito"
-              className="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring focus:ring-indigo-200 p-2"
+              className="w-full rounded-lg border border-[#2c5a60] bg-[#24474d] text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#36b6b0] p-2"
               value={depositoId ?? ""}
               onChange={(e) => setDepositoId(e.target.value as Id<"depositos">)}
             >
@@ -60,7 +58,7 @@ export default function AsignarRepuestoPage() {
             <Label htmlFor="repuesto">Repuesto</Label>
             <select
               id="repuesto"
-              className="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring focus:ring-indigo-200 p-2"
+              className="w-full rounded-lg border border-[#2c5a60] bg-[#24474d] text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#36b6b0] p-2"
               value={repuestoId ?? ""}
               onChange={(e) => setRepuestoId(e.target.value as Id<"repuestos">)}
             >
@@ -88,7 +86,7 @@ export default function AsignarRepuestoPage() {
           {/* Botón */}
           <Button
             onClick={handleSubmit}
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg py-2"
+            className="w-full bg-[#2ca6a4] hover:bg-[#249390] text-white rounded-lg py-2"
           >
             Asignar
           </Button>

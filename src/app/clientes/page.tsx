@@ -11,7 +11,7 @@ export default function ListaDeClientes() {
   const clientes = useQuery(api.clientes.listar, { busqueda }) ?? [];
 
   return (
-    <div className="min-h-screen bg-[#1b3a3f] p-6 space-y-8 transition-colors duration-300">
+    <div className="min-h-screen bg-[#0d1b1e] p-6 space-y-8 transition-colors duration-300">
       {/* Header */}
       <header className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
@@ -33,23 +33,23 @@ export default function ListaDeClientes() {
 
       {/* Barra de búsqueda */}
       <div className="relative w-full md:max-w-md">
-        <Search className="absolute left-3 top-2.5 text-[#5ba7a1]" size={20} />
+        <Search className="absolute left-3 top-2.5 text-[#7ca6a8]" size={20} />
         <input
           type="text"
           placeholder="Buscar por nombre, correo o empresa…"
-          className="pl-10 pr-4 py-2 border border-[#2c5a60] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#36b6b0] bg-[#24474d] text-gray-100 w-full shadow-sm placeholder:text-gray-400"
+          className="pl-10 pr-4 py-2 border border-[#23454e] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#36b6b0] bg-[#11292e] text-gray-200 w-full shadow-sm placeholder:text-gray-400"
           value={busqueda}
           onChange={(e) => setBusqueda(e.target.value)}
         />
       </div>
 
       {/* Tabla de clientes */}
-      <div className="bg-[#24474d] rounded-xl shadow-md border border-[#2f6368] overflow-hidden">
+      <div className="bg-[#11292e] rounded-2xl shadow-md border border-[#1e3c42] overflow-hidden">
         {clientes.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-[#2b5a60] text-[#b7e2de] text-sm">
+                <tr className="bg-[#0e2529] text-[#9ed1cd] text-sm">
                   <th className="p-3 font-medium">Nombre</th>
                   <th className="p-3 font-medium">Correo</th>
                   <th className="p-3 font-medium">Empresa</th>
@@ -62,15 +62,15 @@ export default function ListaDeClientes() {
                 {clientes.map((c: any) => (
                   <tr
                     key={c._id}
-                    className="border-t border-[#2f6368] hover:bg-[#2b5a60] transition"
+                    className="border-t border-[#1e3c42] hover:bg-[#15393f] transition"
                   >
-                    <td className="p-3 text-[#e2f7f6] font-medium">
+                    <td className="p-3 text-[#d6f4f4] font-medium">
                       {c.nombre}
                     </td>
-                    <td className="p-3 text-[#e2f7f6]">{c.correo}</td>
-                    <td className="p-3 text-[#e2f7f6]">{c.empresa || "—"}</td>
-                    <td className="p-3 text-[#e2f7f6]">{c.telefono || "—"}</td>
-                    <td className="p-3 text-[#e2f7f6] max-w-xs truncate">
+                    <td className="p-3 text-[#d6f4f4]">{c.correo}</td>
+                    <td className="p-3 text-[#d6f4f4]">{c.empresa || "—"}</td>
+                    <td className="p-3 text-[#d6f4f4]">{c.telefono || "—"}</td>
+                    <td className="p-3 text-[#d6f4f4] max-w-xs truncate">
                       {c.notas || ""}
                     </td>
                     <td className="p-3">
@@ -87,7 +87,7 @@ export default function ListaDeClientes() {
             </table>
           </div>
         ) : (
-          <div className="p-6 text-center text-[#b7e2de]">
+          <div className="p-6 text-center text-gray-400">
             No se encontraron clientes con ese criterio.
           </div>
         )}

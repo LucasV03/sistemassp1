@@ -11,7 +11,7 @@ export default function ViajesPage() {
   const [busqueda, setBusqueda] = useState("");
 
   return (
-    <div className="min-h-screen bg-[#1b3a3f] p-8 text-[#e8f9f9]">
+    <div className="min-h-screen bg-[#0d1b1e] p-8 text-[#e8f9f9]">
       {/* Header */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
         <div>
@@ -23,11 +23,11 @@ export default function ViajesPage() {
 
         <div className="flex items-center gap-3">
           <div className="relative">
-            <Search className="absolute left-3 top-2.5 text-[#5ba7a1]" size={20} />
+            <Search className="absolute left-3 top-2.5 text-[#7ca6a8]" size={20} />
             <input
               type="text"
               placeholder="Buscar viaje o cliente..."
-              className="pl-10 pr-4 py-2 border border-[#2f6368] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#36b6b0] bg-[#24474d] text-gray-100 w-64 shadow-sm placeholder:text-gray-400"
+              className="pl-10 pr-4 py-2 border border-[#23454e] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#36b6b0] bg-[#11292e] text-gray-200 w-64 shadow-sm placeholder:text-gray-400"
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
             />
@@ -53,12 +53,12 @@ export default function ViajesPage() {
       )}
 
       {/* Tabla */}
-      <div className="bg-[#24474d] rounded-xl shadow-md border border-[#2f6368] p-6">
-        <h2 className="text-xl font-semibold mb-4">Listado de viajes</h2>
+      <div className="bg-[#11292e] rounded-2xl shadow-md border border-[#1e3c42] p-6">
+        <h2 className="text-xl font-bold text-[#e8f8f8] mb-4">Listado de viajes</h2>
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="text-[#b7e2de] border-b border-[#2f6368] text-sm">
+              <tr className="bg-[#0e2529] text-[#9ed1cd] text-sm">
                 <th className="p-3 font-medium">Cliente</th>
                 <th className="p-3 font-medium">Chofer</th>
                 <th className="p-3 font-medium">Origen</th>
@@ -75,15 +75,12 @@ export default function ViajesPage() {
                     v.choferNombre?.toLowerCase().includes(busqueda.toLowerCase())
                 )
                 .map((v: any) => (
-                  <tr
-                    key={v._id}
-                    className="border-t border-[#2f6368] hover:bg-[#2b5a60] transition"
-                  >
-                    <td className="p-3">{v.clienteNombre}</td>
-                    <td className="p-3">{v.choferNombre}</td>
-                    <td className="p-3">{v.origen}</td>
-                    <td className="p-3">{v.destino}</td>
-                    <td className="p-3">{v.distanciaKm} km</td>
+                  <tr key={v._id} className="border-t border-[#1e3c42] hover:bg-[#15393f] transition">
+                    <td className="p-3 text-[#d6f4f4]">{v.clienteNombre}</td>
+                    <td className="p-3 text-[#d6f4f4]">{v.choferNombre}</td>
+                    <td className="p-3 text-[#d6f4f4]">{v.origen}</td>
+                    <td className="p-3 text-[#d6f4f4]">{v.destino}</td>
+                    <td className="p-3 text-[#d6f4f4]">{v.distanciaKm} km</td>
                     <td className="p-3">
                       <EstadoPill estado={v.estado} />
                     </td>
@@ -99,14 +96,14 @@ export default function ViajesPage() {
 
 function KpiCard({ icon: Icon, color, label, value }: any) {
   return (
-    <div className="bg-[#24474d] rounded-xl border border-[#2f6368] shadow-md p-6 relative">
+    <div className="bg-[#11292e] rounded-xl border border-[#1e3c42] shadow-md p-6 relative">
       <div className="flex items-center gap-4">
         <div className="p-4 rounded-xl" style={{ backgroundColor: `${color}22` }}>
           {Icon ? <Icon style={{ color }} size={28} /> : <Truck style={{ color }} size={28} />}
         </div>
         <div>
-          <p className="text-[#a8d8d3] text-sm mb-1">{label}</p>
-          <p className="text-3xl font-bold">{value}</p>
+          <p className="text-[#93c6c1] text-sm mb-1">{label}</p>
+          <p className="text-3xl font-bold text-[#e8f8f8]">{value}</p>
         </div>
       </div>
       <MoreVertical className="absolute right-4 top-4 text-[#7bbdb7]" size={18} />

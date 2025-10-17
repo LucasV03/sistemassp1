@@ -90,13 +90,13 @@ export default function NuevoViajePage() {
         <form onSubmit={handleSubmit} className="grid gap-4">
           {/* CLIENTE */}
           <div>
-            <label className="text-sm mb-1 block">Cliente *</label>
+            <label className="text-sm mb-1 block text-[#93c6c1]">Cliente *</label>
             <select
               value={clienteId}
               onChange={(e) =>
                 setClienteId(e.target.value as Id<"clientes_ventas">)
               }
-              className="w-full px-4 py-2 rounded-lg border border-[#2f6368] bg-[#1b3a3f]"
+              className="w-full px-4 py-2 rounded-lg border border-[#23454e] bg-[#11292e] text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#36b6b0]"
             >
               <option value="">Seleccionar cliente</option>
               {clientes.map((c: any) => (
@@ -109,13 +109,13 @@ export default function NuevoViajePage() {
 
           {/* CHOFER */}
           <div>
-            <label className="text-sm mb-1 block">Chofer *</label>
+            <label className="text-sm mb-1 block text-[#93c6c1]">Chofer *</label>
             <select
               value={choferId}
               onChange={(e) =>
                 setChoferId(e.target.value as Id<"choferes">)
               }
-              className="w-full px-4 py-2 rounded-lg border border-[#2f6368] bg-[#1b3a3f]"
+              className="w-full px-4 py-2 rounded-lg border border-[#23454e] bg-[#11292e] text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#36b6b0]"
             >
               <option value="">Seleccionar chofer</option>
               {choferes.map((ch: any) => (
@@ -129,11 +129,11 @@ export default function NuevoViajePage() {
           {/* ORIGEN / DESTINO */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="text-sm mb-1 block">Origen *</label>
+              <label className="text-sm mb-1 block text-[#93c6c1]">Origen *</label>
               <select
                 value={origen}
                 onChange={(e) => setOrigen(e.target.value)}
-                className="w-full px-4 py-2 rounded-lg border border-[#2f6368] bg-[#1b3a3f]"
+                className="w-full px-4 py-2 rounded-lg border border-[#23454e] bg-[#11292e] text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#36b6b0]"
               >
                 <option value="">Seleccionar origen</option>
                 {Object.keys(DISTANCIAS_PREDEFINIDAS).map((p) => (
@@ -145,11 +145,11 @@ export default function NuevoViajePage() {
             </div>
 
             <div>
-              <label className="text-sm mb-1 block">Destino *</label>
+              <label className="text-sm mb-1 block text-[#93c6c1]">Destino *</label>
               <select
                 value={destino}
                 onChange={(e) => setDestino(e.target.value)}
-                className="w-full px-4 py-2 rounded-lg border border-[#2f6368] bg-[#1b3a3f]"
+                className="w-full px-4 py-2 rounded-lg border border-[#23454e] bg-[#11292e] text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#36b6b0]"
               >
                 <option value="">Seleccionar destino</option>
                 {Object.keys(DISTANCIAS_PREDEFINIDAS).map((p) => (
@@ -163,20 +163,20 @@ export default function NuevoViajePage() {
 
           {/* DISTANCIA */}
           <div>
-            <label className="text-sm mb-1 block">Distancia (km)</label>
+            <label className="text-sm mb-1 block text-[#93c6c1]">Distancia (km)</label>
             <input
               type="number"
               value={distanciaKm}
               onChange={(e) => setDistanciaKm(e.target.value)}
               placeholder="Distancia en km"
-              className="px-4 py-2 rounded-lg border border-[#2f6368] bg-[#1b3a3f]"
+              className="px-4 py-2 rounded-lg border border-[#23454e] bg-[#11292e] text-gray-200"
               readOnly
             />
           </div>
 
           {/* ESTADO */}
           <div>
-            <label className="text-sm mb-1 block">Estado</label>
+            <label className="text-sm mb-1 block text-[#93c6c1]">Estado</label>
             <select
               value={estado}
               onChange={(e) =>
@@ -188,7 +188,7 @@ export default function NuevoViajePage() {
                     | "CANCELADO"
                 )
               }
-              className="px-4 py-2 rounded-lg border border-[#2f6368] bg-[#1b3a3f]"
+              className="px-4 py-2 rounded-lg border border-[#23454e] bg-[#11292e] text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#36b6b0]"
             >
               <option value="PENDIENTE">PENDIENTE</option>
               <option value="EN_CURSO">EN CURSO</option>

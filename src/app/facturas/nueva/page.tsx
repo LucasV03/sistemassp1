@@ -124,7 +124,7 @@ export default function NuevaFacturaPage() {
   }
 
   return (
-    <div className="p-6 space-y-6 text-white">
+    <div className="min-h-screen bg-[#1b3a3f] text-[#e6f6f7] p-6 space-y-6">
       <h1 className="text-2xl font-bold">Nuevo Comprobante</h1>
 
       {err && (
@@ -138,7 +138,7 @@ export default function NuevaFacturaPage() {
         {/* Proveedor */}
         <LabelField label="Proveedor">
           <select
-            className="inp"
+            className="pl-3 pr-4 py-2 rounded-lg border border-[#2c5a60] bg-[#24474d] text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#36b6b0]"
             value={proveedorId}
             onChange={(e) => setProveedorId(e.target.value)}
           >
@@ -152,13 +152,13 @@ export default function NuevaFacturaPage() {
         </LabelField>
 
         <LabelField label="CUIT">
-          <input className="inp" value={cuit} readOnly placeholder="CUIT" />
+          <input className="pl-3 pr-4 py-2 rounded-lg border border-[#2c5a60] bg-[#24474d] text-gray-100 placeholder-gray-400" value={cuit} readOnly placeholder="CUIT" />
         </LabelField>
 
         {/* Tipo de comprobante */}
         <LabelField label="Tipo de comprobante">
           <select
-            className="inp"
+            className="pl-3 pr-4 py-2 rounded-lg border border-[#2c5a60] bg-[#24474d] text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#36b6b0]"
             value={tipoComprobanteId}
             onChange={(e) => setTipoComprobanteId(e.target.value)}
           >
@@ -174,7 +174,7 @@ export default function NuevaFacturaPage() {
         {/* Tipo factura (A/B/C) */}
         <LabelField label="Tipo de factura">
           <select
-            className="inp"
+            className="pl-3 pr-4 py-2 rounded-lg border border-[#2c5a60] bg-[#24474d] text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#36b6b0]"
             value={tipoFactura}
             onChange={(e) => setTipoFactura(e.target.value)}
           >
@@ -187,7 +187,7 @@ export default function NuevaFacturaPage() {
         {/* Sucursal */}
         <LabelField label="Sucursal">
           <input
-            className="inp"
+            className="pl-3 pr-4 py-2 rounded-lg border border-[#2c5a60] bg-[#24474d] text-gray-100 placeholder-gray-400"
             value={sucursal}
             onChange={(e) => setSucursal(e.target.value)}
             placeholder="0001"
@@ -197,7 +197,7 @@ export default function NuevaFacturaPage() {
         {/* Número */}
         <LabelField label="Número">
           <input
-            className="inp"
+            className="pl-3 pr-4 py-2 rounded-lg border border-[#2c5a60] bg-[#24474d] text-gray-100 placeholder-gray-400"
             value={numero}
             onChange={(e) => setNumero(e.target.value)}
             placeholder="00000001"
@@ -208,7 +208,7 @@ export default function NuevaFacturaPage() {
         <LabelField label="Fecha">
           <input
             type="date"
-            className="inp"
+            className="pl-3 pr-4 py-2 rounded-lg border border-[#2c5a60] bg-[#24474d] text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#36b6b0]"
             value={fecha}
             onChange={(e) => setFecha(e.target.value)}
             required
@@ -218,7 +218,7 @@ export default function NuevaFacturaPage() {
         <LabelField label="Hora">
           <input
             type="time"
-            className="inp"
+            className="pl-3 pr-4 py-2 rounded-lg border border-[#2c5a60] bg-[#24474d] text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#36b6b0]"
             value={hora}
             onChange={(e) => setHora(e.target.value)}
             required
@@ -232,16 +232,16 @@ export default function NuevaFacturaPage() {
           <h2 className="font-medium">Ítems</h2>
           <button
             type="button"
-            className="px-3 py-1 rounded bg-neutral-800 hover:bg-neutral-700"
+            className="px-3 py-1.5 rounded-lg border border-[#2f6368] bg-[#2b5a60] hover:bg-[#2f6368]"
             onClick={addRow}
           >
             Agregar ítem
           </button>
         </div>
 
-        <div className="rounded border border-neutral-800 overflow-hidden bg-[#0c0c0c]">
+        <div className="bg-[#24474d] border border-[#2f6368] rounded-xl overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-neutral-900 text-neutral-100">
+            <thead className="bg-[#2b5a60] text-[#b7e2de]">
               <tr>
                 <th className="p-2 text-left">Repuesto</th>
                 <th className="p-2 text-left">Descripción</th>
@@ -253,10 +253,10 @@ export default function NuevaFacturaPage() {
             </thead>
             <tbody>
               {items.map((it, i) => (
-                <tr key={i} className="border-t border-neutral-800">
+                <tr key={i} className="border-t border-[#2f6368] hover:bg-[#2b5a60] transition">
                   <td className="p-2">
                     <select
-                      className="inp"
+                      className="pl-3 pr-4 py-1.5 rounded-lg border border-[#2c5a60] bg-[#24474d] text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#36b6b0]"
                       value={String(it.repuestoId ?? "")}
                       onChange={(e) => {
                         const val = e.target.value as any;
@@ -280,7 +280,7 @@ export default function NuevaFacturaPage() {
                   </td>
                   <td className="p-2">
                     <input
-                      className="inp"
+                      className="pl-3 pr-4 py-1.5 rounded-lg border border-[#2c5a60] bg-[#24474d] text-gray-100"
                       value={it.descripcion}
                       onChange={(e) => updateRow(i, { descripcion: e.target.value })}
                     />
@@ -288,7 +288,7 @@ export default function NuevaFacturaPage() {
                   <td className="p-2 text-right">
                     <input
                       type="number"
-                      className="inp text-right"
+                      className="pl-3 pr-4 py-1.5 rounded-lg border border-[#2c5a60] bg-[#24474d] text-gray-100 text-right"
                       value={it.cantidad}
                       onChange={(e) => updateRow(i, { cantidad: Number(e.target.value) || 0 })}
                     />
@@ -296,7 +296,7 @@ export default function NuevaFacturaPage() {
                   <td className="p-2 text-right">
                     <input
                       type="number"
-                      className="inp text-right"
+                      className="pl-3 pr-4 py-1.5 rounded-lg border border-[#2c5a60] bg-[#24474d] text-gray-100 text-right"
                       value={it.precio}
                       onChange={(e) => updateRow(i, { precio: Number(e.target.value) || 0 })}
                     />
@@ -307,10 +307,10 @@ export default function NuevaFacturaPage() {
                   <td className="p-2 text-right">
                     <button
                       type="button"
-                      className="px-2 py-1 bg-red-600/80 hover:bg-red-600 rounded text-white"
+                      className="px-3 py-1.5 rounded-lg bg-red-700/70 hover:bg-red-600/80 text-white text-xs font-medium transition"
                       onClick={() => removeRow(i)}
                     >
-                      Del
+                      Eliminar
                     </button>
                   </td>
                 </tr>
@@ -318,7 +318,7 @@ export default function NuevaFacturaPage() {
 
               {items.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="p-4 text-center text-neutral-400">
+                  <td colSpan={6} className="p-4 text-center text-[#b7e2de]">
                     Agregá al menos un ítem.
                   </td>
                 </tr>
@@ -328,9 +328,9 @@ export default function NuevaFacturaPage() {
         </div>
 
         {/* Totales */}
-        <div className="flex justify-end text-sm text-neutral-200">
+        <div className="flex justify-end text-sm">
           <div className="w-full sm:w-80">
-            <div className="flex justify-between border-t border-neutral-800 mt-1 pt-2 font-semibold">
+            <div className="flex justify-between border-t border-[#2f6368] mt-1 pt-2 font-semibold">
               <span>Total</span>
               <span>{moneyFmt.format(preview.subtotal)}</span>
             </div>
@@ -343,27 +343,20 @@ export default function NuevaFacturaPage() {
         <button
           onClick={submit}
           disabled={saving}
-          className="px-4 py-2 rounded bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white"
+          className="px-4 py-2 rounded-lg bg-[#2ca6a4] hover:bg-[#249390] disabled:opacity-50 text-white font-semibold shadow-sm"
         >
           {saving ? "Guardando…" : "Guardar Comprobante"}
         </button>
         <button
           onClick={() => router.back()}
-          className="px-4 py-2 rounded bg-neutral-800 hover:bg-neutral-700 text-neutral-200"
+          className="px-4 py-2 rounded-lg border border-[#2f6368] bg-[#2b5a60] hover:bg-[#2f6368]"
         >
           Cancelar
         </button>
       </div>
 
       <style jsx>{`
-        .inp {
-          background: #0a0a0a;
-          border: 1px solid #404040;
-          color: #e5e5e5;
-          border-radius: 0.5rem;
-          padding: 0.4rem 0.6rem;
-          width: 100%;
-        }
+        .inp { /* overriding legacy class if used elsewhere */ }
       `}</style>
     </div>
   );

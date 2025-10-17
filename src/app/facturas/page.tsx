@@ -82,27 +82,31 @@ export default function ComprobantesProvPage() {
   if (!comprobantes) return <div className="p-6 text-neutral-300">Cargando…</div>;
 
   return (
-    <div className="p-6 space-y-6">
+    // CAMBIO 1: Fondo principal
+    <div className="min-h-screen bg-[#0b1618] text-[#e6f6f7] p-6 space-y-8">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-white">Comprobantes de Proveedor</h1>
+        <h1 className="text-2xl font-bold">Comprobantes de Proveedor</h1>
         <div className="flex items-center gap-3">
+          {/* Botón principal */}
           <Link
             href="/facturas/nueva"
-            className="px-3 py-2 rounded bg-indigo-600 text-white hover:bg-indigo-500"
+            className="px-3 py-2 rounded-lg bg-[#36b6b0] text-white hover:bg-[#2ca6a4] font-semibold shadow-sm"
           >
             + Nuevo Comprobante
           </Link>
+          {/* Botón secundario */}
            <Link
-    href="/facturas/pagos/nuevo"
-    className="px-3 py-2 rounded bg-emerald-600 text-white hover:bg-emerald-500"
-  >
-    + Nuevo Pago
-  </Link>
-          <div className="px-3 py-2 rounded bg-neutral-900 border border-neutral-700 text-neutral-200">
+              href="/facturas/pagos/nuevo"
+              className="px-3 py-2 rounded bg-emerald-600 text-white hover:bg-emerald-500 font-semibold shadow-sm"
+            >
+              + Nuevo Pago
+          </Link>
+          {/* KPIs en header - CAMBIO 2: Fondo y borde de KPI boxes */}
+          <div className="px-3 py-2 rounded bg-[#11292e] border border-[#1e3c42]">
             Pendiente: <b>{moneyFmt("ARS").format(kpis.totalPendiente)}</b>
           </div>
-          <div className="px-3 py-2 rounded bg-neutral-900 border border-neutral-700 text-neutral-200">
+          <div className="px-3 py-2 rounded bg-[#11292e] border border-[#1e3c42]">
             Vencidas: <b>{kpis.cantVencidas}</b>
           </div>
         </div>
@@ -110,16 +114,18 @@ export default function ComprobantesProvPage() {
 
       {/* Filtros */}
       <div className="flex flex-wrap gap-2 items-center">
+        {/* Input de búsqueda - CAMBIO 3: Fondo, borde y texto de input */}
         <input
           value={buscar}
           onChange={(e) => setBuscar(e.target.value)}
           placeholder="Buscar Nº / sucursal / proveedor..."
-          className="bg-neutral-900 text-sm px-3 py-2 rounded border border-neutral-700 w-64 text-neutral-100"
+          className="bg-[#11292e] text-sm px-3 py-2 rounded border border-[#1e3c42] w-64 text-gray-200 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#36b6b0]"
         />
+        {/* Select de estado - CAMBIO 4: Fondo, borde y texto de select */}
         <select
           value={estado}
           onChange={(e) => setEstado(e.target.value as Estado)}
-          className="bg-neutral-900 text-sm px-3 py-2 rounded border border-neutral-700 text-neutral-100"
+          className="bg-[#11292e] text-sm px-3 py-2 rounded border border-[#1e3c42] text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#36b6b0]"
         >
           <option value="">Todos</option>
           <option value="PENDIENTE">PENDIENTE</option>
@@ -129,70 +135,73 @@ export default function ComprobantesProvPage() {
         </select>
       </div>
 
-      {/* Tabla */}
-      <div className="rounded-md border border-neutral-800 overflow-hidden text-zinc-400">
+      {/* Tabla - CAMBIO 5: Fondo, borde, header y filas */}
+      <div className="bg-[#11292e] border border-[#1e3c42] rounded-xl overflow-hidden shadow-xl">
         <table className="w-full text-sm">
-          <thead className="bg-neutral-900 text-zinc-300">
+          {/* Header de la tabla */}
+          <thead className="bg-[#1e3c42] text-[#9ed1cd]">
             <tr>
-              <th className="px-4 py-2 text-left">Tipo</th>
-              <th className="px-4 py-2 text-left">Comprobante</th>
-              <th className="px-4 py-2 text-left">Proveedor</th>
-              <th className="px-4 py-2 text-left">Fecha</th>
-              <th className="px-4 py-2 text-left">Hora</th>
-              <th className="px-4 py-2 text-left">Estado</th>
-              <th className="px-4 py-2 text-right">Total</th>
-              <th className="px-4 py-2 text-right">Saldo</th>
-              <th className="px-4 py-2 text-right">Acciones</th>
+              <th className="px-4 py-3 text-left">Tipo</th>
+              <th className="px-4 py-3 text-left">Comprobante</th>
+              <th className="px-4 py-3 text-left">Proveedor</th>
+              <th className="px-4 py-3 text-left">Fecha</th>
+              <th className="px-4 py-3 text-left">Hora</th>
+              <th className="px-4 py-3 text-left">Estado</th>
+              <th className="px-4 py-3 text-right">Total</th>
+              <th className="px-4 py-3 text-right">Saldo</th>
+              <th className="px-4 py-3 text-right">Acciones</th>
             </tr>
           </thead>
           <tbody>
             {filtrados.map((c) => {
               const m = moneyFmt("ARS");
               return (
-                <tr key={c._id} className="border-t border-neutral-800">
-                  <td className="px-4 py-2">{c.letra}</td>
-                  <td className="px-4 py-2">
+                <tr key={c._id} className="border-t border-[#1e3c42] hover:bg-[#15393f] transition">
+                  <td className="px-4 py-3">{c.letra}</td>
+                  <td className="px-4 py-3">
                     {c.sucursal}-{c.numero}
                   </td>
-                  <td className="px-4 py-2">{c.proveedorNombre ?? "(sin proveedor)"}</td>
-                  <td className="px-4 py-2">
+                  <td className="px-4 py-3">{c.proveedorNombre ?? "(sin proveedor)"}</td>
+                  <td className="px-4 py-3">
                     {new Date(c.fecha).toLocaleDateString("es-AR")}
                   </td>
-                  <td className="px-4 py-2">{c.hora ?? "—"}</td>
-                  <td className="px-4 py-2">
+                  <td className="px-4 py-3">{c.hora ?? "—"}</td>
+                  <td className="px-4 py-3">
                     <span
                       className={cn(
-                        "px-2 py-1 rounded border",
+                        "px-2 py-1 rounded border text-xs font-medium",
                         c.estado === "PAGADO" &&
-                          "bg-green-700/40 border-green-600 text-green-100",
+                          "bg-green-700/40 border-green-600 text-green-300",
                         c.estado === "PARCIAL" &&
-                          "bg-yellow-700/40 border-yellow-600 text-yellow-100",
+                          "bg-yellow-700/40 border-yellow-600 text-yellow-300",
+                        // CAMBIO 6: Color de estado PENDIENTE
                         c.estado === "PENDIENTE" &&
-                          "bg-neutral-800 border-neutral-600 text-neutral-200",
+                          "bg-[#1e3c42] border-[#2e5d65] text-[#d6f4f4]",
                         c.estado === "ANULADO" &&
-                          "bg-red-800/40 border-red-600 text-red-100"
+                          "bg-red-800/40 border-red-600 text-red-300"
                       )}
                     >
                       {c.estado}
                     </span>
                   </td>
-                  <td className="px-4 py-2 text-right">{m.format(c.total ?? 0)}</td>
-                  <td className="px-4 py-2 text-right">{m.format(c.saldo ?? 0)}</td>
-                  <td className="px-4 py-2 text-right">
-  <div className="flex gap-2 justify-end">
-    <Link
-      href={`/facturas/${c._id}`}
-      className="px-2 py-1 rounded bg-blue-600 text-white hover:bg-blue-500"
-    >
-      Ver Detalles
-    </Link>
-    {c.estado !== "ANULADO" && c.estado !== "PAGADO" && (
-      <button className="px-2 py-1 rounded bg-red-600 text-white hover:bg-red-500">
-        Anular
-      </button>
-    )}
-  </div>
-</td>
+                  <td className="px-4 py-3 text-right">{m.format(c.total ?? 0)}</td>
+                  <td className="px-4 py-3 text-right">{m.format(c.saldo ?? 0)}</td>
+                  <td className="px-4 py-3 text-right">
+                    <div className="flex gap-2 justify-end">
+                      {/* Botón Ver Detalles - Mantengo el color de énfasis */}
+                      <Link
+                        href={`/facturas/${c._id}`}
+                        className="px-3 py-1.5 rounded-lg bg-[#36b6b0] hover:bg-[#2ca6a4] text-white text-xs font-medium transition"
+                      >
+                        Ver Detalles
+                      </Link>
+                      {c.estado !== "ANULADO" && c.estado !== "PAGADO" && (
+                        <button className="px-3 py-1.5 rounded-lg bg-red-700/70 text-white hover:bg-red-600/80 text-xs font-medium transition">
+                          Anular
+                        </button>
+                      )}
+                    </div>
+                  </td>
                 </tr>
               );
             })}
@@ -209,15 +218,17 @@ export default function ComprobantesProvPage() {
 
       {/* Modal de pago */}
       {showPagoModal && comprobanteSeleccionado && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-          <div className="bg-neutral-900 p-6 rounded-lg shadow-lg w-full max-w-lg space-y-4 border border-neutral-700">
-            <h2 className="text-lg font-bold text-white">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
+          {/* CAMBIO 7: Fondo y borde del Modal */}
+          <div className="bg-[#11292e] p-6 rounded-xl shadow-2xl w-full max-w-lg space-y-4 border border-[#1e3c42]">
+            <h2 className="text-xl font-bold text-[#e8f8f8]">
               Pagar comprobante {comprobanteSeleccionado.sucursal}-
               {comprobanteSeleccionado.numero}
             </h2>
 
             {pagos.map((pago, idx) => (
               <div key={idx} className="flex gap-2 items-center">
+                {/* CAMBIO 8: Fondo y borde de selects e inputs dentro del modal */}
                 <select
                   value={pago.medio}
                   onChange={(e) => {
@@ -225,7 +236,7 @@ export default function ComprobantesProvPage() {
                     updated[idx].medio = e.target.value as Medio;
                     setPagos(updated);
                   }}
-                  className="bg-neutral-800 text-white px-2 py-1 rounded border border-neutral-600"
+                  className="bg-[#0b1618] text-white px-3 py-2 rounded-lg border border-[#1e3c42] focus:ring-[#36b6b0] focus:border-[#36b6b0] transition"
                 >
                   <option value="EFECTIVO">Efectivo</option>
                   <option value="TRANSFERENCIA">Transferencia</option>
@@ -241,11 +252,11 @@ export default function ComprobantesProvPage() {
                     updated[idx].importe = parseFloat(e.target.value) || 0;
                     setPagos(updated);
                   }}
-                  className="bg-neutral-800 text-white px-2 py-1 rounded border border-neutral-600 w-32"
+                  className="bg-[#0b1618] text-white px-3 py-2 rounded-lg border border-[#1e3c42] w-32 focus:ring-[#36b6b0] focus:border-[#36b6b0] transition"
                 />
                 <button
                   onClick={() => setPagos(pagos.filter((_, i) => i !== idx))}
-                  className="text-red-400 hover:text-red-200"
+                  className="text-red-400 hover:text-red-300 p-2 rounded-full hover:bg-[#1e3c42] transition"
                 >
                   ✕
                 </button>
@@ -254,21 +265,23 @@ export default function ComprobantesProvPage() {
 
             <button
               onClick={() => setPagos([...pagos, { medio: "EFECTIVO", importe: 0 }])}
-              className="px-2 py-1 rounded bg-blue-600 text-white hover:bg-blue-500"
+              className="px-3 py-2 rounded-lg bg-[#36b6b0] text-white hover:bg-[#2ca6a4] font-medium transition"
             >
               + Agregar método
             </button>
 
-            <div className="flex justify-end gap-2">
+            <div className="flex justify-end gap-3 pt-2">
               <button
                 onClick={() => setShowPagoModal(false)}
-                className="px-3 py-2 rounded bg-neutral-700 text-white"
+                // CAMBIO 9: Botón Cancelar
+                className="px-4 py-2 rounded-lg bg-[#1e3c42] text-white hover:bg-[#2e5d65] transition font-medium"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleConfirmarPago}
-                className="px-3 py-2 rounded bg-emerald-600 text-white hover:bg-emerald-500"
+                // Botón Confirmar Pago - Mantiene color de éxito/énfasis
+                className="px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-500 transition font-medium"
               >
                 Confirmar Pago
               </button>
