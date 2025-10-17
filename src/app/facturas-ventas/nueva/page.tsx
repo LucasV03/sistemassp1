@@ -27,6 +27,7 @@ export default function NuevaFacturaVentaPage() {
 
   // 💰 Configuración de facturación
   const PRECIO_POR_KM = 5000;
+  const [precioKm, setPrecioKm] = useState<number>(PRECIO_POR_KM);
   const COMISION_CHOFER_PORC = 0.1; // 10%
 
   // Fecha y hora actual
@@ -45,7 +46,7 @@ export default function NuevaFacturaVentaPage() {
   // 🔹 Agregar viaje como ítem facturable
   const addItem = (viaje: any) => {
     const desc = `${viaje.origen} → ${viaje.destino} (${viaje.distanciaKm} km)`;
-    const base = viaje.distanciaKm * PRECIO_POR_KM;
+    const base = viaje.distanciaKm * precioKm;
     const comisionChofer = base * COMISION_CHOFER_PORC;
     const precioTotal = base + comisionChofer;
 
@@ -61,9 +62,23 @@ export default function NuevaFacturaVentaPage() {
         subtotal: precioTotal,
         base,
         comisionChofer,
+        distanciaKm: viaje.distanciaKm,
       },
     ]);
   };
+
+  // Recalcular ítems cuando cambia el precio por km
+  useMemo(() => {
+    setItems((prev) =>
+      prev.map((i) => {
+        if (typeof i.distanciaKm !== "number") return i;
+        const base = i.distanciaKm * precioKm;
+        const comisionChofer = base * COMISION_CHOFER_PORC;
+        const precioTotal = base + comisionChofer;
+        return { ...i, base, comisionChofer, precioUnitario: precioTotal, subtotal: precioTotal };
+      })
+    );
+  }, [precioKm]);
 
   // 🔹 Calcular totales
   const subtotal = items.reduce((acc, i) => acc + i.subtotal, 0);
@@ -132,13 +147,18 @@ export default function NuevaFacturaVentaPage() {
       )}
 
       {/* ---------- CONFIGURACIÓN TARIFARIA ---------- */}
-      <div className="bg-[#11292e] border border-[#1e3c42] rounded-xl p-4 flex items-center justify-between text-sm">
+      <div className="bg-[#11292e] border border-[#1e3c42] rounded-xl p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3 text-sm">
         <div className="flex items-center gap-2">
           <Info size={16} className="text-[#36b6b0]" />
           <span className="text-gray-300">Precio por kilómetro:</span>
-          <span className="text-[#36b6b0] font-semibold">
-            {PRECIO_POR_KM.toLocaleString("es-AR", { style: "currency", currency: "ARS" })} / km
-          </span>
+          <input
+            type="number"
+            step="0.01"
+            value={precioKm}
+            onChange={(e) => setPrecioKm(Number(e.target.value) || 0)}
+            className="w-32 rounded-lg border border-[#23454e] bg-[#0f2327] px-2 py-1 text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#36b6b0]"
+          />
+          <span className="text-gray-400">ARS/km</span>
         </div>
         <div className="flex items-center gap-2">
           <Info size={16} className="text-[#36b6b0]" />
