@@ -14,6 +14,8 @@ import {
   PieChart,
   Pie,
   Cell,
+  LineChart,
+  Line,
 } from "recharts";
 import {
   Truck,
@@ -32,6 +34,7 @@ export default function DashboardPage() {
   const vehiculos = useQuery(api.vehiculos.listar, {}) ?? [];
   const facturas = useQuery(api.facturas_ventas.listarConCliente, {}) ?? [];
   const viajes = useQuery(api.viajes.listarConNombres, {}) ?? [];
+  const clientesVentas = useQuery(api.clientes_ventas.listar, { busqueda: "" } as any) ?? [];
 
   // 🔹 Calcular estadísticas
   const totalVehiculos = vehiculos.length;
@@ -66,6 +69,47 @@ export default function DashboardPage() {
       cantidad,
     }));
   }, [vehiculos]);
+
+  // 🔹 Helper: últimos N meses continuos con etiqueta corta
+  function lastNMonths(n: number) {
+    const out: { key: string; label: string; year: number; month: number }[] = [];
+    const d = new Date();
+    d.setDate(1);
+    for (let i = n - 1; i >= 0; i--) {
+      const dt = new Date(d.getFullYear(), d.getMonth() - i, 1);
+      out.push({
+        key: `${dt.getFullYear()}-${dt.getMonth() + 1}`,
+        label: dt.toLocaleString("es-AR", { month: "short" }),
+        year: dt.getFullYear(),
+        month: dt.getMonth(),
+      });
+    }
+    return out;
+  }
+
+  // 🔹 Serie continua de viajes realizados por mes (últimos 12)
+  const viajesMensuales = useMemo(() => {
+    const base = lastNMonths(12);
+    const counts: Record<string, number> = {};
+    viajes.forEach((v: any) => {
+      const t = new Date(v.creadoEn || v.fecha || Date.now());
+      const key = `${t.getFullYear()}-${t.getMonth() + 1}`;
+      counts[key] = (counts[key] || 0) + 1;
+    });
+    return base.map((m) => ({ mes: m.label, cantidad: counts[m.key] || 0 }));
+  }, [viajes]);
+
+  // 🔹 Serie continua de clientes creados por mes (últimos 12)
+  const clientesMensuales = useMemo(() => {
+    const base = lastNMonths(12);
+    const counts: Record<string, number> = {};
+    clientesVentas.forEach((c: any) => {
+      const t = new Date(c.creadoEn || Date.now());
+      const key = `${t.getFullYear()}-${t.getMonth() + 1}`;
+      counts[key] = (counts[key] || 0) + 1;
+    });
+    return base.map((m) => ({ mes: m.label, cantidad: counts[m.key] || 0 }));
+  }, [clientesVentas]);
 
   return (
     <main className="min-h-screen bg-[#0d1b1e] text-[#e6f6f7] p-8 space-y-8">
@@ -165,6 +209,55 @@ export default function DashboardPage() {
                   }}
                 />
               </PieChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* 🔹 Series continuas: Viajes y Clientes por mes */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* 📈 Viajes realizados */}
+        <Card className="bg-[#111f24] border border-[#0f2c2e] text-[#e6f6f7] rounded-2xl">
+          <CardHeader>
+            <CardTitle className="text-lg font-semibold text-[#00B8A9]">
+              Viajes realizados (últimos 12 meses)
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={viajesMensuales}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#1a2b2e" />
+                <XAxis dataKey="mes" stroke="#a3a3a3" />
+                <YAxis stroke="#a3a3a3" allowDecimals={false} />
+                <Tooltip
+                  cursor={{ stroke: "#00B8A9" }}
+                  contentStyle={{ backgroundColor: "#0f2c2e", border: "none", color: "#e6f6f7" }}
+                />
+                <Line type="monotone" dataKey="cantidad" stroke="#00B8A9" strokeWidth={2} dot={{ r: 3 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        {/* 📈 Clientes creados */}
+        <Card className="bg-[#111f24] border border-[#0f2c2e] text-[#e6f6f7] rounded-2xl">
+          <CardHeader>
+            <CardTitle className="text-lg font-semibold text-[#00B8A9]">
+              Clientes (últimos 12 meses)
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={clientesMensuales}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#1a2b2e" />
+                <XAxis dataKey="mes" stroke="#a3a3a3" />
+                <YAxis stroke="#a3a3a3" allowDecimals={false} />
+                <Tooltip
+                  cursor={{ stroke: "#00B8A9" }}
+                  contentStyle={{ backgroundColor: "#0f2c2e", border: "none", color: "#e6f6f7" }}
+                />
+                <Line type="monotone" dataKey="cantidad" stroke="#00B8A9" strokeWidth={2} dot={{ r: 3 }} />
+              </LineChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>

@@ -23,6 +23,7 @@ import {
   WrenchIcon,
   Car,
   UserCog,
+  LayoutDashboard,
 } from "lucide-react";
 
 // -------------------------
@@ -132,6 +133,12 @@ export default function Sidebar() {
         />
         {openMenus.compras && (
           <>
+            <SubMenuItem
+              href="/dashboard"
+              label="Dashboard"
+              icon={LayoutDashboard}
+              isActive={pathname === "/dashboard"}
+            />
             <SubMenuItem
               href="/"
               label="Inicio"
