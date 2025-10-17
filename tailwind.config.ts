@@ -1,7 +1,7 @@
-import type { Config } from "tailwindcss"
+import type { Config } from "tailwindcss";
 
 const config: Config = {
-  darkMode: "class", // ⬅️ Esto activa dark mode con la clase "dark"
+  // ❌ Eliminamos soporte dark mode
   content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -11,15 +11,14 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Colores base que podés usar en toda la app
         brand: {
-          light: "#14B8A6", // teal-500
-          dark: "#0f766e",  // teal-700
+          light: "#14B8A6", // teal principal
+          dark: "#0f766e",  // teal más oscuro para hover o bordes
         },
       },
     },
   },
   plugins: [],
-}
+};
 
-export default config
+export default config;

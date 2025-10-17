@@ -15,14 +15,20 @@ import type {
 } from "convex/server";
 import type * as _lib from "../_lib.js";
 import type * as categorias from "../categorias.js";
+import type * as choferes from "../choferes.js";
 import type * as clientes from "../clientes.js";
+import type * as clientes_ventas from "../clientes_ventas.js";
 import type * as comprobantes_prov from "../comprobantes_prov.js";
 import type * as contratos from "../contratos.js";
+import type * as contratos_servicios from "../contratos_servicios.js";
 import type * as depositos from "../depositos.js";
 import type * as detalle_traspaso from "../detalle_traspaso.js";
 import type * as facturas_prov from "../facturas_prov.js";
+import type * as facturas_ventas from "../facturas_ventas.js";
 import type * as interacciones from "../interacciones.js";
+import type * as mantenimientos from "../mantenimientos.js";
 import type * as marcas from "../marcas.js";
+import type * as marcas_vehiculos from "../marcas_vehiculos.js";
 import type * as modelos from "../modelos.js";
 import type * as movimientos from "../movimientos.js";
 import type * as notas from "../notas.js";
@@ -36,6 +42,7 @@ import type * as tipos_comprobante from "../tipos_comprobante.js";
 import type * as tipos_movimiento from "../tipos_movimiento.js";
 import type * as traspasos from "../traspasos.js";
 import type * as vehiculos from "../vehiculos.js";
+import type * as viajes from "../viajes.js";
 
 /**
  * A utility for referencing Convex functions in your app's API.
@@ -48,14 +55,20 @@ import type * as vehiculos from "../vehiculos.js";
 declare const fullApi: ApiFromModules<{
   _lib: typeof _lib;
   categorias: typeof categorias;
+  choferes: typeof choferes;
   clientes: typeof clientes;
+  clientes_ventas: typeof clientes_ventas;
   comprobantes_prov: typeof comprobantes_prov;
   contratos: typeof contratos;
+  contratos_servicios: typeof contratos_servicios;
   depositos: typeof depositos;
   detalle_traspaso: typeof detalle_traspaso;
   facturas_prov: typeof facturas_prov;
+  facturas_ventas: typeof facturas_ventas;
   interacciones: typeof interacciones;
+  mantenimientos: typeof mantenimientos;
   marcas: typeof marcas;
+  marcas_vehiculos: typeof marcas_vehiculos;
   modelos: typeof modelos;
   movimientos: typeof movimientos;
   notas: typeof notas;
@@ -69,6 +82,7 @@ declare const fullApi: ApiFromModules<{
   tipos_movimiento: typeof tipos_movimiento;
   traspasos: typeof traspasos;
   vehiculos: typeof vehiculos;
+  viajes: typeof viajes;
 }>;
 export declare const api: FilterApi<
   typeof fullApi,

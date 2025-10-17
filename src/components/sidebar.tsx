@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   Globe,
   Home,
@@ -19,9 +19,15 @@ import {
   Truck,
   Briefcase,
   DollarSign,
-} from 'lucide-react';
+  Settings,
+  WrenchIcon,
+  Car,
+  UserCog,
+} from "lucide-react";
 
+// -------------------------
 // 🔹 Tipos
+// -------------------------
 type MenuItemProps = {
   icon: React.ComponentType<{ size?: number }>;
   label: string;
@@ -38,12 +44,21 @@ type SubMenuItemProps = {
   isActive?: boolean;
 };
 
-// 🔹 Item de menú principal
-const MenuItem = ({ icon: Icon, label, isActive, onClick, hasSubmenu, isOpen }: MenuItemProps) => (
+// -------------------------
+// 🔹 Item principal
+// -------------------------
+const MenuItem = ({
+  icon: Icon,
+  label,
+  isActive,
+  onClick,
+  hasSubmenu,
+  isOpen,
+}: MenuItemProps) => (
   <div
     onClick={onClick}
     className={`flex items-center justify-between px-4 py-2.5 cursor-pointer transition-all ${
-      isActive ? 'bg-teal-700 text-white' : 'text-teal-100 hover:bg-teal-700/50'
+      isActive ? "bg-teal-700 text-white" : "text-teal-100 hover:bg-teal-700/50"
     }`}
   >
     <div className="flex items-center gap-3">
@@ -54,12 +69,16 @@ const MenuItem = ({ icon: Icon, label, isActive, onClick, hasSubmenu, isOpen }: 
   </div>
 );
 
-// 🔹 Submenu item
+// -------------------------
+// 🔹 Subitem
+// -------------------------
 const SubMenuItem = ({ href, label, icon: Icon, isActive }: SubMenuItemProps) => (
   <Link
     href={href}
     className={`flex items-center gap-3 pl-12 pr-4 py-2 text-sm transition-all ${
-      isActive ? 'text-white bg-teal-700/30' : 'text-teal-200 hover:text-white hover:bg-teal-700/30'
+      isActive
+        ? "text-white bg-teal-700/30"
+        : "text-teal-200 hover:text-white hover:bg-teal-700/30"
     }`}
   >
     <Icon size={16} />
@@ -67,11 +86,15 @@ const SubMenuItem = ({ href, label, icon: Icon, isActive }: SubMenuItemProps) =>
   </Link>
 );
 
+// -------------------------
+// 🔹 Sidebar principal
+// -------------------------
 export default function Sidebar() {
   const pathname = usePathname();
-  const [openMenus, setOpenMenus] = useState<{ compras: boolean; ventas: boolean }>({
+  const [openMenus, setOpenMenus] = useState({
     compras: true,
     ventas: true,
+    flota: true,
   });
 
   const toggleMenu = (menu: keyof typeof openMenus) => {
@@ -93,62 +116,68 @@ export default function Sidebar() {
 
       {/* Menús */}
       <div className="flex-1 py-4">
-        {/* Compras / Stock */}
+
+        {/* =================== COMPRAS =================== */}
         <div className="px-4 mb-2">
           <span className="text-xs font-semibold text-teal-300 uppercase tracking-wider">
             Compras & Stock
           </span>
         </div>
         <MenuItem
-          icon={Home}
+          icon={Box}
           label="Compras / Stock"
           hasSubmenu
           isOpen={openMenus.compras}
-          onClick={() => toggleMenu('compras')}
+          onClick={() => toggleMenu("compras")}
         />
         {openMenus.compras && (
           <>
-            <SubMenuItem href="/" label="Inicio" icon={Home} isActive={pathname === '/'} />
+            <SubMenuItem
+              href="/"
+              label="Inicio"
+              icon={Home}
+              isActive={pathname === "/"}
+            />
             <SubMenuItem
               href="/repuestos"
               label="Repuestos"
               icon={Wrench}
-              isActive={pathname.startsWith('/repuestos')}
+              isActive={pathname.startsWith("/repuestos")}
             />
             <SubMenuItem
               href="/movimientos"
               label="Movimientos"
               icon={Clock}
-              isActive={pathname.startsWith('/movimientos')}
+              isActive={pathname.startsWith("/movimientos")}
             />
             <SubMenuItem
               href="/depositos"
               label="Depósitos"
               icon={Box}
-              isActive={pathname.startsWith('/depositos')}
+              isActive={pathname.startsWith("/depositos")}
             />
             <SubMenuItem
               href="/proveedores"
               label="Proveedores"
               icon={Users2Icon}
-              isActive={pathname.startsWith('/proveedores')}
+              isActive={pathname.startsWith("/proveedores")}
             />
             <SubMenuItem
               href="/ordenes-compra"
               label="Órdenes de Compra"
               icon={FileText}
-              isActive={pathname.startsWith('/ordenes-compra')}
+              isActive={pathname.startsWith("/ordenes-compra")}
             />
             <SubMenuItem
               href="/facturas"
-              label="Facturas Proveedores"
+              label="Facturas Proveedor"
               icon={Receipt}
-              isActive={pathname.startsWith('/facturas')}
+              isActive={pathname.startsWith("/facturas")}
             />
           </>
         )}
 
-        {/* Ventas */}
+        {/* =================== VENTAS =================== */}
         <div className="px-4 mt-6 mb-2">
           <span className="text-xs font-semibold text-teal-300 uppercase tracking-wider">
             Ventas
@@ -159,41 +188,76 @@ export default function Sidebar() {
           label="Ventas"
           hasSubmenu
           isOpen={openMenus.ventas}
-          onClick={() => toggleMenu('ventas')}
+          onClick={() => toggleMenu("ventas")}
         />
         {openMenus.ventas && (
           <>
             <SubMenuItem
-              href="/clientes"
+              href="/clientes-ventas"
               label="Clientes"
               icon={User2Icon}
-              isActive={pathname.startsWith('/clientes')}
+              isActive={pathname.startsWith("/clientes")}
             />
             <SubMenuItem
               href="/contratos-servicios"
               label="Contratos"
               icon={Briefcase}
-              isActive={pathname.startsWith('/contratos-servicios')}
+              isActive={pathname.startsWith("/contratos-servicios")}
             />
             <SubMenuItem
               href="/viajes"
               label="Viajes"
               icon={Truck}
-              isActive={pathname.startsWith('/viajes')}
+              isActive={pathname.startsWith("/viajes")}
             />
             <SubMenuItem
               href="/ventas"
               label="Facturación"
               icon={Receipt}
-              isActive={pathname.startsWith('/ventas')}
+              isActive={pathname.startsWith("/ventas")}
+            />
+          </>
+        )}
+
+        {/* =================== GESTIÓN DE FLOTA =================== */}
+        <div className="px-4 mt-6 mb-2">
+          <span className="text-xs font-semibold text-teal-300 uppercase tracking-wider">
+            Gestión de Flota
+          </span>
+        </div>
+        <MenuItem
+          icon={Truck}
+          label="Flota"
+          hasSubmenu
+          isOpen={openMenus.flota}
+          onClick={() => toggleMenu("flota")}
+        />
+        {openMenus.flota && (
+          <>
+            <SubMenuItem
+              href="/vehiculos"
+              label="Vehículos"
+              icon={Car}
+              isActive={pathname.startsWith("/vehiculos")}
+            />
+            <SubMenuItem
+              href="/choferes"
+              label="Choferes"
+              icon={UserCog}
+              isActive={pathname.startsWith("/choferes")}
+            />
+            <SubMenuItem
+              href="/mantenimientos"
+              label="Mantenimientos"
+              icon={WrenchIcon}
+              isActive={pathname.startsWith("/mantenimientos")}
             />
           </>
         )}
       </div>
 
-      {/* User Footer */}
-     
-    
+      {/* Footer usuario */}
+      
     </div>
   );
 }

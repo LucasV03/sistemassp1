@@ -3,6 +3,9 @@ import { v } from "convex/values";
 import { query, mutation } from "./_generated/server";
 import { norm, slugify, now } from "./_lib";
 
+// ============================
+// 🔍 Buscar marcas (por texto o cursor)
+// ============================
 export const buscar = query({
   args: {
     q: v.optional(v.string()),
@@ -23,6 +26,19 @@ export const buscar = query({
   },
 });
 
+// ============================
+// 📋 Listar todas las marcas (para selects, formularios, etc.)
+// ============================
+export const listar = query({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.db.query("marcas").order("asc").collect();
+  },
+});
+
+// ============================
+// ➕ Crear marca
+// ============================
 export const crear = mutation({
   args: { nombre: v.string() },
   handler: async (ctx, { nombre }) => {
@@ -31,6 +47,7 @@ export const crear = mutation({
       .query("marcas")
       .filter((qb) => qb.eq(qb.field("slug"), slug))
       .unique();
+
     if (ya) return ya._id;
 
     return await ctx.db.insert("marcas", {
@@ -42,6 +59,9 @@ export const crear = mutation({
   },
 });
 
+// ============================
+// ❌ Eliminar marca
+// ============================
 export const eliminar = mutation({
   args: { id: v.id("marcas") },
   handler: async (ctx, { id }) => {

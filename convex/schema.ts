@@ -22,16 +22,26 @@ export default defineSchema({
     .index("by_slug", ["slug"])
     .index("by_nombre", ["nombre"]),
 
-  vehiculos: defineTable({
-    nombre: v.string(), // p.ej. "Hilux"
-    marcaId: v.id("marcas"),
-    slug: v.string(),
-    creadoEn: v.number(),
-    actualizadoEn: v.number(),
-  })
-    .index("by_marca", ["marcaId"])
-    .index("by_marca_slug", ["marcaId", "slug"]),
+vehiculos: defineTable({
+  nombre: v.string(),
+  marcaVehiculoId: v.id("marcas_vehiculos"), // ✅ corregido
+  slug: v.string(),
+  patente: v.optional(v.string()),
+  tipo: v.optional(v.string()),
+  capacidad: v.optional(v.number()),
+  estado: v.union(
+    v.literal("OPERATIVO"),
+    v.literal("MANTENIMIENTO"),
+    v.literal("FUERA_SERVICIO")
+  ),
+  creadoEn: v.number(),
+  actualizadoEn: v.number(),
+})
+  .index("by_marcaVehiculo", ["marcaVehiculoId"])
+  .index("by_estado", ["estado"]),
 
+
+  
   modelos: defineTable({
     nombre: v.string(), // p.ej. "2016 2.8 TDI 4x4"
     marcaId: v.id("marcas"),
@@ -407,33 +417,42 @@ facturas_prov_items: defineTable({
 
 
 // ======= VENTAS (basado en distancias) =======
+// ======= CLIENTES DE VENTAS =======
 clientes_ventas: defineTable({
-  nombre: v.string(),
-  razonSocial: v.string(),
-  cuit: v.string(),
+  razonSocial: v.string(),         // Nombre fiscal oficial
+  alias: v.optional(v.string()),   // Alias o nombre comercial (ej: "Minera Los Andes")
+  cuit: v.string(),                // CUIT único
   direccion: v.string(),
-  telefono: v.string(),
-  email: v.string(),
+  provincia: v.optional(v.string()),
+  ciudad: v.optional(v.string()),
+  codigoPostal: v.optional(v.string()),
+  telefono: v.optional(v.string()),
+  email: v.optional(v.string()),
   estado: v.union(v.literal("ACTIVO"), v.literal("INACTIVO")),
+  notas: v.optional(v.string()),
+  creadoPor: v.optional(v.string()),  // ID o nombre del usuario que lo creó
   creadoEn: v.number(),
   actualizadoEn: v.number(),
 })
   .index("by_cuit", ["cuit"])
-  .index("by_nombre", ["nombre"]),
+  .index("by_razonSocial", ["razonSocial"])
+  .index("by_estado", ["estado"]),
+
 
 contratos_servicios: defineTable({
   clienteId: v.id("clientes_ventas"),
-  tipo: v.union(v.literal("POR_KM"), v.literal("POR_VIAJE"), v.literal("POR_TONKM")),
-  tarifaBase: v.number(),            // valor en ARS
-  minimo: v.optional(v.number()),    // mínimo facturable
-  descripcion: v.optional(v.string()),
+  clienteRazonSocial: v.optional(v.string()), // 🔹 duplicado del cliente
+  clienteCuit: v.optional(v.string()),        // 🔹 duplicado del CUIT
+  tipo: v.string(),
+  tarifaBase: v.number(),
   fechaInicio: v.string(),
   fechaFin: v.optional(v.string()),
-  estado: v.union(v.literal("VIGENTE"), v.literal("FINALIZADO")),
+  estado: v.string(), // VIGENTE | FINALIZADO | PENDIENTE
+  notas: v.optional(v.string()),
   creadoEn: v.number(),
-})
-  .index("by_cliente", ["clienteId"])
-  .index("by_estado", ["estado"]),
+  actualizadoEn: v.number(),
+}).index("byCliente", ["clienteId"]),
+
 
 
 facturas_ventas: defineTable({
@@ -442,7 +461,7 @@ facturas_ventas: defineTable({
   numero: v.string(),
   tipoComprobante: v.union(v.literal("FACTURA_A"), v.literal("FACTURA_B"), v.literal("FACTURA_C")),
   fecha: v.string(),
-  hora: v.string(),
+  hora: v.string(), 
   items: v.array(
     v.object({
       viajeId: v.id("viajes"),
@@ -455,7 +474,7 @@ facturas_ventas: defineTable({
   subtotal: v.number(),
   iva: v.number(),
   total: v.number(),
-  estado: v.union(v.literal("EMITIDA"), v.literal("PAGADA"), v.literal("VENCIDA")),
+  estado: v.union(v.literal("EMITIDA"), v.literal("PAGADA"), v.literal("VENCIDA"), v.literal("PENDIENTE")),
   creadoEn: v.number(),
   actualizadoEn: v.number(),
 })
@@ -465,22 +484,29 @@ facturas_ventas: defineTable({
 
 
 
-  choferes: defineTable({
-  nombre: v.string(),
+choferes: defineTable({
+  nombre: v.string(),        // solo el nombre propio
+  apellido: v.string(),      // solo el apellido
   dni: v.string(),
   telefono: v.optional(v.string()),
   licencia: v.string(),
   estado: v.union(v.literal("ACTIVO"), v.literal("INACTIVO")),
   creadoEn: v.number(),
-}),
+})
+  .index("byEstado", ["estado"])
+  .index("byNombre", ["nombre"])
+  .index("byApellido", ["apellido"])
+  .index("byDni", ["dni"]),
+
 
 viajes: defineTable({
-  clienteId: v.id("clientes"),
+  clienteId: v.id("clientes_ventas"), // ✅ referencia corregida
   choferId: v.id("choferes"),
+  vehiculoId: v.optional(v.id("vehiculos")),
   origen: v.string(),
   destino: v.string(),
   distanciaKm: v.number(),
-  fecha: v.string(), // ISO date
+  fecha: v.optional(v.string()), // opcional, si no se carga desde UI
   estado: v.union(
     v.literal("PENDIENTE"),
     v.literal("EN_CURSO"),
@@ -489,9 +515,44 @@ viajes: defineTable({
   ),
   notas: v.optional(v.string()),
   creadoEn: v.number(),
+  actualizadoEn: v.optional(v.number()), // ✅ agregado
 })
   .index("byCliente", ["clienteId"])
   .index("byChofer", ["choferId"])
+  .index("byVehiculo", ["vehiculoId"])
+  .index("byEstado", ["estado"])
   .index("byFecha", ["fecha"]),
+
+
+  mantenimientos: defineTable({
+  vehiculoId: v.id("vehiculos"),
+  vehiculoNombre: v.optional(v.string()),
+  tipo: v.string(),
+  fecha: v.string(), // formato ISO
+  costo: v.optional(v.number()),
+  descripcion: v.optional(v.string()),
+  estado: v.union(
+    v.literal("PENDIENTE"),
+    v.literal("EN_CURSO"),
+    v.literal("FINALIZADO")
+  ),
+  creadoEn: v.number(),
+  actualizadoEn: v.number(),
+})
+  .index("byVehiculo", ["vehiculoId"])
+  .index("byEstado", ["estado"]),
+
+
+
+marcas_vehiculos: defineTable({
+  nombre: v.string(),
+  slug: v.string(),
+  pais: v.optional(v.string()),
+  descripcion: v.optional(v.string()),
+  creadoEn: v.number(),
+  actualizadoEn: v.number(),
+})
+  .index("by_nombre", ["nombre"])
+  .index("by_slug", ["slug"]),
 
 });
