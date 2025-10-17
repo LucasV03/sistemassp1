@@ -90,7 +90,7 @@ export default function VehiculosPage() {
                       <td className="p-3 text-[#d6f4f4]">{v.marcaNombre || "—"}</td>
                       <td className="p-3 text-[#d6f4f4]">{v.patente || "—"}</td>
                       <td className="p-3 text-[#d6f4f4]">{v.tipo || "—"}</td>
-                      <td className="p-3 text-[#d6f4f4]">{v.capacidad ? `${v.capacidad} kg` : "—"}</td>
+                      <td className="p-3 text-[#d6f4f4]">{v.capacidad ? `${v.capacidad} personas` : "—"}</td>
                       <td className="p-3">
                         <Estado estado={v.estado} />
                       </td>

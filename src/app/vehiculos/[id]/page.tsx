@@ -10,6 +10,7 @@ export default function VehiculoDetallePage() {
   const vehiculos = useQuery(api.vehiculos.listar, {}) ?? [];
   const v = vehiculos.find((x: any) => String(x._id) === String(id));
 
+
   if (!vehiculos)
     return (
       <div className="min-h-screen bg-[#0d1b1e] text-[#e6f6f7] p-6 flex items-center justify-center">
@@ -23,6 +24,9 @@ export default function VehiculoDetallePage() {
         No se encontró el vehículo.
       </div>
     );
+
+const marcas = useQuery(api.marcas_vehiculos.listar, {}) ?? [];
+const marca = marcas.find((m: any) => m._id === v.marcaVehiculoId);
 
   return (
     <div className="min-h-screen bg-[#0d1b1e] text-[#e6f6f7] p-6 space-y-6">
@@ -40,10 +44,11 @@ export default function VehiculoDetallePage() {
 
       <div className="max-w-4xl mx-auto bg-[#24474d] border border-[#2f6368] rounded-xl p-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Info label="Marca" value={v.marcaNombre ?? "—"} />
+          <Info label="Marca" value={marca?.nombre ?? "—"} />
+
           <Info label="Patente" value={v.patente ?? "—"} />
           <Info label="Tipo" value={v.tipo ?? "—"} />
-          <Info label="Capacidad" value={v.capacidad ? `${v.capacidad} kg` : "—"} />
+          <Info label="Capacidad" value={v.capacidad ? `${v.capacidad} personas` : "—"} />
           <Info label="Estado" value={v.estado ?? "—"} />
         </div>
       </div>

@@ -4,7 +4,7 @@ import { query, mutation } from "./_generated/server";
 import { norm, slugify, now } from "./_lib";
 
 // ============================
-// 🔍 Buscar vehículos (filtro + marca)
+// 🔍 Buscar vehículos (filtro + marca + join con marcas)
 // ============================
 export const buscar = query({
   args: {
@@ -17,9 +17,7 @@ export const buscar = query({
     let qy = ctx.db.query("vehiculos");
 
     if (marcaVehiculoId) {
-      qy = qy.filter((qb) =>
-        qb.eq(qb.field("marcaVehiculoId"), marcaVehiculoId)
-      );
+      qy = qy.filter((qb) => qb.eq(qb.field("marcaVehiculoId"), marcaVehiculoId));
     }
 
     if (cursor) {
@@ -29,9 +27,24 @@ export const buscar = query({
     const lote = await qy.take(400);
 
     const nq = norm(q);
-    const items = nq
-      ? lote.filter((d) => norm(d.nombre).includes(nq))
+    const filtrados = nq
+      ? lote.filter((d) => {
+          const texto = [d.nombre, d.patente, d.tipo].join(" ").toLowerCase();
+          return texto.includes(nq.toLowerCase());
+        })
       : lote;
+
+    // 🔹 Hacemos el "join" con marcas_vehiculos
+    const items = await Promise.all(
+      filtrados.map(async (vehiculo) => {
+        let marcaNombre = "";
+        if (vehiculo.marcaVehiculoId) {
+          const marca = await ctx.db.get(vehiculo.marcaVehiculoId);
+          marcaNombre = marca?.nombre ?? "";
+        }
+        return { ...vehiculo, marcaNombre };
+      })
+    );
 
     const page = items.slice(0, limit);
     const nextCursor = page.length ? page[page.length - 1]._id : undefined;

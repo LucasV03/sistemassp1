@@ -52,15 +52,16 @@ export default function EditarVehiculoPage() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     await actualizar({
-      id: v._id,
-      nombre: form.nombre,
-      marcaVehiculoId: form.marcaVehiculoId ? (form.marcaVehiculoId as any) : undefined,
-      patente: form.patente || undefined,
-      tipo: form.tipo || undefined,
-      capacidad: form.capacidad ? Number(form.capacidad) : undefined,
-      estado: form.estado as any,
-    });
-    router.push(`/vehiculos/${String(v._id)}`);
+  id: v!._id, // ✅ garantizamos que v no es undefined
+  nombre: form.nombre,
+  marcaVehiculoId: form.marcaVehiculoId ? (form.marcaVehiculoId as any) : undefined,
+  patente: form.patente || undefined,
+  tipo: form.tipo || undefined,
+  capacidad: form.capacidad ? Number(form.capacidad) : undefined,
+  estado: form.estado as any,
+});
+router.push(`/vehiculos/${String(v!._id)}`);
+
   }
 
   return (
@@ -96,7 +97,7 @@ export default function EditarVehiculoPage() {
             <Input value={form.tipo} onChange={(e) => setForm({ ...form, tipo: e.target.value })} />
           </Field>
 
-          <Field label="Capacidad (kg)">
+          <Field label="Capacidad (personas)">
             <Input type="number" value={form.capacidad} onChange={(e) => setForm({ ...form, capacidad: e.target.value })} />
           </Field>
 
