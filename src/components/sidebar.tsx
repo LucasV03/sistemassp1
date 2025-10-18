@@ -181,6 +181,12 @@ export default function Sidebar() {
               icon={Receipt}
               isActive={pathname.startsWith("/facturas")}
             />
+            <SubMenuItem
+              href="/pagos"
+              label="Historial de Pagos"
+              icon={Receipt}
+              isActive={pathname.startsWith("/pagos")}
+            />
           </>
         )}
 

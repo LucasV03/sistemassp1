@@ -44,3 +44,30 @@ export const listarPorFactura = query({
     return todos.filter((p) => p.facturasIds?.includes(facturaId));
   },
 });
+
+export const obtener = query({
+  args: { id: v.id("pagos_comprobantes") },
+  handler: async (ctx, { id }) => {
+    const pago = await ctx.db.get(id);
+    if (!pago) throw new Error("Pago no encontrado");
+
+    // 🧾 Traer proveedor asociado
+    const proveedor = await ctx.db.get(pago.proveedorId);
+
+    // 🧩 Traer facturas asociadas
+    let facturas: any[] = [];
+    if (pago.facturasIds && pago.facturasIds.length > 0) {
+      const fetched = await Promise.all(
+        pago.facturasIds.map((fid) => ctx.db.get(fid))
+      );
+      facturas = fetched.filter(Boolean);
+    }
+
+    // ✅ Devolvemos campos adicionales para el frontend
+    return {
+      ...pago,
+      proveedorNombre: proveedor?.nombre ?? "(sin proveedor)",
+      facturas,
+    };
+  },
+});

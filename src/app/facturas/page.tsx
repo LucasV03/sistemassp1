@@ -96,19 +96,7 @@ export default function ComprobantesProvPage() {
             + Nuevo Comprobante
           </Link>
           {/* Historial de pagos */}
-          <Link
-            href="/facturas/pagos"
-            className="px-3 py-2 rounded-lg border border-[#2f6368] bg-[#2b5a60] hover:bg-[#2f6368] text-white font-semibold shadow-sm"
-          >
-            Historial de pagos
-          </Link>
-          {/* Botón secundario */}
-           <Link
-              href="/facturas/pagos/nuevo"
-              className="px-3 py-2 rounded bg-emerald-600 text-white hover:bg-emerald-500 font-semibold shadow-sm"
-            >
-              + Nuevo Pago
-          </Link>
+          
           {/* KPIs en header - CAMBIO 2: Fondo y borde de KPI boxes */}
           <div className="px-3 py-2 rounded bg-[#11292e] border border-[#1e3c42]">
             Pendiente: <b>{moneyFmt("ARS").format(kpis.totalPendiente)}</b>
