@@ -136,13 +136,13 @@ export default function ContratosPage() {
                       <td className="p-3 text-[#d6f4f4]">{formatDate(c.fechaFin)}</td>
                       <td className="p-3 text-center flex justify-center gap-2">
                         <Link
-                          href={`/contratos-servicios/${c._id}`}
+                          href={`/contratos-servicios/${c._id}/ver`}
                           className="flex items-center gap-1 px-3 py-1 rounded bg-[#36b6b0] text-white text-xs font-semibold hover:bg-[#2ca6a4]"
                         >
                           <Eye size={14} /> Ver
                         </Link>
                         <Link
-                          href={`/contratos-servicios/${c._id}?edit=true`}
+                          href={`/contratos-servicios/${c._id}`}
                           className="flex items-center gap-1 px-3 py-1 rounded bg-[#b7d9d7] text-[#1b3a3f] text-xs font-semibold hover:bg-[#a0c8c5]"
                         >
                           <Pencil size={14} /> Editar
