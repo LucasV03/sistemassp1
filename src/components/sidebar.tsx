@@ -24,6 +24,7 @@ import {
   Car,
   UserCog,
   LayoutDashboard,
+  ReceiptCent,
 } from "lucide-react";
 
 // -------------------------
@@ -176,11 +177,12 @@ export default function Sidebar() {
               isActive={pathname.startsWith("/ordenes-compra")}
             />
             <SubMenuItem
-              href="/facturas"
-              label="Facturas Proveedor"
-              icon={Receipt}
-              isActive={pathname.startsWith("/facturas")}
-            />
+  href="/facturas"
+  label="Facturas Proveedor"
+  icon={Receipt}
+  isActive={pathname === "/facturas" || pathname.startsWith("/facturas/")}
+/>
+
             <SubMenuItem
               href="/pagos"
               label="Historial de Pagos"
@@ -224,11 +226,12 @@ export default function Sidebar() {
               isActive={pathname.startsWith("/viajes")}
             />
             <SubMenuItem
-              href="/facturas-ventas"
-              label="Facturación"
-              icon={Receipt}
-              isActive={pathname.startsWith("/ventas")}
-            />
+  href="/facturas-ventas"
+  label="Facturación"
+  icon={ReceiptCent}
+  isActive={pathname === "/facturas-ventas" || pathname.startsWith("/facturas-ventas/")}
+/>
+
           </>
         )}
 

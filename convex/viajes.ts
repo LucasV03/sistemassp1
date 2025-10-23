@@ -10,6 +10,7 @@ export const crear = mutation({
   args: {
     clienteId: v.id("clientes_ventas"),
     choferId: v.id("choferes"),
+    vehiculoId: v.optional(v.id("vehiculos")), // ✅ agregado
     origen: v.string(),
     destino: v.string(),
     distanciaKm: v.number(),
@@ -27,6 +28,7 @@ export const crear = mutation({
     const nuevoViajeId = await ctx.db.insert("viajes", {
       clienteId: a.clienteId,
       choferId: a.choferId,
+      vehiculoId: a.vehiculoId, // ✅ agregado
       origen: a.origen.trim(),
       destino: a.destino.trim(),
       distanciaKm: a.distanciaKm,
@@ -38,22 +40,13 @@ export const crear = mutation({
   },
 });
 
-/* ---------- OBTENER ---------- */
-export const obtener = query({
-  args: { id: v.id("viajes") },
-  handler: async (ctx, a) => {
-    const viaje = await ctx.db.get(a.id);
-    if (!viaje) throw new ConvexError("Viaje no encontrado.");
-    return viaje;
-  },
-});
-
 /* ---------- ACTUALIZAR ---------- */
 export const actualizar = mutation({
   args: {
     id: v.id("viajes"),
     clienteId: v.optional(v.id("clientes_ventas")),
     choferId: v.optional(v.id("choferes")),
+    vehiculoId: v.optional(v.id("vehiculos")), // ✅ agregado
     origen: v.optional(v.string()),
     destino: v.optional(v.string()),
     distanciaKm: v.optional(v.number()),
@@ -73,6 +66,7 @@ export const actualizar = mutation({
     await ctx.db.patch(a.id, {
       ...(a.clienteId ? { clienteId: a.clienteId } : {}),
       ...(a.choferId ? { choferId: a.choferId } : {}),
+      ...(a.vehiculoId ? { vehiculoId: a.vehiculoId } : {}), // ✅ agregado
       ...(a.origen ? { origen: a.origen.trim() } : {}),
       ...(a.destino ? { destino: a.destino.trim() } : {}),
       ...(a.distanciaKm !== undefined ? { distanciaKm: a.distanciaKm } : {}),
@@ -81,6 +75,66 @@ export const actualizar = mutation({
     });
   },
 });
+
+/* ---------- LISTAR CON NOMBRES ---------- */
+export const listarConNombres = query({
+  args: {},
+  handler: async (ctx) => {
+    const viajes = await ctx.db.query("viajes").order("desc").collect();
+
+    const cacheClientes = new Map();
+    const cacheChoferes = new Map();
+    const cacheVehiculos = new Map();
+
+    const resultados = await Promise.all(
+      viajes.map(async (v) => {
+        // Cliente
+        if (!cacheClientes.has(v.clienteId)) {
+          cacheClientes.set(v.clienteId, await ctx.db.get(v.clienteId));
+        }
+        const cliente = cacheClientes.get(v.clienteId);
+
+        // Chofer
+        if (!cacheChoferes.has(v.choferId)) {
+          cacheChoferes.set(v.choferId, await ctx.db.get(v.choferId));
+        }
+        const chofer = cacheChoferes.get(v.choferId);
+
+        // Vehículo ✅
+        let vehiculo = null;
+        if (v.vehiculoId) {
+          if (!cacheVehiculos.has(v.vehiculoId)) {
+            cacheVehiculos.set(v.vehiculoId, await ctx.db.get(v.vehiculoId));
+          }
+          vehiculo = cacheVehiculos.get(v.vehiculoId);
+        }
+
+        return {
+          ...v,
+          clienteNombre: cliente?.razonSocial || cliente?.alias || "—",
+          choferNombre: chofer
+            ? `${chofer.nombre ?? ""} ${chofer.apellido ?? ""}`.trim()
+            : "—",
+          vehiculoNombre: vehiculo?.nombre ?? "—",
+        };
+      })
+    );
+
+    return resultados;
+  },
+});
+/* ---------- OBTENER ---------- */
+export const obtener = query({
+  args: { id: v.id("viajes") },
+  handler: async (ctx, a) => {
+    const viaje = await ctx.db.get(a.id);
+    if (!viaje) throw new ConvexError("Viaje no encontrado.");
+    return viaje;
+  },
+});
+
+/* ---------- ACTUALIZAR ---------- */
+
 
 
 /* ---------- ELIMINAR ---------- */
@@ -122,66 +176,5 @@ export const estadisticas = query({
       totalDistancia,
       promedioDistancia,
     };
-  },
-});
-export const listarConNombres = query({
-  args: {},
-  handler: async (ctx) => {
-    const viajes = await ctx.db.query("viajes").order("desc").collect();
-
-    // 🔹 Cache para evitar llamadas repetidas a la BD
-    const cacheClientes = new Map();
-    const cacheChoferes = new Map();
-    const cacheVehiculos = new Map();
-
-    const resultados = await Promise.all(
-      viajes.map(async (v) => {
-        // 🟢 Cliente
-        if (!cacheClientes.has(v.clienteId)) {
-          cacheClientes.set(v.clienteId, await ctx.db.get(v.clienteId));
-        }
-        const cliente = cacheClientes.get(v.clienteId);
-
-        // 🟢 Chofer
-        if (!cacheChoferes.has(v.choferId)) {
-          cacheChoferes.set(v.choferId, await ctx.db.get(v.choferId));
-        }
-        const chofer = cacheChoferes.get(v.choferId);
-
-        // 🟢 Vehículo (opcional)
-        let vehiculo = null;
-        if (v.vehiculoId) {
-          if (!cacheVehiculos.has(v.vehiculoId)) {
-            cacheVehiculos.set(v.vehiculoId, await ctx.db.get(v.vehiculoId));
-          }
-          vehiculo = cacheVehiculos.get(v.vehiculoId);
-        }
-
-        // 🔹 Construcción final
-        return {
-          ...v,
-          clienteNombre:
-            cliente?.razonSocial ||
-            cliente?.alias ||
-            "—",
-          choferNombre: chofer
-            ? `${chofer.nombre ?? ""} ${chofer.apellido ?? ""}`.trim()
-            : "—",
-          vehiculoNombre: vehiculo?.nombre ?? "—",
-          origen: v.origen,
-          destino: v.destino,
-          distanciaKm: v.distanciaKm ?? 0,
-          estado: v.estado ?? "PENDIENTE",
-        };
-      })
-    );
-
-    return resultados;
-  },
-});
-export const listar = query({
-  args: {},
-  handler: async (ctx) => {
-    return await ctx.db.query("viajes").collect();
   },
 });

@@ -15,14 +15,17 @@ export default function EditViajePage() {
   const viaje = useQuery(api.viajes.obtener, { id: id as Id<"viajes"> });
   const actualizar = useMutation(api.viajes.actualizar);
   const eliminar = useMutation(api.viajes.eliminar);
+
   const clientes = useQuery(api.clientes_ventas.listar, {}) ?? [];
   const choferes = useQuery(api.choferes.listar, {}) ?? [];
+  const vehiculos = useQuery(api.vehiculos.listar, {}) ?? [];
 
   // 🔹 Estado local
   const [data, setData] = useState<any>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Cargar datos del viaje
   useEffect(() => {
     if (viaje) setData(viaje);
   }, [viaje]);
@@ -33,7 +36,14 @@ export default function EditViajePage() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!data?.clienteId || !data?.choferId || !data?.origen || !data?.destino) {
+
+    if (
+      !data?.clienteId ||
+      !data?.choferId ||
+      !data?.vehiculoId ||
+      !data?.origen ||
+      !data?.destino
+    ) {
       setError("Completa todos los campos obligatorios.");
       return;
     }
@@ -44,6 +54,7 @@ export default function EditViajePage() {
         id: id as Id<"viajes">,
         clienteId: data.clienteId as Id<"clientes_ventas">,
         choferId: data.choferId as Id<"choferes">,
+        vehiculoId: data.vehiculoId as Id<"vehiculos">,
         origen: data.origen,
         destino: data.destino,
         distanciaKm: Number(data.distanciaKm),
@@ -99,7 +110,7 @@ export default function EditViajePage() {
             <select
               value={data.clienteId}
               onChange={(e) => handleChange("clienteId", e.target.value)}
-              className="w-full px-4 py-2 rounded-lg border border-[#23454e] bg-[#11292e] text-gray-200 focus:ring-2 focus:ring-[#36b6b0]"
+              className="w-full px-4 py-2 rounded-lg border border-[#23454e] bg-[#132f34] text-gray-200 focus:ring-2 focus:ring-[#36b6b0]"
             >
               <option value="">Seleccionar cliente</option>
               {clientes.map((c: any) => (
@@ -116,14 +127,33 @@ export default function EditViajePage() {
             <select
               value={data.choferId}
               onChange={(e) => handleChange("choferId", e.target.value)}
-              className="w-full px-4 py-2 rounded-lg border border-[#23454e] bg-[#11292e] text-gray-200 focus:ring-2 focus:ring-[#36b6b0]"
+              className="w-full px-4 py-2 rounded-lg border border-[#23454e] bg-[#132f34] text-gray-200 focus:ring-2 focus:ring-[#36b6b0]"
             >
               <option value="">Seleccionar chofer</option>
               {choferes.map((ch: any) => (
                 <option key={ch._id} value={ch._id}>
-                  {ch.nombre}
+                  {ch.nombre} {ch.apellido}
                 </option>
               ))}
+            </select>
+          </div>
+
+          {/* Vehículo */}
+          <div>
+            <label className="text-sm text-[#93c6c1] block mb-1">Vehículo *</label>
+            <select
+              value={data.vehiculoId || ""}
+              onChange={(e) => handleChange("vehiculoId", e.target.value)}
+              className="w-full px-4 py-2 rounded-lg border border-[#23454e] bg-[#132f34] text-gray-200 focus:ring-2 focus:ring-[#36b6b0]"
+            >
+              <option value="">Seleccionar vehículo</option>
+              {vehiculos
+                .filter((v: any) => v.estado === "OPERATIVO")
+                .map((v: any) => (
+                  <option key={v._id} value={v._id}>
+                    {v.nombre} ({v.patente ?? "sin patente"})
+                  </option>
+                ))}
             </select>
           </div>
 
@@ -135,7 +165,7 @@ export default function EditViajePage() {
                 type="text"
                 value={data.origen}
                 onChange={(e) => handleChange("origen", e.target.value)}
-                className="w-full px-4 py-2 rounded-lg border border-[#23454e] bg-[#11292e] text-gray-200 focus:ring-2 focus:ring-[#36b6b0]"
+                className="w-full px-4 py-2 rounded-lg border border-[#23454e] bg-[#132f34] text-gray-200 focus:ring-2 focus:ring-[#36b6b0]"
               />
             </div>
             <div>
@@ -144,7 +174,7 @@ export default function EditViajePage() {
                 type="text"
                 value={data.destino}
                 onChange={(e) => handleChange("destino", e.target.value)}
-                className="w-full px-4 py-2 rounded-lg border border-[#23454e] bg-[#11292e] text-gray-200 focus:ring-2 focus:ring-[#36b6b0]"
+                className="w-full px-4 py-2 rounded-lg border border-[#23454e] bg-[#132f34] text-gray-200 focus:ring-2 focus:ring-[#36b6b0]"
               />
             </div>
           </div>
@@ -156,7 +186,7 @@ export default function EditViajePage() {
               type="number"
               value={data.distanciaKm}
               onChange={(e) => handleChange("distanciaKm", Number(e.target.value))}
-              className="w-full px-4 py-2 rounded-lg border border-[#23454e] bg-[#11292e] text-gray-200 focus:ring-2 focus:ring-[#36b6b0]"
+              className="w-full px-4 py-2 rounded-lg border border-[#23454e] bg-[#132f34] text-gray-200 focus:ring-2 focus:ring-[#36b6b0]"
             />
           </div>
 
@@ -166,7 +196,7 @@ export default function EditViajePage() {
             <select
               value={data.estado}
               onChange={(e) => handleChange("estado", e.target.value)}
-              className="w-full px-4 py-2 rounded-lg border border-[#23454e] bg-[#11292e] text-gray-200 focus:ring-2 focus:ring-[#36b6b0]"
+              className="w-full px-4 py-2 rounded-lg border border-[#23454e] bg-[#132f34] text-gray-200 focus:ring-2 focus:ring-[#36b6b0]"
             >
               <option value="PENDIENTE">PENDIENTE</option>
               <option value="EN_CURSO">EN CURSO</option>
@@ -202,4 +232,3 @@ export default function EditViajePage() {
     </div>
   );
 }
-  
