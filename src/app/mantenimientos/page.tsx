@@ -1,6 +1,14 @@
 "use client";
 
-import { Search, Wrench, Clock, CheckCircle2, AlertTriangle, PlusCircle } from "lucide-react";
+import {
+  Search,
+  Wrench,
+  Clock,
+  CheckCircle2,
+  AlertTriangle,
+  PlusCircle,
+  Pencil,
+} from "lucide-react";
 import { useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
@@ -18,12 +26,10 @@ export default function MantenimientosPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8fafa] dark:bg-[#0d1b1e] p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-2xl font-bold text-[#1a3b47] dark:text-[#e6f6f7]">
-          Mantenimientos
-        </h1>
+    <div className="min-h-screen bg-[#0d1b1e] text-white p-6 transition-colors duration-300">
+      {/* HEADER */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+        <h1 className="text-2xl font-bold text-white">Mantenimientos</h1>
 
         <div className="flex items-center gap-3">
           <div className="relative">
@@ -32,7 +38,7 @@ export default function MantenimientosPage() {
               placeholder="Buscar mantenimiento..."
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
-              className="pl-10 pr-4 py-2 border border-[#d2e6e9] dark:border-[#23454e] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#36b6b0] bg-white dark:bg-[#11292e] text-gray-700 dark:text-gray-200 w-64 shadow-sm"
+              className="pl-10 pr-4 py-2 border border-[#23454e] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#36b6b0] bg-[#11292e] text-white placeholder-gray-400 w-64 shadow-sm"
             />
             <Search className="absolute left-3 top-2.5 text-[#7ca6a8]" size={20} />
           </div>
@@ -55,46 +61,56 @@ export default function MantenimientosPage() {
         <KpiCard label="Finalizados" value={stats.finalizados} color="#10b981" icon={CheckCircle2} />
       </div>
 
-      {/* Tabla */}
-      <div className="bg-white dark:bg-[#11292e] rounded-xl shadow-md border border-[#e1efef] dark:border-[#1e3c42] p-6">
-        <h2 className="text-xl font-bold text-[#1a3b47] dark:text-[#e8f8f8] mb-4">
+      {/* TABLA */}
+      <div className="bg-[#11292e] rounded-xl shadow-md border border-[#1e3c42] p-6">
+        <h2 className="text-xl font-bold text-white mb-4">
           Listado de Mantenimientos
         </h2>
 
         {data.length > 0 ? (
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-[#f2fafa] dark:bg-[#0e2529] text-[#4b6a6e] dark:text-[#9ed1cd]">
+              <tr className="bg-[#0e2529] text-[#93c6c1]">
                 <th className="p-3">Vehículo</th>
                 <th className="p-3">Tipo</th>
                 <th className="p-3">Fecha</th>
                 <th className="p-3">Costo</th>
                 <th className="p-3">Estado</th>
+                <th className="p-3 text-center">Acciones</th>
               </tr>
             </thead>
             <tbody>
               {data.map((m: any) => (
                 <tr
                   key={m._id}
-                  className="border-t border-[#d8ecec] dark:border-[#1e3c42] hover:bg-[#eefafa] dark:hover:bg-[#15393f] transition"
+                  className="border-t border-[#1e3c42] hover:bg-[#15393f] transition text-white"
                 >
-                  <td className="p-3 text-[#1a3b47] dark:text-[#d6f4f4] font-medium">
-                    {m.vehiculoNombre || "—"}
-                  </td>
+                  <td className="p-3 font-medium">{m.vehiculoNombre || "—"}</td>
                   <td className="p-3">{m.tipo || "—"}</td>
-                  <td className="p-3">{new Date(m.fecha).toLocaleDateString("es-AR")}</td>
+                  <td className="p-3">
+                    {new Date(m.fecha).toLocaleDateString("es-AR")}
+                  </td>
                   <td className="p-3">
                     {m.costo ? `$ ${m.costo.toLocaleString("es-AR")}` : "—"}
                   </td>
                   <td className="p-3">
                     <Estado estado={m.estado} />
                   </td>
+                  <td className="p-3 text-center">
+                    <Link
+                      href={`/mantenimientos/${m._id}/editar`}
+                      className="inline-flex items-center gap-1 px-3 py-1 rounded-md bg-[#36b6b0] hover:bg-[#2ca6a4] text-white font-medium text-sm transition"
+                    >
+                      <Pencil size={16} />
+                      Editar
+                    </Link>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         ) : (
-          <div className="text-[#688b8f] dark:text-[#93c6c1] text-center py-4">
+          <div className="text-[#93c6c1] text-center py-4">
             No se encontraron mantenimientos registrados.
           </div>
         )}
@@ -106,14 +122,14 @@ export default function MantenimientosPage() {
 /* ---------- COMPONENTES ---------- */
 function KpiCard({ label, value, color, icon: Icon }: any) {
   return (
-    <div className="bg-white dark:bg-[#11292e] rounded-xl shadow-md p-6 border border-[#e1efef] dark:border-[#1e3c42]">
+    <div className="bg-[#11292e] rounded-xl shadow-md p-6 border border-[#1e3c42]">
       <div className="flex items-center gap-4">
         <div className="p-4 rounded-xl" style={{ backgroundColor: `${color}22` }}>
           <Icon style={{ color }} size={28} />
         </div>
         <div>
-          <p className="text-[#688b8f] dark:text-[#93c6c1] text-sm mb-1">{label}</p>
-          <p className="text-3xl font-bold text-[#1a3b47] dark:text-[#e8f8f8]">{value}</p>
+          <p className="text-[#93c6c1] text-sm mb-1">{label}</p>
+          <p className="text-3xl font-bold text-white">{value}</p>
         </div>
       </div>
     </div>
@@ -123,11 +139,11 @@ function KpiCard({ label, value, color, icon: Icon }: any) {
 function Estado({ estado }: { estado: string }) {
   const map: any = {
     PENDIENTE:
-      "bg-yellow-100 text-yellow-800 dark:bg-yellow-800/30 dark:text-yellow-300",
+      "bg-yellow-800/30 text-yellow-300 border border-yellow-700",
     EN_CURSO:
-      "bg-blue-100 text-blue-800 dark:bg-blue-800/30 dark:text-blue-300",
+      "bg-blue-800/30 text-blue-300 border border-blue-700",
     FINALIZADO:
-      "bg-green-100 text-green-800 dark:bg-green-800/30 dark:text-green-300",
+      "bg-green-800/30 text-green-300 border border-green-700",
   };
 
   return (
