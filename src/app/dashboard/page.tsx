@@ -121,74 +121,103 @@ export default function DashboardPage() {
   const exportarPdf = async () => {
     setExportando(true);
     try {
-      // Construimos datasets para PDF con un único período coherente (usa el global seleccionado)
-      const { from, to } = rango(periodo);
-      const inRange = (d: any) => {
+      // Helper local para crear rango e inRange por período
+      const rBalance = rango(periodoBalance);
+      const rGastos = rango(periodoGastos);
+      const rRutas = rango(periodoRutas);
+      const rRanking = rango(periodoRankingChoferes);
+      const rIngresos = rango(periodoIngresosCliente);
+      const rHeatmap = rango(periodoHeatmap);
+
+      const inRange = (d: any, from: Date, to: Date) => {
         const x = new Date(d);
         return x >= from && x < to;
       };
 
-      // Balance diario
+      // Balance diario (según periodoBalance)
       const balance: { fecha: string; ingresos: number; egresos: number; neto: number }[] = [];
-      const cursor = new Date(from);
-      while (cursor < to) {
-        const key = cursor.toLocaleDateString('es-AR');
-        const ingresos = facturas.filter((f: any) => f?.creadoEn && inRange(f.creadoEn) && new Date(f.creadoEn).toLocaleDateString('es-AR') === key).reduce((a: number,b: any)=>a+(b.total||0),0);
-        const egresos = comprobantes.filter((c: any) => c?.creadoEn && inRange(c.creadoEn) && c.estado==='PAGADO' && new Date(c.creadoEn).toLocaleDateString('es-AR')===key).reduce((a:number,b:any)=>a+(b.total||0),0);
-        balance.push({ fecha: key, ingresos, egresos, neto: ingresos-egresos });
-        cursor.setDate(cursor.getDate()+1);
+      {
+        const cursor = new Date(rBalance.from);
+        while (cursor < rBalance.to) {
+          const key = cursor.toLocaleDateString('es-AR');
+          const ingresos = facturas
+            .filter((f: any) => f?.creadoEn && inRange(f.creadoEn, rBalance.from, rBalance.to) && new Date(f.creadoEn).toLocaleDateString('es-AR') === key)
+            .reduce((a: number, b: any) => a + (b.total || 0), 0);
+          const egresos = comprobantes
+            .filter((c: any) => c?.creadoEn && inRange(c.creadoEn, rBalance.from, rBalance.to) && c.estado === 'PAGADO' && new Date(c.creadoEn).toLocaleDateString('es-AR') === key)
+            .reduce((a: number, b: any) => a + (b.total || 0), 0);
+          balance.push({ fecha: key, ingresos, egresos, neto: ingresos - egresos });
+          cursor.setDate(cursor.getDate() + 1);
+        }
       }
 
-      // Gastos por tipo
+      // Gastos por tipo (según periodoGastos)
       const gastosMap: Record<string, number> = {};
-      comprobantes.filter((c:any)=>c?.creadoEn && inRange(c.creadoEn) && c.estado==='PAGADO').forEach((c:any)=>{
-        const tipo = c.tipoComprobanteNombre || 'Otros';
-        gastosMap[tipo]=(gastosMap[tipo]||0)+(c.total||0);
-      });
-      const gastos = Object.entries(gastosMap).map(([nombre,valor])=>({nombre,valor})).sort((a,b)=>b.valor-a.valor);
-
-      // Rutas (km promedio)
-      const rutasAgg: Record<string, number[]> = {};
-      viajes.filter((v:any)=>v?.creadoEn && inRange(v.creadoEn)).forEach((v:any)=>{
-        const ruta = `${v.origen} - ${v.destino}`;
-        if(!rutasAgg[ruta]) rutasAgg[ruta]=[];
-        rutasAgg[ruta].push(v.distanciaKm||0);
-      });
-      const rutas = Object.entries(rutasAgg).map(([ruta,arr])=>({ruta, kmPromedio: arr.length? Math.round(arr.reduce((a,b)=>a+b,0)/arr.length):0})).sort((a,b)=>b.kmPromedio-a.kmPromedio);
-
-      // Ranking choferes
-      const rMap: Record<string,{nombre:string; viajes:number; km:number}> = {};
-      viajes.filter((v:any)=>v?.creadoEn && inRange(v.creadoEn)).forEach((v:any)=>{
-        const id = String(v.choferId ?? v.chofer_id ?? v.chofer?.id ?? 's/n');
-        const nombre = v.choferNombre || v.chofer_nombre || v.chofer?.nombreCompleto || v.chofer?.nombre || `Chofer ${id.slice(-4)}`;
-        if(!rMap[id]) rMap[id] = {nombre, viajes:0, km:0};
-        rMap[id].viajes += 1;
-        rMap[id].km += Number(v.distanciaKm||0);
-      });
-      const ranking = Object.values(rMap).sort((a,b)=> (metricChofer==='viajes'? b.viajes-a.viajes : b.km-a.km));
-
-      // Ingresos por cliente
-      const icMap: Record<string, number> = {};
-      facturas.filter((f:any)=>f?.creadoEn && inRange(f.creadoEn)).forEach((f:any)=>{
-        const nombre = f.clienteNombre || f.cliente?.nombreCompleto || f.cliente?.razonSocial || f.cliente?.nombre || 'No identificado';
-        icMap[nombre]=(icMap[nombre]||0)+(f.total||0);
-      });
-      const ingresosCliente = Object.entries(icMap).map(([nombre,valor])=>({nombre,valor})).sort((a,b)=>b.valor-a.valor);
-
-      // Heatmap (si hay vehículo)
-      let heatmap: {matrix:number[][]; max:number} | undefined = undefined;
-      if (vehiculoHeatmap) {
-        const matrix:number[][] = Array.from({length:7},()=>Array(24).fill(0));
-        viajes.filter((v:any)=>v?.creadoEn && inRange(v.creadoEn)).forEach((v:any)=>{
-          const id = String(v.vehiculoId ?? v.vehiculo_id ?? v.vehiculo?.id ?? '');
-          if(String(vehiculoHeatmap) !== id) return;
-          const d = new Date(v.creadoEn);
-          let dow = d.getDay(); dow = dow===0?6:dow-1;
-          const h = d.getHours();
-          if(dow>=0&&dow<7&&h>=0&&h<24) matrix[dow][h]++;
+      comprobantes
+        .filter((c: any) => c?.creadoEn && inRange(c.creadoEn, rGastos.from, rGastos.to) && c.estado === 'PAGADO')
+        .forEach((c: any) => {
+          const tipo = c.tipoComprobanteNombre || 'Otros';
+          gastosMap[tipo] = (gastosMap[tipo] || 0) + (c.total || 0);
         });
-        const max = matrix.flat().reduce((a,b)=>Math.max(a,b),0) || 1;
-        heatmap = {matrix, max};
+      const gastos = Object.entries(gastosMap)
+        .map(([nombre, valor]) => ({ nombre, valor }))
+        .sort((a, b) => b.valor - a.valor);
+
+      // Rutas (según periodoRutas)
+      const rutasAgg: Record<string, number[]> = {};
+      viajes
+        .filter((v: any) => v?.creadoEn && inRange(v.creadoEn, rRutas.from, rRutas.to))
+        .forEach((v: any) => {
+          const ruta = `${v.origen} - ${v.destino}`;
+          if (!rutasAgg[ruta]) rutasAgg[ruta] = [];
+          rutasAgg[ruta].push(v.distanciaKm || 0);
+        });
+      const rutas = Object.entries(rutasAgg)
+        .map(([ruta, arr]) => ({ ruta, kmPromedio: arr.length ? Math.round(arr.reduce((a, b) => a + b, 0) / arr.length) : 0 }))
+        .sort((a, b) => b.kmPromedio - a.kmPromedio);
+
+      // Ranking (según periodoRankingChoferes)
+      const rMap: Record<string, { nombre: string; viajes: number; km: number }> = {};
+      viajes
+        .filter((v: any) => v?.creadoEn && inRange(v.creadoEn, rRanking.from, rRanking.to))
+        .forEach((v: any) => {
+          const id = String(v.choferId ?? v.chofer_id ?? v.chofer?.id ?? 's/n');
+          const nombre = v.choferNombre || v.chofer_nombre || v.chofer?.nombreCompleto || v.chofer?.nombre || `Chofer ${id.slice(-4)}`;
+          if (!rMap[id]) rMap[id] = { nombre, viajes: 0, km: 0 };
+          rMap[id].viajes += 1;
+          rMap[id].km += Number(v.distanciaKm || 0);
+        });
+      const ranking = Object.values(rMap).sort((a, b) => (metricChofer === 'viajes' ? b.viajes - a.viajes : b.km - a.km));
+
+      // Ingresos por cliente (según periodoIngresosCliente)
+      const icMap: Record<string, number> = {};
+      facturas
+        .filter((f: any) => f?.creadoEn && inRange(f.creadoEn, rIngresos.from, rIngresos.to))
+        .forEach((f: any) => {
+          const nombre = f.clienteNombre || f.cliente?.nombreCompleto || f.cliente?.razonSocial || f.cliente?.nombre || 'No identificado';
+          icMap[nombre] = (icMap[nombre] || 0) + (f.total || 0);
+        });
+      const ingresosCliente = Object.entries(icMap)
+        .map(([nombre, valor]) => ({ nombre, valor }))
+        .sort((a, b) => b.valor - a.valor);
+
+      // Heatmap (según periodoHeatmap y vehículo)
+      let heatmap: { matrix: number[][]; max: number } | undefined = undefined;
+      if (vehiculoHeatmap) {
+        const matrix: number[][] = Array.from({ length: 7 }, () => Array(24).fill(0));
+        viajes
+          .filter((v: any) => v?.creadoEn && inRange(v.creadoEn, rHeatmap.from, rHeatmap.to))
+          .forEach((v: any) => {
+            const id = String(v.vehiculoId ?? v.vehiculo_id ?? v.vehiculo?.id ?? '');
+            if (String(vehiculoHeatmap) !== id) return;
+            const d = new Date(v.creadoEn);
+            let dow = d.getDay();
+            dow = dow === 0 ? 6 : dow - 1;
+            const h = d.getHours();
+            if (dow >= 0 && dow < 7 && h >= 0 && h < 24) matrix[dow][h]++;
+          });
+        const max = matrix.flat().reduce((a, b) => Math.max(a, b), 0) || 1;
+        heatmap = { matrix, max };
       }
 
       await generarReporteTransportePDF({
@@ -201,7 +230,9 @@ export default function DashboardPage() {
         heatmap,
         meta: { fecha: new Date().toLocaleDateString('es-AR') },
       });
-    } finally { setExportando(false); }
+    } finally {
+      setExportando(false);
+    }
   };
 
   /* ========================================================

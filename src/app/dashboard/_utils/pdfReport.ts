@@ -17,7 +17,7 @@ export async function generarReporteTransportePDF(d: ReportData) {
   const pdf = new jsPDF("p", "pt", "a4");
   const W = pdf.internal.pageSize.getWidth();
   const H = pdf.internal.pageSize.getHeight();
-  const M = 36;
+  const M = 30;
   let y = M;
 
   // Paleta alineada al dashboard
@@ -38,9 +38,9 @@ export async function generarReporteTransportePDF(d: ReportData) {
   const addTitle = (title: string) => {
     pdf.setFont("helvetica", "bold");
     pdf.setTextColor(...TEAL);
-    pdf.setFontSize(20);
+    pdf.setFontSize(19);
     pdf.text(title, M, y);
-    y += 22;
+    y += 20;
     pdf.setTextColor(...TEXT);
   };
 
@@ -57,7 +57,7 @@ export async function generarReporteTransportePDF(d: ReportData) {
   // Balance (line chart simple)
   if (d.balance?.length) {
     addTitle("Balance financiero");
-    const area = { x: M, y: y, w: W - M * 2, h: 160 };
+    const area = { x: M, y: y, w: W - M * 2, h: 150 };
     const max = Math.max(1, ...d.balance.map(b => Math.max(b.ingresos, b.egresos, b.neto)));
     const min = Math.min(0, ...d.balance.map(b => Math.min(b.ingresos, b.egresos, b.neto)));
     const scaleX = area.w / Math.max(1, d.balance.length - 1);
@@ -100,10 +100,8 @@ export async function generarReporteTransportePDF(d: ReportData) {
       pdf.setTextColor(...TEXT); pdf.text(`${l.t}: $ ${Math.round(l.v).toLocaleString('es-AR')}`, lx + 16, legendY);
     });
 
-    y += area.h + 26;
-    // salto de página para separar balance del resto
-    pdf.addPage();
-    y = M;
+    y += area.h + 30;
+    pageBreakIfNeeded(210);
   }
 
   // Distribución de gastos (pie)
@@ -125,7 +123,9 @@ export async function generarReporteTransportePDF(d: ReportData) {
       pdf.text(`${g.nombre} ${(frac * 100).toFixed(1)}%  ($ ${Math.round(g.valor||0).toLocaleString('es-AR')})`, cx + 105, y + 10 + i * 16);
       a0 = a1;
     });
-    y += 130;
+    y += 140; // más aire después de torta
+    pageBreakIfNeeded(200);
+    y += 12;
   }
 
   // Barras rendimiento de rutas
@@ -142,10 +142,9 @@ export async function generarReporteTransportePDF(d: ReportData) {
       // valor encima
       pdf.setTextColor(...TEXT); pdf.setFontSize(9); pdf.text(String(Math.round(r.kmPromedio)), x + barW * 0.35, by - 4, { align: 'center' as any });
     });
-    y += 160;
-    // salto de página para ranking + ingresos por cliente
-    pdf.addPage();
-    y = M;
+    y += 170;
+    pageBreakIfNeeded(240);
+    y += 12;
   }
 
   // Ranking choferes (horizontal)
@@ -160,13 +159,15 @@ export async function generarReporteTransportePDF(d: ReportData) {
       pdf.setFillColor(...TEAL); pdf.rect(M + 130, yRow - 8, bar, 10, "F");
       pdf.setTextColor(...TEXT); pdf.text(String(i[d.rankingMetric] ?? 0), M + 135 + bar, yRow);
     });
-    y += 8 + items.length * 18;
+    y += 16 + items.length * 18;
+    pageBreakIfNeeded(220);
+    y += 12;
   }
 
   // Distribución ingresos por cliente (pie)
   if (d.ingresosCliente?.length) {
     addTitle("Distribución de ingresos por cliente");
-    const cx = M + 70, cy = y + 60, r = 50;
+    const cx = M + 70, cy = y + 58, r = 48;
     const total = d.ingresosCliente.reduce((a, b) => a + (b.valor || 0), 0) || 1;
     let a0 = 0;
     const top = d.ingresosCliente.slice(0, 7);
@@ -182,7 +183,7 @@ export async function generarReporteTransportePDF(d: ReportData) {
       pdf.text(`${g.nombre.slice(0,22)} ${(frac * 100).toFixed(1)}%  ($ ${Math.round(g.valor||0).toLocaleString('es-AR')})`, cx + 105, y + 10 + i * 16);
       a0 = a1;
     });
-    y += 140;
+    y += 135;
 
     // Tabla resumen top ingresos
     const startY = y;
@@ -191,15 +192,13 @@ export async function generarReporteTransportePDF(d: ReportData) {
     top.forEach((c, idx) => {
       pdf.text(`${idx + 1}. ${c.nombre.slice(0,40)}`, M, y);
       pdf.text(`$ ${Math.round(c.valor||0).toLocaleString('es-AR')}`, W - M - 120, y, { align: 'right' as any });
-      y += 12; pageBreakIfNeeded(24);
+      y += 12; pageBreakIfNeeded(30);
     });
   }
 
   // Heatmap utilización
   if (d.heatmap && d.heatmap.max > 0) {
-    // página exclusiva para el heatmap
-    pdf.addPage();
-    y = M;
+    pageBreakIfNeeded(220);
     addTitle("Mapa de calor de vehículos");
     const cell = 10; const padL = 36; const padT = 14;
     const rows = d.heatmap.matrix.length; const cols = d.heatmap.matrix[0].length;
