@@ -89,7 +89,8 @@ export default function VehiculosPage() {
                       <td className="p-3 text-[#d6f4f4] font-medium">{v.nombre}</td>
                       <td className="p-3 text-[#d6f4f4]">{v.marcaNombre || "—"}</td>
                       <td className="p-3 text-[#d6f4f4]">{v.patente || "—"}</td>
-                      <td className="p-3 text-[#d6f4f4]">{v.tipo || "—"}</td>
+                      <td className="p-3 text-[#d6f4f4]">{v.tipoVehiculoNombre || "—"}</td>
+
                       <td className="p-3 text-[#d6f4f4]">{v.capacidad ? `${v.capacidad} personas` : "—"}</td>
                       <td className="p-3">
                         <Estado estado={v.estado} />
@@ -97,13 +98,13 @@ export default function VehiculosPage() {
                       <td className="p-3">
                         <div className="flex gap-2 justify-end">
                           <Link
-                            href={`/vehiculos/${String(v._id)}`}
+                            href={`/vehiculos/${String(v._id)}/`}
                             className="px-3 py-1.5 rounded-lg bg-[#2ca6a4] hover:bg-[#249390] text-white text-xs font-medium transition"
                           >
                             Ver
                           </Link>
                           <Link
-                            href={`/vehiculos/${String(v._id)}/editar`}
+                            href={`/vehiculos/${String(v._id)}/editar/`}
                             className="px-3 py-1.5 rounded-lg bg-[#2ca6a4] hover:bg-[#249390] text-white text-xs font-medium transition"
                           >
                             Editar

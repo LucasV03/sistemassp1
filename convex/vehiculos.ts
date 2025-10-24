@@ -1,10 +1,10 @@
 // convex/vehiculos.ts
 import { v } from "convex/values";
 import { query, mutation } from "./_generated/server";
-import { norm, slugify, now } from "./_lib";
+import { now } from "./_lib"; // ✅ ya no usamos slugify ni norm aquí
 
 // ============================
-// 🔍 Buscar vehículos (filtro + marca + join con marcas)
+// 🔍 Buscar vehículos (filtro + marca + join con marcas y tipos)
 // ============================
 export const buscar = query({
   args: {
@@ -26,32 +26,43 @@ export const buscar = query({
 
     const lote = await qy.take(400);
 
-    const nq = norm(q);
-    const filtrados = nq
-      ? lote.filter((d) => {
-          const texto = [d.nombre, d.patente, d.tipo].join(" ").toLowerCase();
-          return texto.includes(nq.toLowerCase());
-        })
-      : lote;
+    const nq = q?.toLowerCase().trim() ?? "";
 
-    // 🔹 Hacemos el "join" con marcas_vehiculos
+    // 🔹 JOIN con marcas y tipos
     const items = await Promise.all(
-      filtrados.map(async (vehiculo) => {
-        let marcaNombre = "";
-        if (vehiculo.marcaVehiculoId) {
-          const marca = await ctx.db.get(vehiculo.marcaVehiculoId);
-          marcaNombre = marca?.nombre ?? "";
+      lote.map(async (vehiculo) => {
+        const marca = vehiculo.marcaVehiculoId
+          ? await ctx.db.get(vehiculo.marcaVehiculoId)
+          : null;
+
+        const tipo = vehiculo.tipoVehiculoId
+          ? await ctx.db.get(vehiculo.tipoVehiculoId)
+          : null;
+
+        const texto = [vehiculo.nombre, vehiculo.patente, tipo?.nombre]
+          .join(" ")
+          .toLowerCase();
+
+        if (!nq || texto.includes(nq)) {
+          return {
+            ...vehiculo,
+            marcaNombre: marca?.nombre ?? "",
+            tipoVehiculoNombre: tipo?.nombre ?? "",
+          };
         }
-        return { ...vehiculo, marcaNombre };
+        return null;
       })
     );
 
-    const page = items.slice(0, limit);
-    const nextCursor = page.length ? page[page.length - 1]._id : undefined;
+    const filtrados = items.filter((x) => x !== null);
+
+    const page = filtrados.slice(0, limit);
+    const nextCursor = page.length ? page[page.length - 1]!._id : undefined;
 
     return { items: page, nextCursor };
   },
 });
+
 
 // ============================
 // 📋 Listar todos (simple)
@@ -69,9 +80,9 @@ export const listar = query({
 export const crear = mutation({
   args: {
     nombre: v.string(),
-    marcaVehiculoId: v.id("marcas_vehiculos"), // ✅ cambio
+    marcaVehiculoId: v.id("marcas_vehiculos"),
+    tipoVehiculoId: v.id("tipos_vehiculo"), // ✅ nuevo campo obligatorio
     patente: v.optional(v.string()),
-    tipo: v.optional(v.string()),
     capacidad: v.optional(v.number()),
     estado: v.optional(
       v.union(
@@ -81,24 +92,28 @@ export const crear = mutation({
       )
     ),
   },
-  handler: async (ctx, { nombre, marcaVehiculoId, ...extra }) => {
-    const slug = slugify(nombre);
+  handler: async (
+    ctx,
+    { nombre, marcaVehiculoId, tipoVehiculoId, patente, capacidad, estado }
+  ) => {
+    // Evita duplicados por nombre + marca
     const ya = await ctx.db
       .query("vehiculos")
+      .filter((qb) => qb.eq(qb.field("nombre"), nombre.trim()))
       .filter((qb) => qb.eq(qb.field("marcaVehiculoId"), marcaVehiculoId))
-      .filter((qb) => qb.eq(qb.field("slug"), slug))
-      .unique();
+      .first();
 
     if (ya) return ya._id;
 
     return await ctx.db.insert("vehiculos", {
       nombre: nombre.trim(),
-      slug,
       marcaVehiculoId,
-      estado: extra.estado ?? "OPERATIVO",
+      tipoVehiculoId,
+      patente,
+      capacidad,
+      estado: estado ?? "OPERATIVO",
       creadoEn: now(),
       actualizadoEn: now(),
-      ...extra,
     });
   },
 });
@@ -111,8 +126,8 @@ export const actualizar = mutation({
     id: v.id("vehiculos"),
     nombre: v.string(),
     marcaVehiculoId: v.id("marcas_vehiculos"),
+    tipoVehiculoId: v.optional(v.id("tipos_vehiculo")),
     patente: v.optional(v.string()),
-    tipo: v.optional(v.string()),
     capacidad: v.optional(v.number()),
     estado: v.optional(
       v.union(
@@ -149,7 +164,9 @@ export const estadisticas = query({
   handler: async (ctx) => {
     const vehiculos = await ctx.db.query("vehiculos").collect();
     const total = vehiculos.length;
-    const operativos = vehiculos.filter((v) => v.estado === "OPERATIVO").length;
+    const operativos = vehiculos.filter(
+      (v) => v.estado === "OPERATIVO"
+    ).length;
     const mantenimiento = vehiculos.filter(
       (v) => v.estado === "MANTENIMIENTO"
     ).length;

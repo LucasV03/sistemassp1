@@ -110,3 +110,16 @@ export const estadisticas = query({
     };
   },
 });
+export const ultimoNumeroPorSucursal = query({
+  args: { sucursal: v.string() },
+  handler: async (ctx, { sucursal }) => {
+    // Traemos las facturas ordenadas por número descendente (más nuevas primero)
+    const facturas = await ctx.db.query("facturas_ventas").order("desc").take(100);
+
+    // Filtramos en memoria las que pertenecen a la sucursal dada
+    const facturasSucursal = facturas.filter((f) => f.numero.startsWith(sucursal));
+
+    if (facturasSucursal.length === 0) return sucursal + "00000000";
+    return facturasSucursal[0].numero;
+  },
+});

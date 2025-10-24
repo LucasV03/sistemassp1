@@ -24,10 +24,10 @@ export default defineSchema({
 
 vehiculos: defineTable({
   nombre: v.string(),
-  marcaVehiculoId: v.id("marcas_vehiculos"), // ✅ corregido
-  slug: v.string(),
+  marcaVehiculoId: v.id("marcas_vehiculos"),
+  tipoVehiculoId: v.id("tipos_vehiculo"),
+
   patente: v.optional(v.string()),
-  tipo: v.optional(v.string()),
   capacidad: v.optional(v.number()),
   estado: v.union(
     v.literal("OPERATIVO"),
@@ -36,12 +36,12 @@ vehiculos: defineTable({
   ),
   creadoEn: v.number(),
   actualizadoEn: v.number(),
+
+  // ⚠️ Campos temporales para permitir deploy
+ 
 })
-  .index("by_marcaVehiculo", ["marcaVehiculoId"])
-  .index("by_estado", ["estado"]),
+.index("byTipoVehiculo", ["tipoVehiculoId"]),
 
-
-  
   modelos: defineTable({
     nombre: v.string(), // p.ej. "2016 2.8 TDI 4x4"
     marcaId: v.id("marcas"),
@@ -585,5 +585,17 @@ combos_pago: defineTable({
   .index("byActivo", ["activo"])
   .index("byNombre", ["nombre"]),
 
-});
 
+tarifas_vehiculos: defineTable({
+  tipoVehiculoId: v.id("tipos_vehiculo"), 
+  tipoVehiculoNombre: v.string(),        
+  precioKm: v.number(),                   
+  actualizadoEn: v.number(),
+})
+  .index("byTipoVehiculo", ["tipoVehiculoId"]),
+
+tipos_vehiculo: defineTable({
+  nombre: v.string(),
+  creadoEn: v.number(),
+}).index("byNombre", ["nombre"]),
+});

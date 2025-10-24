@@ -178,3 +178,45 @@ export const estadisticas = query({
     };
   },
 });
+export const listarConVehiculoYTarifa = query({
+  handler: async (ctx) => {
+    const viajes = await ctx.db.query("viajes").collect();
+    const vehiculos = await ctx.db.query("vehiculos").collect();
+    const tipos = await ctx.db.query("tipos_vehiculo").collect();
+    const tarifas = await ctx.db.query("tarifas_vehiculos").collect();
+
+    return viajes.map((v) => {
+      // Buscar el vehículo asociado
+      const vehiculo = vehiculos.find((vh) => vh._id === v.vehiculoId);
+
+      // ✅ Verificación segura
+      if (!vehiculo) {
+        return {
+          ...v,
+          vehiculoNombre: "Sin vehículo",
+          tipoVehiculoNombre: "Sin tipo",
+          tipoVehiculoId: null,
+          tarifaPrecioKm: 0,
+        };
+      }
+
+      // Buscar el tipo de vehículo
+      const tipoVehiculo = tipos.find(
+        (t) => t._id === vehiculo.tipoVehiculoId
+      );
+
+      // Buscar la tarifa asociada al tipo de vehículo
+      const tarifa = tarifas.find(
+        (t) => t.tipoVehiculoId === tipoVehiculo?._id
+      );
+
+      return {
+        ...v,
+        vehiculoNombre: vehiculo.nombre ?? "—",
+        tipoVehiculoNombre: tipoVehiculo?.nombre ?? "Sin tipo",
+        tipoVehiculoId: tipoVehiculo?._id ?? null,
+        tarifaPrecioKm: tarifa?.precioKm ?? 0,
+      };
+    });
+  },
+});

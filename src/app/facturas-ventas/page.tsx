@@ -11,6 +11,7 @@ import {
   ArrowUpRight,
   ArrowDownRight,
 } from "lucide-react";
+import TarifasVehiculosTable from "./_components/TarifasVehiculosTable";
 
 export default function FacturasVentasPage() {
   const facturas = useQuery(api.facturas_ventas.listarConCliente) ?? [];
@@ -41,6 +42,7 @@ export default function FacturasVentasPage() {
 
         {/* ---------- ACCIONES ---------- */}
         <div className="flex flex-wrap items-center gap-3">
+          
           {/* 🔍 Búsqueda */}
           <div className="relative">
             <Search className="absolute left-3 top-2.5 text-[#7ca6a8]" size={18} />
@@ -76,7 +78,9 @@ export default function FacturasVentasPage() {
           >
             <ArrowUpRight size={18} /> Reportes
           </Link>
+          
         </div>
+        
       </div>
 
       {/* ---------- KPIs ---------- */}
@@ -181,6 +185,7 @@ export default function FacturasVentasPage() {
           </tbody>
         </table>
       </div>
+      <TarifasVehiculosTable />
     </div>
   );
 }

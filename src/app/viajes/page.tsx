@@ -18,15 +18,26 @@ export default function ViajesPage() {
   const data = useQuery(api.viajes.listarConNombres) ?? [];
   const stats = useQuery(api.viajes.estadisticas);
   const eliminar = useMutation(api.viajes.eliminar);
+
   const [busqueda, setBusqueda] = useState("");
   const [menuActivo, setMenuActivo] = useState<string | null>(null);
 
   const handleEliminar = async (id: string) => {
     if (confirm("¿Seguro que deseas eliminar este viaje?")) {
       await eliminar({ id: id as Id<"viajes"> });
-
       alert("✅ Viaje eliminado correctamente.");
     }
+  };
+
+  const filtrar = (v: any) => {
+    const q = busqueda.toLowerCase();
+    return (
+      v.clienteNombre?.toLowerCase().includes(q) ||
+      v.choferNombre?.toLowerCase().includes(q) ||
+      v.vehiculoNombre?.toLowerCase().includes(q) ||
+      v.origen?.toLowerCase().includes(q) ||
+      v.destino?.toLowerCase().includes(q)
+    );
   };
 
   return (
@@ -45,7 +56,7 @@ export default function ViajesPage() {
             <Search className="absolute left-3 top-2.5 text-[#7ca6a8]" size={20} />
             <input
               type="text"
-              placeholder="Buscar viaje o cliente..."
+              placeholder="Buscar cliente, chofer o vehículo..."
               className="pl-10 pr-4 py-2 border border-[#23454e] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#36b6b0] bg-[#11292e] text-gray-200 w-64 shadow-sm placeholder:text-gray-400"
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
@@ -80,6 +91,7 @@ export default function ViajesPage() {
               <tr className="bg-[#0e2529] text-[#9ed1cd] text-sm">
                 <th className="p-3 font-medium">Cliente</th>
                 <th className="p-3 font-medium">Chofer</th>
+                <th className="p-3 font-medium">Vehículo</th>
                 <th className="p-3 font-medium">Origen</th>
                 <th className="p-3 font-medium">Destino</th>
                 <th className="p-3 font-medium">Distancia</th>
@@ -88,62 +100,57 @@ export default function ViajesPage() {
               </tr>
             </thead>
             <tbody>
-              {data
-                .filter(
-                  (v: any) =>
-                    v.clienteNombre?.toLowerCase().includes(busqueda.toLowerCase()) ||
-                    v.choferNombre?.toLowerCase().includes(busqueda.toLowerCase())
-                )
-                .map((v: any) => (
-                  <tr
-                    key={v._id}
-                    className="border-t border-[#1e3c42] hover:bg-[#15393f] transition relative"
-                  >
-                    <td className="p-3 text-[#d6f4f4]">{v.clienteNombre}</td>
-                    <td className="p-3 text-[#d6f4f4]">{v.choferNombre}</td>
-                    <td className="p-3 text-[#d6f4f4]">{v.origen}</td>
-                    <td className="p-3 text-[#d6f4f4]">{v.destino}</td>
-                    <td className="p-3 text-[#d6f4f4]">{v.distanciaKm} km</td>
-                    <td className="p-3">
-                      <EstadoPill estado={v.estado} />
-                    </td>
+              {data.filter(filtrar).map((v: any) => (
+                <tr
+                  key={v._id}
+                  className="border-t border-[#1e3c42] hover:bg-[#15393f] transition relative"
+                >
+                  <td className="p-3 text-[#d6f4f4]">{v.clienteNombre}</td>
+                  <td className="p-3 text-[#d6f4f4]">{v.choferNombre}</td>
+                  <td className="p-3 text-[#d6f4f4]">{v.vehiculoNombre}</td>
+                  <td className="p-3 text-[#d6f4f4]">{v.origen}</td>
+                  <td className="p-3 text-[#d6f4f4]">{v.destino}</td>
+                  <td className="p-3 text-[#d6f4f4]">{v.distanciaKm} km</td>
+                  <td className="p-3">
+                    <EstadoPill estado={v.estado} />
+                  </td>
 
-                    {/* Acciones */}
-                    <td className="p-3 text-center relative">
-                      <button
-                        onClick={() =>
-                          setMenuActivo(menuActivo === v._id ? null : v._id)
-                        }
-                        className="text-[#36b6b0] hover:text-[#2ca6a4] transition"
-                      >
-                        <MoreVertical size={18} />
-                      </button>
+                  {/* Acciones */}
+                  <td className="p-3 text-center relative">
+                    <button
+                      onClick={() =>
+                        setMenuActivo(menuActivo === v._id ? null : v._id)
+                      }
+                      className="text-[#36b6b0] hover:text-[#2ca6a4] transition"
+                    >
+                      <MoreVertical size={18} />
+                    </button>
 
-                      {menuActivo === v._id && (
-                        <div className="absolute right-6 top-8 z-20 bg-[#0f2327] border border-[#1e3c42] rounded-lg shadow-lg w-40 text-sm text-gray-200">
-                          <Link
-                            href={`/viajes/${v._id}`}
-                            className="flex items-center gap-2 px-3 py-2 hover:bg-[#15393f] transition"
-                          >
-                            <Pencil size={14} /> Editar
-                          </Link>
-                          <Link
-                            href={`/viajes/${v._id}`}
-                            className="flex items-center gap-2 px-3 py-2 hover:bg-[#15393f] transition"
-                          >
-                            <Eye size={14} /> Ver detalle
-                          </Link>
-                          <button
-                            onClick={() => handleEliminar(v._id)}
-                            className="w-full flex items-center gap-2 px-3 py-2 text-red-400 hover:bg-red-900/30 transition"
-                          >
-                            <Trash2 size={14} /> Eliminar
-                          </button>
-                        </div>
-                      )}
-                    </td>
-                  </tr>
-                ))}
+                    {menuActivo === v._id && (
+                      <div className="absolute right-6 top-8 z-20 bg-[#0f2327] border border-[#1e3c42] rounded-lg shadow-lg w-40 text-sm text-gray-200">
+                        <Link
+                          href={`/viajes/${v._id}`}
+                          className="flex items-center gap-2 px-3 py-2 hover:bg-[#15393f] transition"
+                        >
+                          <Pencil size={14} /> Editar
+                        </Link>
+                        <Link
+                          href={`/viajes/${v._id}`}
+                          className="flex items-center gap-2 px-3 py-2 hover:bg-[#15393f] transition"
+                        >
+                          <Eye size={14} /> Ver detalle
+                        </Link>
+                        <button
+                          onClick={() => handleEliminar(v._id)}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-red-400 hover:bg-red-900/30 transition"
+                        >
+                          <Trash2 size={14} /> Eliminar
+                        </button>
+                      </div>
+                    )}
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
@@ -177,7 +184,11 @@ function EstadoPill({ estado }: { estado: string }) {
     CANCELADO: "bg-red-800/30 text-red-300",
   };
   return (
-    <span className={`px-3 py-1 text-xs font-semibold rounded-full ${map[estado] ?? ""}`}>
+    <span
+      className={`px-3 py-1 text-xs font-semibold rounded-full ${
+        map[estado] ?? ""
+      }`}
+    >
       {estado}
     </span>
   );
