@@ -41,6 +41,7 @@ import type * as repuestos from "../repuestos.js";
 import type * as repuestos_por_deposito from "../repuestos_por_deposito.js";
 import type * as scripts_limpiarVehiculosAntiguos from "../scripts/limpiarVehiculosAntiguos.js";
 import type * as scripts_migrarVehiculos from "../scripts/migrarVehiculos.js";
+import type * as seed from "../seed.js";
 import type * as tarifas_vehiculos from "../tarifas_vehiculos.js";
 import type * as tipos_comprobante from "../tipos_comprobante.js";
 import type * as tipos_movimiento from "../tipos_movimiento.js";
@@ -86,6 +87,7 @@ declare const fullApi: ApiFromModules<{
   repuestos_por_deposito: typeof repuestos_por_deposito;
   "scripts/limpiarVehiculosAntiguos": typeof scripts_limpiarVehiculosAntiguos;
   "scripts/migrarVehiculos": typeof scripts_migrarVehiculos;
+  seed: typeof seed;
   tarifas_vehiculos: typeof tarifas_vehiculos;
   tipos_comprobante: typeof tipos_comprobante;
   tipos_movimiento: typeof tipos_movimiento;

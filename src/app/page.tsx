@@ -212,9 +212,15 @@ function Card({
 }
 
 // Th ajustado al texto oscuro
-function Th({ children }: { children: React.ReactNode }) {
+function Th({
+  children,
+  className = "",
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
   return (
-    <th className="px-3 py-2 text-left font-medium">
+    <th className={["px-3 py-2 text-left font-medium", className].join(" ")}>
       {children}
     </th>
   );
